@@ -1,47 +1,85 @@
-# MeshnetworkVenezuela
+# Mesh Network Venezuela
 
-Herramienta offline-first para paramédicos y brigadas de rescate en La Guaira, Venezuela. Registra incidentes y transporta datos sin depender de internet.
+Herramienta **offline-first** para paramédicos y brigadas de rescate en **La Guaira**. Registra personas afectadas con GPS, persiste en SQLite y transmite datos por **SMS manual** cuando hay señal GSM — sin internet ni servidores.
 
-## Componentes
+- **App de campo:** APK Android (`com.vic_arx.meshnetworkvenezuela`)
+- **Demo web:** [meshnetwork-venezuela.vercel.app](https://meshnetwork-venezuela.vercel.app) (capacitación; no sustituye el APK)
+- **Repo:** [github.com/dynastymarketinga/MeshnetworkVenezuela](https://github.com/dynastymarketinga/MeshnetworkVenezuela)
 
-| Componente | Tecnología | Cómo probarlo |
-|------------|------------|---------------|
-| **App Móvil Operativa** | Expo + AsyncStorage | Expo Go + `npx expo start` |
-| **Demo Web** | `index.html` (Vercel) | Solo demostración — la app real es móvil |
+---
 
-## App Móvil Operativa (Expo Go)
+## Capacidades (sin internet)
 
-```bash
+| Función | Tecnología |
+|---------|------------|
+| Registro táctico + triaje | SQLite + GPS obligatorio |
+| Persistencia tras apagado | `expo-sqlite` (WAL) |
+| Navegación a punto | `geo:` / Google Maps / OsmAnd offline |
+| Enlace entre brigadas | SMS comprimido `MNv1\|1/3\|…` |
+| Fusión sin duplicados | `INSERT OR IGNORE` |
+
+---
+
+## Compilar APK (producción)
+
+```powershell
+npm install
+npx eas-cli login
+npx eas-cli init
+npx eas-cli build --platform android --profile preview
+```
+
+Instalación en teléfonos: ver **`INSTALACION_APK_CAMPO.md`**.  
+Validación en terreno: ver **`CHECKLIST_VALIDACION_CAMPO.md`**.
+
+### Configuración operativa
+
+Editar `src/config/OperacionConfig.ts`:
+
+- `COMANDO_CENTRAL_SMS` — número Bomberos / Protección Civil La Guaira
+- `BRIGADA_ID`, `NOMBRE_COMANDO`
+
+---
+
+## Desarrollo local (Expo)
+
+```powershell
 npm install
 npx expo start
 ```
 
-- **Persistencia local:** cada registro se guarda en disco del teléfono (AsyncStorage).
-- **Exportar:** comprimir todos los reportes a JSON SMS (`i,n,e,g,u,s,o,t`).
-- **Importar:** pegar cadena de otra brigada y fusionar sin duplicar IDs.
-- **Prioridad:** CRITICO → POR LOCALIZAR → LOCALIZADO.
-- **Sin datos falsos:** eliminada toda simulación BLE automática.
+Para probar en dispositivo físico con módulos nativos (SQLite, SMS, GPS):
 
-Escanea el QR con **Expo Go** en Android/iOS.
+```powershell
+npm run run:android
+```
 
-## Arquitectura (Clean Architecture)
+---
+
+## Arquitectura
 
 ```
 src/
-├── domain/          # Entidades y contratos (sin React)
-├── infrastructure/  # Repositorio en memoria + simulación malla
-└── screens/         # UI táctica HomeScreen
+├── config/OperacionConfig.ts
+├── domain/entities, repositories, services
+├── infrastructure/
+│   ├── database/SQLiteDatabase.ts
+│   ├── repositories/SQLiteReporteRepository.ts
+│   └── services/Location, Navigation, SmsDirect
+├── screens/HomeScreen.tsx
+└── theme/BrutalistTheme.ts
 ```
 
-## Despliegue Vercel
+---
 
-1. Conectar repo `dynastymarketinga/MeshnetworkVenezuela` en [vercel.com](https://vercel.com)
-2. Framework: **Other**
-3. Build Command: *(vacío)*
-4. Output Directory: `.`
+## Despliegue web (Vercel)
 
-El archivo `vercel.json` sirve `index.html` como página principal.
+Framework: **Other** · Output: `.` · `vercel.json` sirve `index.html`.
+
+La web usa `localStorage` como demo; la operación real es el **APK**.
+
+---
 
 ## Licencia
 
-Uso interno — Dynasty Marketing / MeshnetworkVenezuela.
+Uso operativo — Mesh Network Venezuela / La Guaira.
