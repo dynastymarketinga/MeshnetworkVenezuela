@@ -870,7 +870,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 </Text>
               ) : null}
               <Text style={styles.smsMeta}>
-                Comando: <Text style={styles.smsMetaStrong}>{OperacionConfig.COMANDO_CENTRAL_SMS}</Text>
+                Comparta sus reportes con otra brigada: copie la cadena y péguela en un mensaje.
                 {'\n'}
                 Protocolo {OperacionConfig.VERSION_DATOS} · Lotes MNv2|1/3|... (sin foto)
               </Text>
@@ -886,27 +886,6 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
               >
                 <Text style={styles.btnCopiarCadenaText}>Copiar cadena comprimida</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.btnComando, enviandoSms && styles.btnDisabled]}
-                onPress={enviarAlComandoCentral}
-                disabled={enviandoSms}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.btnComandoText}>
-                  {enviandoSms ? 'Abriendo SMS…' : '🚨 ENVIAR AL COMANDO'}
-                </Text>
-              </TouchableOpacity>
-              {lotesPendientes.length > 1 && indiceLote < lotesPendientes.length - 1 ? (
-                <TouchableOpacity
-                  style={styles.btnSiguienteLote}
-                  onPress={enviarSiguienteLote}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.btnSiguienteLoteText}>
-                    Enviar lote {indiceLote + 2}/{lotesPendientes.length}
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
               <TextInput
                 style={styles.syncInput}
                 value={cadenaImport}
