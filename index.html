@@ -471,6 +471,7 @@
     .gps-manual { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--muted); }
     .gps-manual p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
     .gps-manual .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hub-resultado { font-family: 'Instrument Sans', sans-serif; font-size: 0.85rem; line-height: 1.55; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -486,7 +487,7 @@
         <p class="kicker">Unidad de registro táctico · La Guaira</p>
         <h1 class="titulo-editorial">Mesh<br />Network</h1>
         <div class="divider"></div>
-        <span class="badge">MNv2.1 · GPS · SMS · Hub</span>
+        <span class="badge">Rescate en La Guaira · GPS · SMS</span>
         <div class="panel" style="margin-top:24px">
           <p class="panel-kicker">01 — Operación activa</p>
           <h2 class="panel-title">Red de rescate local</h2>
@@ -607,7 +608,7 @@
         <span class="lista-count" id="count">0 activos</span>
       </div>
       <div class="field-box" style="margin-bottom:12px">
-        <label for="busqueda-tactica">Buscador táctico (persona / zona)</label>
+        <label for="busqueda-tactica">Buscar persona o zona</label>
         <input id="busqueda-tactica" type="search" placeholder="Buscar por nombre, cédula o sector…" />
       </div>
       <div class="lista" id="lista">
@@ -629,53 +630,46 @@
 
       <div id="tab-hub" class="tab-panel">
         <div class="panel">
-          <p class="panel-kicker">05 — Hub de integración</p>
-          <h2 class="panel-title">API centralizada (Vercel KV)</h2>
+          <p class="panel-kicker">05 — Red compartida</p>
+          <h2 class="panel-title">¿Alguien ya fue registrado?</h2>
           <p class="panel-desc">
-            Para desarrolladores de otras plataformas. La APK de campo opera offline; este Hub unifica registros cuando hay internet.
+            Otras páginas de ayuda (desaparecidos, refugios) pueden consultar aquí si una brigada en campo ya anotó a esa persona.
+            <strong> Los rescatistas en la calle deben usar la app instalada en el teléfono.</strong>
           </p>
-          <p class="panel-desc" style="margin-top:12px;font-family:monospace;font-size:0.8rem" id="hub-url-display"></p>
         </div>
         <div class="field-box">
-          <label>Buscar persona en Hub (GET ?action=buscar)</label>
-          <input id="hub-buscar-query" type="text" placeholder="Nombre de desaparecido…" />
-          <button type="button" class="btn-action btn-copy" id="btn-hub-buscar" style="margin-top:8px">Buscar en Hub</button>
-          <pre class="sms-box" id="hub-buscar-out" style="max-height:160px;overflow:auto;margin-top:8px">—</pre>
+          <label for="hub-buscar-query">Buscar por nombre o cédula</label>
+          <input id="hub-buscar-query" type="text" placeholder="Ej: María López" />
+          <button type="button" class="btn-action btn-copy" id="btn-hub-buscar" style="margin-top:8px">Buscar en la red</button>
+          <pre class="sms-box hub-resultado" id="hub-buscar-out" style="max-height:200px;overflow:auto;margin-top:8px">Escriba un nombre y toque «Buscar en la red».</pre>
         </div>
         <div class="field-box">
-          <label>Mapa de zonas afectadas (GET ?action=zonas)</label>
-          <button type="button" class="btn-action btn-fusionar" id="btn-hub-zonas">Ver zonas</button>
-          <pre class="sms-box" id="hub-zonas-out" style="max-height:200px;overflow:auto;margin-top:8px">—</pre>
+          <label>Zonas con más damnificados</label>
+          <button type="button" class="btn-action btn-fusionar" id="btn-hub-zonas">Ver zonas afectadas</button>
+          <pre class="sms-box hub-resultado" id="hub-zonas-out" style="max-height:200px;overflow:auto;margin-top:8px">Toque el botón para ver el resumen por sector.</pre>
         </div>
         <div class="field-box">
-          <label>Consultar base maestra (GET)</label>
-          <button type="button" class="btn-action btn-copy" id="btn-hub-consultar">Consultar Hub</button>
-          <pre class="sms-box" id="hub-consultar-out" style="max-height:200px;overflow:auto">[]</pre>
+          <label>Todos los reportes en la red</label>
+          <button type="button" class="btn-action btn-copy" id="btn-hub-consultar">Ver listado completo</button>
+          <pre class="sms-box hub-resultado" id="hub-consultar-out" style="max-height:200px;overflow:auto">Toque «Ver listado completo» para consultar.</pre>
         </div>
-        <div class="field-box">
-          <label>Registrar en Hub (POST) — JSON ReporteEmergencia</label>
-          <textarea class="sync-input" id="hub-registrar-json" rows="6" placeholder='{"id":"EXT-001","fuente_origen":"MiApp",...}'></textarea>
-          <button type="button" class="btn-action btn-fusionar" id="btn-hub-registrar">Registrar en Hub</button>
-          <pre class="sms-box" id="hub-registrar-out" style="margin-top:8px">—</pre>
-        </div>
-        <div class="field-box">
-          <label>Ejemplo fetch (copiar)</label>
-          <pre class="sms-box" id="hub-fetch-ejemplo" style="font-size:0.7rem;white-space:pre-wrap"></pre>
-        </div>
+        <p class="panel-desc" style="margin-top:8px;font-size:0.85rem;color:var(--muted)">
+          Si administra otra página de ayuda y necesita conectarla, escríbanos — esta sección es para coordinación entre equipos, no para registrar en campo.
+        </p>
       </div>
     </div>
 
     <aside class="sidebar tab-panel" id="tab-sms">
-      <h2>Enlace SMS</h2>
+      <h2>Compartir por SMS</h2>
       <p class="sms-meta">
-        Comando: <strong id="comando-num">04140000000</strong><br />
-        Llaves: i o x n e g u lt lg s c r m t · Lotes MNv2|1/3|...
+        Número del comando: <strong id="comando-num">04140000000</strong><br />
+        Si son muchos reportes, el mensaje puede salir en varias partes — envíe todas.
       </p>
-      <div class="sms-box" id="sms-output">[]</div>
-      <button type="button" class="btn-action btn-copy" id="btn-copy">Copiar cadena comprimida</button>
+      <div class="sms-box" id="sms-output">Sin reportes todavía</div>
+      <button type="button" class="btn-action btn-copy" id="btn-copy">Copiar mensaje para enviar</button>
       <button type="button" class="btn-action btn-comando" id="btn-comando">Enviar al comando central</button>
-      <textarea class="sync-input" id="import-input" placeholder="Pegue cadena JSON o lotes MNv1|1/3|..."></textarea>
-      <button type="button" class="btn-action btn-fusionar" id="btn-fusionar">Pegar y fusionar</button>
+      <textarea class="sync-input" id="import-input" placeholder="Pegue aquí el mensaje de texto que recibió de otra brigada…"></textarea>
+      <button type="button" class="btn-action btn-fusionar" id="btn-fusionar">Agregar reportes recibidos</button>
     </aside>
   </div>
 
@@ -683,9 +677,9 @@
     <button type="button" class="nav-btn active" data-tab="inicio">Inicio</button>
     <button type="button" class="nav-btn" data-tab="registro">Registro</button>
     <button type="button" class="nav-btn" data-tab="reportes">Reportes</button>
-    <button type="button" class="nav-btn" data-tab="sms">Enlace</button>
+    <button type="button" class="nav-btn" data-tab="sms">Mensajes</button>
     <button type="button" class="nav-btn" data-tab="comando">Comando</button>
-    <button type="button" class="nav-btn" data-tab="hub">Hub</button>
+    <button type="button" class="nav-btn" data-tab="hub">Red compartida</button>
   </nav>
 
   <div class="toast" id="toast"></div>
@@ -1046,7 +1040,9 @@
       const q = $('busqueda-tactica')?.value || '';
       const visibles = filtrarReportes(reportes, q);
       $('count').textContent = `${visibles.length} activos`;
-      $('sms-output').textContent = repo.comprimirParaSMS();
+      $('sms-output').textContent = reportes.length
+        ? `${reportes.length} reporte(s) listos para enviar por mensaje de texto`
+        : 'Sin reportes todavía';
       const criticos = reportes.filter((r) => r.estado_actual === 'CRITICO').length;
       const localizados = reportes.filter((r) => r.estado_actual === 'LOCALIZADO').length;
       const zonas = new Set(reportes.map((r) => r.ciudad)).size;
@@ -1212,7 +1208,7 @@
         document.execCommand('copy');
         document.body.removeChild(ta);
       }
-      toast(`📲 ${cadena.length} caracteres copiados`);
+      toast(`📲 Mensaje copiado (${cadena.length} caracteres)`);
     });
 
     $('btn-comando').addEventListener('click', () => {
@@ -1226,41 +1222,65 @@
 
     $('btn-fusionar').addEventListener('click', () => {
       const texto = $('import-input').value;
-      if (!texto.trim()) { toast('⚠ Pegue una cadena SMS primero'); return; }
+      if (!texto.trim()) { toast('⚠ Pegue primero el mensaje que recibió'); return; }
       try {
         const r = repo.importarYFusionar(texto);
-        toast(`✓ Fusionados: ${r.nuevos} nuevos de ${r.total} items`);
+        toast(`✓ Se agregaron ${r.nuevos} reporte(s) nuevos`);
         $('import-input').value = '';
       } catch (e) {
-        toast('⚠ ' + (e.message || 'Error al parsear SMS'));
+        toast('⚠ No se pudo leer el mensaje. Verifique que esté completo.');
       }
     });
 
     const hubUrl = `${location.origin}${CONFIG.HUB_BASE}`;
-    const hubUrlEl = $('hub-url-display');
-    if (hubUrlEl) hubUrlEl.textContent = hubUrl;
-    const hubEjemplo = $('hub-fetch-ejemplo');
-    if (hubEjemplo) {
-      hubEjemplo.textContent =
-        `// Consultar duplicados antes de guardar\n` +
-        `const res = await fetch('${hubUrl}?action=consultar');\n` +
-        `const { reportes } = await res.json();\n\n` +
-        `// Registrar nuevo reporte\n` +
-        `await fetch('${hubUrl}?action=registrar', {\n` +
-        `  method: 'POST',\n` +
-        `  headers: { 'Content-Type': 'application/json' },\n` +
-        `  body: JSON.stringify({ reportes: [miReporte] })\n` +
-        `});`;
+
+    function mensajeErrorHub(data) {
+      if (data?.code === 'KV_NO_CONFIGURADO') {
+        return 'La red compartida aún no está activada en el servidor. Los reportes de la app se guardan en el teléfono igualmente.';
+      }
+      return data?.error || 'No se pudo consultar. Intente más tarde.';
+    }
+
+    function formatearCoincidencias(data) {
+      if (data?.code) return mensajeErrorHub(data);
+      const lista = data.coincidencias || [];
+      if (!lista.length) return `No hay registros de «${data.query || ''}» en la red compartida.`;
+      return lista.map((r, i) => {
+        const censo = (r.censo_personas || []).length
+          ? `\n   Personas en el grupo: ${r.censo_personas.join(', ')}`
+          : '';
+        const hogar = r.tiene_hogar_actual === false ? '\n   ⚠ Sin vivienda — necesita refugio' : '';
+        return `${i + 1}. ${r.nombre_completo} — ${r.estado_actual}\n   ${r.ubicacion_exacta || r.ciudad || 'Sin dirección'}${hogar}${censo}`;
+      }).join('\n\n');
+    }
+
+    function formatearZonas(data) {
+      if (data?.code) return mensajeErrorHub(data);
+      const zonas = data.zonas || [];
+      if (!zonas.length) return 'Aún no hay datos por zona en la red compartida.';
+      return zonas.map((z, i) =>
+        `${i + 1}. ${z.tag}\n   Reportes: ${z.total} · Sin vivienda: ${z.sin_vivienda} · Críticos: ${z.criticos}`
+      ).join('\n\n');
+    }
+
+    function formatearListado(data) {
+      if (data?.code) return mensajeErrorHub(data);
+      const lista = data.reportes || [];
+      if (!lista.length) return 'No hay reportes en la red compartida todavía.';
+      return `Total: ${lista.length} reporte(s)\n\n` + lista.slice(0, 20).map((r, i) =>
+        `${i + 1}. ${r.nombre_completo} (${r.estado_actual}) — ${r.ciudad || 'La Guaira'}`
+      ).join('\n') + (lista.length > 20 ? `\n\n… y ${lista.length - 20} más` : '');
     }
 
     $('btn-hub-consultar').addEventListener('click', async () => {
       try {
         const res = await fetch(`${hubUrl}?action=consultar`);
         const data = await res.json();
-        $('hub-consultar-out').textContent = JSON.stringify(data, null, 2);
-        toast(`Hub: ${data.total ?? 0} registros`);
+        $('hub-consultar-out').textContent = formatearListado(data);
+        toast(data.total ? `Hay ${data.total} reporte(s) en la red` : 'Listado consultado');
       } catch (e) {
-        toast('⚠ Error consultando Hub');
+        $('hub-consultar-out').textContent = 'Sin conexión. Verifique su internet.';
+        toast('⚠ No se pudo consultar');
       }
     });
 
@@ -1270,10 +1290,11 @@
       try {
         const res = await fetch(`${hubUrl}?action=buscar&query=${encodeURIComponent(query)}`);
         const data = await res.json();
-        $('hub-buscar-out').textContent = JSON.stringify(data, null, 2);
-        toast(`Hub: ${data.total ?? 0} coincidencia(s)`);
+        $('hub-buscar-out').textContent = formatearCoincidencias(data);
+        toast(data.total ? `Se encontró ${data.total} coincidencia(s)` : 'Sin coincidencias');
       } catch (e) {
-        toast('⚠ Error buscando en Hub');
+        $('hub-buscar-out').textContent = 'Sin conexión. Verifique su internet.';
+        toast('⚠ No se pudo buscar');
       }
     });
 
@@ -1281,28 +1302,11 @@
       try {
         const res = await fetch(`${hubUrl}?action=zonas`);
         const data = await res.json();
-        $('hub-zonas-out').textContent = JSON.stringify(data, null, 2);
-        toast(`Hub: ${data.total ?? 0} zona(s)`);
+        $('hub-zonas-out').textContent = formatearZonas(data);
+        toast(data.total ? `${data.total} zona(s) con reportes` : 'Zonas consultadas');
       } catch (e) {
-        toast('⚠ Error consultando zonas');
-      }
-    });
-
-    $('btn-hub-registrar').addEventListener('click', async () => {
-      const raw = $('hub-registrar-json').value.trim();
-      if (!raw) { toast('⚠ Pegue JSON del reporte'); return; }
-      try {
-        const body = JSON.parse(raw);
-        const res = await fetch(`${hubUrl}?action=registrar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body.reportes ? body : { reportes: [body] }),
-        });
-        const data = await res.json();
-        $('hub-registrar-out').textContent = JSON.stringify(data, null, 2);
-        toast(res.ok ? '✓ Registrado en Hub' : '⚠ ' + (data.error || 'Error'));
-      } catch (e) {
-        toast('⚠ JSON inválido o error de red');
+        $('hub-zonas-out').textContent = 'Sin conexión. Verifique su internet.';
+        toast('⚠ No se pudo cargar las zonas');
       }
     });
 
