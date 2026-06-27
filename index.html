@@ -45,7 +45,8 @@
     }
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
-      .sidebar { border-left: none; border-top: 1px solid #222; }
+      .sidebar { border-left: none; border-top: 2px solid var(--ink); margin: 0 20px 80px; }
+      #tab-sms.active { margin: 0 20px 80px; }
     }
     .main { padding: 24px 20px 80px; overflow-y: auto; max-width: 720px; margin: 0 auto; }
     .sidebar {
@@ -156,202 +157,306 @@
     .tab-panel.active { display: block; }
     #tab-sms { display: none; }
     #tab-sms.active { display: flex; flex-direction: column; }
-    .section-label {
-      color: #00AEEF;
-      font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      margin-bottom: 12px;
+    #tab-sms.active {
+      display: flex;
+      flex-direction: column;
+      background: var(--paper-up);
+      border: 2px solid var(--ink);
+      padding: 20px;
+      margin: 0 20px 80px;
+      box-shadow: var(--shadow);
+      gap: 12px;
     }
     .field-box {
-      background: #0a0a0a;
-      border: 1px solid #222;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 10px;
+      background: var(--paper-up);
+      border: 2px solid var(--ink);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
     }
     .field-box label {
       display: block;
-      color: #888;
-      font-size: 0.7rem;
-      font-weight: 600;
+      color: var(--ink);
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     input, textarea {
       width: 100%;
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 4px;
-      color: #fff;
-      font-size: 0.95rem;
-      padding: 10px 12px;
+      background: var(--bg);
+      border: none;
+      border-bottom: 2px solid var(--ink);
+      color: var(--ink);
+      font-size: 1rem;
+      font-family: inherit;
+      padding: 10px 0;
       outline: none;
     }
-    input:focus, textarea:focus { border-color: #00AEEF; }
-    textarea { min-height: 60px; resize: vertical; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    input::placeholder, textarea::placeholder { color: var(--light); }
+    input:focus, textarea:focus {
+      border-bottom-color: var(--blue-dark);
+      background: var(--paper);
+    }
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      border: 1px solid #C4BDB4;
+      border-bottom: 2px solid var(--ink);
+      padding: 12px;
+      margin-top: 4px;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip {
       padding: 8px 14px;
-      border-radius: 4px;
-      border: 1px solid #222;
-      background: #111;
-      color: #888;
+      border: 2px solid #C4BDB4;
+      background: var(--bg);
+      color: var(--muted);
       font-weight: 700;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, border-color 0.15s;
     }
-    .chip.active { background: #00AEEF; border-color: #00AEEF; color: #000; }
+    .chip:hover { border-color: var(--ink); color: var(--ink); }
+    .chip.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--paper-up);
+    }
     .estado-btn {
       flex: 1;
       min-width: 30%;
-      padding: 10px 6px;
-      border-radius: 4px;
-      border: 1px solid #222;
-      background: #111;
-      color: #888;
-      font-size: 0.65rem;
+      padding: 12px 6px;
+      border: 2px solid #C4BDB4;
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 0.58rem;
       font-weight: 800;
+      letter-spacing: 0.04em;
       cursor: pointer;
       text-align: center;
+      font-family: inherit;
     }
-    .estado-btn.active { color: #000; }
+    .estado-btn.active { color: var(--ink); font-weight: 900; }
     .gps-line {
-      color: #00FF00;
+      color: var(--blue-dark);
       font-size: 0.8rem;
-      font-weight: 700;
-      margin-top: 8px;
-      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      margin-top: 12px;
+      font-family: ui-monospace, monospace;
     }
+    .btn-primary {
+      width: 100%;
+      background: var(--ink);
+      border: 2px solid var(--ink);
+      color: var(--paper-up);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 16px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      font-family: inherit;
+    }
+    .btn-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
     .btn-emergencia {
       width: 100%;
-      background: #FF0000;
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 900;
+      background: var(--critico);
+      border: 2px solid var(--ink);
+      color: var(--paper-up);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       padding: 18px;
       cursor: pointer;
-      margin: 8px 0 10px;
+      margin: 8px 0 24px;
+      box-shadow: var(--shadow);
+      font-family: inherit;
     }
+    .btn-emergencia:hover { opacity: 0.92; }
     .btn-gps {
       width: 100%;
-      background: #111;
-      border: 2px solid #00FF00;
-      border-radius: 8px;
-      color: #00FF00;
-      font-size: 0.85rem;
+      background: var(--blue-dark);
+      border: 2px solid var(--ink);
+      color: var(--paper-up);
+      font-size: 0.68rem;
       font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
       padding: 14px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-top: 14px;
+      font-family: inherit;
+      box-shadow: var(--shadow);
     }
+    .btn-gps:hover { background: var(--ink); }
     .lista-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+      align-items: baseline;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--ink);
     }
-    .lista-titulo { font-size: 0.9rem; font-weight: 800; }
-    .lista-count { color: #00AEEF; font-size: 0.8rem; font-weight: 700; }
-    .lista { display: flex; flex-direction: column; gap: 10px; }
+    .lista-titulo {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .lista-count {
+      color: var(--blue-dark);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .lista { display: flex; flex-direction: column; gap: 12px; }
     .card {
-      background: #0a0a0a;
-      border: 1px solid #222;
-      border-left-width: 4px;
-      border-radius: 6px;
-      padding: 14px;
+      background: var(--paper-up);
+      border: 2px solid var(--ink);
+      border-left-width: 5px;
+      padding: 16px;
+      box-shadow: var(--shadow);
     }
     .card-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
-    .card-estado { font-size: 0.7rem; font-weight: 900; }
-    .card-id { color: #555; font-size: 0.65rem; font-family: monospace; }
-    .card-nombre { font-size: 0.9rem; font-weight: 700; }
-    .card-ubicacion { color: #ccc; font-size: 0.85rem; margin-top: 4px; }
-    .card-gps { color: #00AEEF; font-size: 0.75rem; margin-top: 4px; font-family: monospace; }
-    .card-notas { color: #888; font-size: 0.75rem; margin-top: 6px; font-style: italic; }
-    .card-time { color: #555; font-size: 0.65rem; margin-top: 8px; }
+    .card-estado {
+      font-size: 0.58rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .card-id { color: var(--light); font-size: 0.6rem; font-family: ui-monospace, monospace; }
+    .card-nombre { font-size: 1rem; font-weight: 800; color: var(--ink); }
+    .card-ubicacion { color: var(--muted); font-size: 0.85rem; margin-top: 6px; line-height: 1.5; }
+    .card-gps {
+      color: var(--blue-dark);
+      font-size: 0.75rem;
+      margin-top: 6px;
+      font-family: ui-monospace, monospace;
+    }
+    .card-notas { color: var(--muted); font-size: 0.8rem; margin-top: 8px; font-style: italic; line-height: 1.5; }
+    .card-time { color: var(--light); font-size: 0.65rem; margin-top: 10px; }
     .btn-navegar {
       display: block;
       width: 100%;
-      margin-top: 10px;
-      background: #003366;
-      border: 1px solid #00AEEF;
-      border-radius: 6px;
-      color: #00AEEF;
-      font-size: 0.8rem;
-      font-weight: 900;
-      padding: 10px;
+      margin-top: 12px;
+      background: var(--bg);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 11px;
       text-align: center;
       text-decoration: none;
+      font-family: inherit;
     }
-    .empty { color: #555; text-align: center; padding: 30px; font-size: 0.85rem; }
+    .btn-navegar:hover { background: var(--paper); }
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 48px 24px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      background: var(--paper-up);
+      border: 2px dashed #C4BDB4;
+    }
     .sidebar h2 {
-      color: #00AEEF;
-      font-size: 0.75rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-    .sms-meta { color: #555; font-size: 0.7rem; line-height: 1.4; }
-    .sms-box {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 6px 6px 0 0;
-      color: #00FF00;
-      font-family: 'Courier New', monospace;
       font-size: 0.65rem;
-      padding: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue-dark);
+      margin-bottom: 4px;
+    }
+    .sms-meta { color: var(--muted); font-size: 0.78rem; line-height: 1.55; }
+    .sms-meta strong { color: var(--ink); font-weight: 800; }
+    .sms-box {
+      background: var(--bg);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      font-family: ui-monospace, monospace;
+      font-size: 0.65rem;
+      padding: 14px;
       overflow-y: auto;
       word-break: break-all;
       min-height: 100px;
-      max-height: 120px;
+      max-height: 140px;
+      line-height: 1.5;
+      box-shadow: inset 2px 2px 0 rgba(28,28,28,0.06);
     }
     .sync-input {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 4px;
-      color: #00FF00;
-      font-family: 'Courier New', monospace;
+      width: 100%;
+      background: var(--bg);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      font-family: ui-monospace, monospace;
       font-size: 0.65rem;
-      padding: 10px;
-      min-height: 72px;
+      padding: 12px;
+      min-height: 88px;
       resize: vertical;
+      line-height: 1.5;
+      box-shadow: inset 2px 2px 0 rgba(28,28,28,0.06);
     }
+    .sync-input::placeholder { color: var(--light); }
     .btn-action {
       width: 100%;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 900;
-      padding: 12px;
+      border: 2px solid var(--ink);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 14px;
       cursor: pointer;
-      letter-spacing: 0.3px;
+      font-family: inherit;
+      box-shadow: var(--shadow);
     }
-    .btn-comando { background: #8B0000; border: 2px solid #FF0000; color: #fff; }
-    .btn-copy { background: #111; border: 1px solid #222; color: #00FF00; border-radius: 0 0 6px 6px; }
-    .btn-fusionar { background: #003300; border: 1px solid #00FF00; color: #00FF00; }
+    .btn-comando {
+      background: var(--critico);
+      color: var(--paper-up);
+      margin: 4px 0;
+    }
+    .btn-comando:hover { opacity: 0.92; }
+    .btn-copy {
+      background: var(--paper-up);
+      color: var(--ink);
+    }
+    .btn-copy:hover { background: var(--paper); }
+    .btn-fusionar {
+      background: var(--blue-dark);
+      color: var(--paper-up);
+    }
+    .btn-fusionar:hover { background: var(--ink); }
     .toast {
       position: fixed;
-      bottom: 20px;
+      bottom: 72px;
       left: 50%;
       transform: translateX(-50%);
-      background: #00AEEF;
-      color: #000;
+      background: var(--ink);
+      color: var(--paper-up);
       font-weight: 700;
+      font-size: 0.85rem;
       padding: 12px 24px;
-      border-radius: 8px;
       opacity: 0;
       transition: opacity 0.3s;
       pointer-events: none;
-      z-index: 999;
+      z-index: 10000;
+      border: 2px solid var(--ink);
+      box-shadow: var(--shadow);
     }
     .toast.show { opacity: 1; }
   </style>
@@ -429,7 +534,7 @@
         <label>Estado actual (prioridad: CRÍTICO → POR LOCALIZAR → LOCALIZADO)</label>
         <div class="chips" id="estado-chips">
           <button type="button" class="estado-btn" data-s="CRITICO">CRITICO</button>
-          <button type="button" class="estado-btn active" data-s="POR LOCALIZAR" style="background:#FF8800;border-color:#FF8800;color:#000">POR LOCALIZAR</button>
+          <button type="button" class="estado-btn active" data-s="POR LOCALIZAR">POR LOCALIZAR</button>
           <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
         </div>
       </div>
@@ -711,22 +816,25 @@
       });
     });
 
-    document.querySelectorAll('#estado-chips .estado-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#estado-chips .estado-btn').forEach((b) => {
-          b.classList.remove('active');
-          b.style.background = '';
-          b.style.borderColor = '';
-          b.style.color = '';
-        });
-        btn.classList.add('active');
-        estadoSel = btn.dataset.s;
-        const c = BORDE[estadoSel];
-        btn.style.background = c;
-        btn.style.borderColor = c;
-        btn.style.color = '#000';
+    function aplicarEstadoActivo(btn) {
+      document.querySelectorAll('#estado-chips .estado-btn').forEach((b) => {
+        b.classList.remove('active');
+        b.style.background = '';
+        b.style.borderColor = '';
+        b.style.color = '';
       });
+      btn.classList.add('active');
+      estadoSel = btn.dataset.s;
+      const c = BORDE[estadoSel];
+      btn.style.background = c;
+      btn.style.borderColor = c;
+      btn.style.color = '#FAF7F2';
+    }
+
+    document.querySelectorAll('#estado-chips .estado-btn').forEach((btn) => {
+      btn.addEventListener('click', () => aplicarEstadoActivo(btn));
     });
+    aplicarEstadoActivo(document.querySelector('#estado-chips .estado-btn.active'));
 
     function toast(msg) {
       const t = $('toast');
@@ -785,18 +893,18 @@
         toast('⚠ GPS no disponible en este navegador');
         return;
       }
-      $('btn-gps').textContent = 'OBTENIENDO GPS...';
+      $('btn-gps').textContent = 'Obteniendo GPS…';
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           latitud = pos.coords.latitude;
           longitud = pos.coords.longitude;
           $('gps-display').hidden = false;
           $('gps-display').textContent = 'GPS activo: ' + formatearCoordenadas(latitud, longitud);
-          $('btn-gps').textContent = '🛰️ CAPTURAR COORDENADAS GPS';
-          toast('🛰️ GPS capturado');
+          $('btn-gps').textContent = 'Capturar coordenadas GPS';
+          toast('GPS capturado');
         },
         (err) => {
-          $('btn-gps').textContent = '🛰️ CAPTURAR COORDENADAS GPS';
+          $('btn-gps').textContent = 'Capturar coordenadas GPS';
           toast('⚠ ' + (err.message || 'No se pudo obtener GPS'));
         },
         { enableHighAccuracy: true, timeout: 30000 }
