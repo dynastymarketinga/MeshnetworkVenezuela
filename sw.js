@@ -1,12 +1,13 @@
 'use strict';
 
-const CACHE_VERSION = 'mesh-v1';
+const CACHE_VERSION = 'mesh-v2';
 const CACHE_SHELL = CACHE_VERSION + '-shell';
 const CACHE_RUNTIME = CACHE_VERSION + '-runtime';
 
 const PRECACHE_URLS = [
   '/',
   '/index.html',
+  '/admin.html',
   '/manifest.json',
   '/assets/logo.jpg',
   'https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap',
@@ -24,6 +25,7 @@ function isNavigationRequest(request) {
 function isStaticAsset(url) {
   if (url.origin === self.location.origin) {
     return url.pathname === '/index.html' ||
+      url.pathname === '/admin.html' ||
       url.pathname === '/manifest.json' ||
       url.pathname.startsWith('/assets/');
   }
@@ -101,15 +103,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isNavigationRequest(request)) {
+    const cacheKey = url.pathname === '/' ? '/index.html' : url.pathname;
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response && response.status === 200) {
-            caches.open(CACHE_SHELL).then((cache) => cache.put('/index.html', response.clone()));
+            const copia = response.clone();
+            caches.open(CACHE_SHELL).then((cache) => cache.put(cacheKey, copia));
           }
           return response;
         })
-        .catch(() => navigationFallback())
+        .catch(async () => (await caches.match(cacheKey)) || navigationFallback())
     );
     return;
   }

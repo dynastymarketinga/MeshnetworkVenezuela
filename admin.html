@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel administrativo — Mesh Network Venezuela</title>
+  <meta name="theme-color" content="#2BA4DB" />
+  <link rel="apple-touch-icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --ink: #14181C;
+      --muted: #1E87BC;
+      --light: #8A95A2;
+      --paper: #EEF5FA;
+      --paper-up: #F7FAFC;
+      --blue: #2BA4DB;
+      --border-light: #CBD8E2;
+      --shadow: 5px 5px 0 rgba(43, 164, 219, 0.16);
+      --critico: #D62F2B;
+      --alerta: #C97A00;
+      --ok: #1E9E57;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Instrument Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 16px;
+      border-bottom: 2px solid var(--border-light);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+    .kicker { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+    h1 { font-family: 'Libre Baskerville', Georgia, serif; font-size: 1.9rem; letter-spacing: -0.02em; }
+    .top-meta { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 0.78rem; color: var(--muted); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); display: inline-block; box-shadow: 0 0 8px var(--ok); }
+    .dot.off { background: var(--critico); box-shadow: 0 0 8px var(--critico); }
+    button, select, input {
+      font-family: inherit;
+    }
+    .btn {
+      border: 2px solid var(--muted);
+      background: var(--paper-up);
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover { border-color: var(--blue); }
+    .btn-toggle.on { background: var(--muted); color: var(--bg); }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat {
+      background: var(--paper-up);
+      border: 2px solid var(--border-light);
+      padding: 14px 12px;
+      box-shadow: var(--shadow);
+    }
+    .stat .n { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; }
+    .stat .l { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+    .n-critico { color: var(--critico); }
+    .n-ok { color: var(--ok); }
+    .n-alerta { color: var(--alerta); }
+
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .filters input[type="search"], .filters select {
+      width: 100%;
+      background: var(--paper);
+      border: 2px solid var(--border-light);
+      color: var(--ink);
+      padding: 11px 12px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .filters input:focus, .filters select:focus { border-color: var(--blue); }
+    .check { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--ink); background: var(--paper); border: 2px solid var(--border-light); padding: 0 12px; }
+    .check input { width: 18px; height: 18px; accent-color: var(--muted); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--paper-up);
+      border: 2px solid var(--border-light);
+      border-left-width: 5px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 12px;
+    }
+    .card.e-CRITICO { border-left-color: var(--critico); }
+    .card.e-POR.LOCALIZAR, .card.e-PORLOCALIZAR { border-left-color: var(--alerta); }
+    .card.e-LOCALIZADO { border-left-color: var(--ok); }
+    .card-foto {
+      width: 86px; height: 86px; flex-shrink: 0;
+      object-fit: cover; border: 2px solid var(--muted); cursor: pointer; background: var(--paper);
+    }
+    .card-foto.placeholder { display: flex; align-items: center; justify-content: center; color: var(--light); font-size: 0.6rem; text-align: center; cursor: default; }
+    .card-body { flex: 1; min-width: 0; }
+    .card-estado { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .c-CRITICO { color: var(--critico); }
+    .c-ALERTA { color: var(--alerta); }
+    .c-OK { color: var(--ok); }
+    .card-nombre { font-size: 1.02rem; font-weight: 800; margin-top: 2px; }
+    .card-sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    .card-gps { font-family: ui-monospace, monospace; font-size: 0.72rem; color: var(--blue); margin-top: 4px; }
+    .card-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 0.58rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 7px; border: 1px solid var(--border-light); color: var(--light); }
+    .tag.flag { color: var(--critico); border-color: var(--critico); }
+    .card-meta { font-size: 0.62rem; color: var(--light); margin-top: 10px; line-height: 1.5; }
+    .card-acts { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .card-acts a { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; text-decoration: none; padding: 7px 10px; border: 2px solid var(--border-light); color: var(--ink); }
+    .card-acts a:hover { border-color: var(--blue); }
+
+    .msg { padding: 40px 20px; text-align: center; color: var(--muted); border: 2px dashed var(--border-light); line-height: 1.6; }
+    .msg.error { color: var(--critico); border-color: var(--critico); }
+
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.93); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 100; }
+    .lightbox.show { display: flex; }
+    .lightbox img { max-width: 100%; max-height: 90vh; border: 2px solid var(--muted); }
+    .lightbox-close { position: fixed; top: 12px; right: 18px; font-size: 2.2rem; color: #fff; background: none; border: none; cursor: pointer; }
+
+    .gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 200; }
+    .gate-box { width: 100%; max-width: 360px; border: 2px solid var(--muted); background: var(--paper-up); padding: 28px 22px; box-shadow: var(--shadow); }
+    .gate-box h2 { font-family: 'Libre Baskerville', serif; font-size: 1.3rem; margin-bottom: 6px; }
+    .gate-box p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+    .gate-box input { width: 100%; background: var(--bg); border: 2px solid var(--border-light); color: var(--ink); padding: 12px; font-size: 1rem; outline: none; margin-bottom: 12px; }
+    .gate-box input:focus { border-color: var(--blue); }
+    .gate-box .btn { width: 100%; background: var(--muted); color: var(--bg); border-color: var(--muted); }
+    .gate-err { color: var(--critico); font-size: 0.8rem; margin-top: 8px; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="gate" id="gate">
+    <div class="gate-box">
+      <img class="brand-logo" src="assets/logo.png" alt="Mesh Network Venezuela" />
+      <p class="kicker">Mesh Network · La Guaira</p>
+      <h2>Panel administrativo</h2>
+      <p>Acceso restringido a coordinación. Ingrese el código de acceso.</p>
+      <input type="password" id="gate-pin" placeholder="Código de acceso" autocomplete="off" />
+      <button type="button" class="btn" id="gate-btn">Entrar</button>
+      <div class="gate-err" id="gate-err"></div>
+    </div>
+  </div>
+
+  <div class="wrap" id="app" hidden>
+    <div class="top">
+      <div>
+        <p class="kicker">Coordinación de rescate · La Guaira</p>
+        <h1>Panel de registros</h1>
+      </div>
+      <div class="top-meta">
+        <span><span class="dot" id="conn-dot"></span> <span id="conn-text">conectando…</span></span>
+        <span id="updated">—</span>
+        <button type="button" class="btn btn-toggle on" id="auto-btn">Auto 20s</button>
+        <button type="button" class="btn" id="refresh-btn">Actualizar</button>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="filters">
+      <input type="search" id="f-q" placeholder="Buscar nombre, cédula, zona…" />
+      <select id="f-estado">
+        <option value="">Todos los estados</option>
+        <option value="CRITICO">Crítico</option>
+        <option value="POR LOCALIZAR">Por localizar</option>
+        <option value="LOCALIZADO">Localizado</option>
+      </select>
+      <select id="f-tipo">
+        <option value="">Todos los tipos</option>
+        <option value="PERSONA_ATRAPADA">Persona atrapada</option>
+        <option value="INFRAESTRUCTURA_DANADA">Infraestructura</option>
+        <option value="SIN_VIVIENDA">Sin vivienda</option>
+      </select>
+      <select id="f-ciudad"><option value="">Todas las ciudades</option></select>
+      <label class="check"><input type="checkbox" id="f-foto" /> Solo con foto</label>
+      <label class="check"><input type="checkbox" id="f-sinviv" /> Solo sin vivienda</label>
+    </div>
+
+    <div id="result"><div class="msg">Cargando registros…</div></div>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Cerrar">×</button>
+    <img id="lightbox-img" alt="Foto ampliada" />
+  </div>
+
+  <script>
+    'use strict';
+
+    // Código de acceso (cosmético, cámbielo). La protección real requiere auth en el servidor.
+    const ADMIN_PIN = 'guaira2026';
+    const HUB_URL = `${location.origin}/api/hub`;
+    const REFRESH_MS = 20000;
+
+    const $ = (id) => document.getElementById(id);
+    let datos = [];
+    let autoOn = true;
+    let timer = null;
+
+    /* —— Gate —— */
+    function desbloquear() {
+      $('gate').style.display = 'none';
+      $('app').hidden = false;
+      iniciar();
+    }
+    function intentarEntrar() {
+      if ($('gate-pin').value === ADMIN_PIN) {
+        sessionStorage.setItem('adminUnlocked', '1');
+        desbloquear();
+      } else {
+        $('gate-err').textContent = 'Código incorrecto.';
+      }
+    }
+    $('gate-btn').addEventListener('click', intentarEntrar);
+    $('gate-pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') intentarEntrar(); });
+    if (sessionStorage.getItem('adminUnlocked') === '1') desbloquear();
+
+    /* —— Lightbox —— */
+    function abrirLightbox(src) { $('lightbox-img').src = src; $('lightbox').classList.add('show'); }
+    function cerrarLightbox() { $('lightbox').classList.remove('show'); $('lightbox-img').removeAttribute('src'); }
+    $('lightbox-close').addEventListener('click', cerrarLightbox);
+    $('lightbox').addEventListener('click', (e) => { if (e.target === $('lightbox')) cerrarLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarLightbox(); });
+
+    /* —— Datos —— */
+    function setConn(ok, texto) {
+      $('conn-dot').classList.toggle('off', !ok);
+      $('conn-text').textContent = texto;
+    }
+
+    async function cargar() {
+      try {
+        const res = await fetch(`${HUB_URL}?action=consultar`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok) {
+          const motivo = data.code === 'KV_NO_CONFIGURADO'
+            ? 'La red central (Vercel KV) no está activada todavía.'
+            : (data.error || 'No se pudo consultar el Hub.');
+          setConn(false, 'sin datos');
+          $('result').innerHTML = `<div class="msg error">${motivo}</div>`;
+          return;
+        }
+        datos = Array.isArray(data.reportes) ? data.reportes : [];
+        setConn(true, 'en línea');
+        $('updated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-VE');
+        poblarCiudades();
+        render();
+      } catch (_) {
+        setConn(false, 'sin conexión');
+        if (!datos.length) $('result').innerHTML = '<div class="msg error">Sin conexión a internet. Reintentando…</div>';
+      }
+    }
+
+    function poblarCiudades() {
+      const sel = $('f-ciudad');
+      const actual = sel.value;
+      const ciudades = [...new Set(datos.map((r) => r.ciudad).filter(Boolean))].sort();
+      sel.innerHTML = '<option value="">Todas las ciudades</option>' +
+        ciudades.map((c) => `<option value="${c}">${c}</option>`).join('');
+      sel.value = actual;
+    }
+
+    function norm(t) {
+      return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
+
+    function filtrar() {
+      const q = norm($('f-q').value);
+      const est = $('f-estado').value;
+      const tipo = $('f-tipo').value;
+      const ciudad = $('f-ciudad').value;
+      const soloFoto = $('f-foto').checked;
+      const soloSinViv = $('f-sinviv').checked;
+      return datos.filter((r) => {
+        if (est && r.estado_actual !== est) return false;
+        if (tipo && r.tipo_registro !== tipo) return false;
+        if (ciudad && r.ciudad !== ciudad) return false;
+        if (soloFoto && !r.foto_estructura_b64) return false;
+        if (soloSinViv && r.tiene_hogar_actual !== false) return false;
+        if (q) {
+          const blob = norm([r.nombre_completo, r.zona_afectada_tag, r.ciudad, r.direccion_origen, r.ubicacion_exacta, r.fuente_origen, ...(r.censo_personas || [])].join(' '));
+          if (!blob.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function renderStats() {
+      const total = datos.length;
+      const criticos = datos.filter((r) => r.estado_actual === 'CRITICO').length;
+      const porLoc = datos.filter((r) => r.estado_actual === 'POR LOCALIZAR').length;
+      const localizados = datos.filter((r) => r.estado_actual === 'LOCALIZADO').length;
+      const sinViv = datos.filter((r) => r.tiene_hogar_actual === false).length;
+      const conFoto = datos.filter((r) => r.foto_estructura_b64).length;
+      const brigadas = new Set(datos.map((r) => r.fuente_origen).filter(Boolean)).size;
+      const cards = [
+        ['', total, 'Total'],
+        ['n-critico', criticos, 'Críticos'],
+        ['n-alerta', porLoc, 'Por localizar'],
+        ['n-ok', localizados, 'Localizados'],
+        ['', sinViv, 'Sin vivienda'],
+        ['', conFoto, 'Con foto'],
+        ['', brigadas, 'Brigadas'],
+      ];
+      $('stats').innerHTML = cards.map(([cls, n, l]) =>
+        `<div class="stat"><div class="n ${cls}">${n}</div><div class="l">${l}</div></div>`
+      ).join('');
+    }
+
+    function claseEstado(s) {
+      if (s === 'CRITICO') return 'c-CRITICO';
+      if (s === 'LOCALIZADO') return 'c-OK';
+      return 'c-ALERTA';
+    }
+
+    function telInternacional(num) {
+      const limpio = String(num || '').replace(/\D/g, '');
+      if (!limpio) return '';
+      if (limpio.startsWith('58')) return '+' + limpio;
+      if (limpio.startsWith('0')) return '+58' + limpio.slice(1);
+      return '+58' + limpio;
+    }
+
+    function tarjeta(r) {
+      const foto = r.foto_estructura_b64
+        ? `<img class="card-foto" src="${r.foto_estructura_b64}" data-full="1" alt="Foto" loading="lazy" />`
+        : `<div class="card-foto placeholder">Sin foto</div>`;
+      const gps = (r.latitud || r.longitud)
+        ? `<div class="card-gps">🛰️ ${Number(r.latitud).toFixed(5)}, ${Number(r.longitud).toFixed(5)}</div>`
+        : '';
+      const tipoLbl = { PERSONA_ATRAPADA: 'Persona atrapada', INFRAESTRUCTURA_DANADA: 'Infraestructura', SIN_VIVIENDA: 'Sin vivienda' }[r.tipo_registro] || r.tipo_registro;
+      const tags = [`<span class="tag">${tipoLbl}</span>`];
+      if (r.tiene_hogar_actual === false) tags.push('<span class="tag flag">Sin vivienda</span>');
+      if (r.censo_personas && r.censo_personas.length) tags.push(`<span class="tag">Grupo: ${r.censo_personas.length}</span>`);
+      const tel = telInternacional(r.telefono_contacto);
+      const acts = [];
+      if (r.latitud || r.longitud) acts.push(`<a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${r.latitud},${r.longitud}&travelmode=walking">Navegar</a>`);
+      if (tel) acts.push(`<a href="tel:${tel}">Llamar</a>`);
+      const edad = r.edad && r.edad !== '0' ? ' · ' + r.edad : '';
+      const claseE = 'e-' + String(r.estado_actual || '').replace(/\s+/g, '');
+      return `
+        <div class="card ${claseE}">
+          ${foto}
+          <div class="card-body">
+            <span class="card-estado ${claseEstado(r.estado_actual)}">${r.estado_actual}</span>
+            <div class="card-nombre">${r.nombre_completo || 'Anónimo'}${edad} · ${r.genero || ''}</div>
+            <div class="card-sub">🏙️ ${r.ciudad || 'La Guaira'} · 📍 ${r.ubicacion_exacta || 's/d'}${r.zona_afectada_tag ? ' · ' + r.zona_afectada_tag : ''}</div>
+            ${gps}
+            ${tel ? `<div class="card-sub">📞 ${r.telefono_contacto}</div>` : ''}
+            ${r.censo_personas && r.censo_personas.length ? `<div class="card-sub">Censo: ${r.censo_personas.join(', ')}</div>` : ''}
+            ${r.notas_paramedicos ? `<div class="card-sub">📝 ${r.notas_paramedicos}</div>` : ''}
+            <div class="card-tags">${tags.join('')}</div>
+            <div class="card-meta">Origen: ${r.fuente_origen || '—'} · ${new Date(r.timestamp).toLocaleString('es-VE')}<br>ID: ${r.id}</div>
+            ${acts.length ? `<div class="card-acts">${acts.join('')}</div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function render() {
+      renderStats();
+      const lista = filtrar();
+      if (!lista.length) {
+        $('result').innerHTML = '<div class="msg">No hay registros que coincidan con el filtro.</div>';
+        return;
+      }
+      $('result').innerHTML = `<div class="grid">${lista.map(tarjeta).join('')}</div>`;
+    }
+
+    $('result').addEventListener('click', (e) => {
+      const img = e.target.closest('.card-foto[data-full]');
+      if (img) abrirLightbox(img.src);
+    });
+
+    ['f-q', 'f-estado', 'f-tipo', 'f-ciudad', 'f-foto', 'f-sinviv'].forEach((id) => {
+      $(id).addEventListener('input', render);
+    });
+
+    $('refresh-btn').addEventListener('click', cargar);
+    $('auto-btn').addEventListener('click', () => {
+      autoOn = !autoOn;
+      $('auto-btn').classList.toggle('on', autoOn);
+      programar();
+    });
+
+    function programar() {
+      if (timer) clearInterval(timer);
+      if (autoOn) timer = setInterval(cargar, REFRESH_MS);
+    }
+
+    function iniciar() {
+      cargar();
+      programar();
+    }
+  </script>
+</body>
+</html>

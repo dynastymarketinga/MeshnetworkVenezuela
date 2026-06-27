@@ -939,7 +939,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           </ScrollView>
         ) : null}
 
-        <View style={[styles.bottomNav, tacticalGlow, { paddingBottom: insets.bottom + 8 }]}>
+        <View style={[styles.bottomNav, tacticalGlow, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
           {TABS.map((tab) => {
             const activa = tabActiva === tab.id;
             return (

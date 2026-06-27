@@ -5,35 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mesh Network Venezuela — Registro Táctico</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#D4AF37" />
+  <meta name="theme-color" content="#2BA4DB" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="assets/logo.jpg" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="apple-touch-icon" href="assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      /* Principal — contenido principal */
-      --bg: #000000;
-      --ink: #FFFFFF;
-      --muted: #D4AF37;
-      --light: #A1813D;
-      /* Secundario — paneles tech / SMS / charcoal */
-      --paper: #141414;
-      --paper-up: #1A1A1A;
-      --blue: #00FFFF;
-      --blue-dark: #00CCCC;
+      /* Paleta de marca — blanco / negro / azul Mesh Network */
+      --bg: #FFFFFF;
+      --ink: #14181C;
+      --muted: #1E87BC;
+      --light: #8A95A2;
+      /* Superficies (paneles, tarjetas, SMS) */
+      --paper: #EEF5FA;
+      --paper-up: #F7FAFC;
+      --blue: #2BA4DB;
+      --blue-dark: #1773A3;
       /* Bloque inferior — navegación */
-      --nav-bg: #F8F8F8;
-      --nav-ink: #000000;
-      --nav-muted: #8B6D36;
+      --nav-bg: #FFFFFF;
+      --nav-ink: #14181C;
+      --nav-muted: #6B7682;
       /* Bordes y efectos */
-      --border-light: #8B6D36;
-      --shadow: 5px 5px 0 rgba(212, 175, 55, 0.12);
-      /* Estados semánticos (legibles sobre fondo oscuro) */
-      --critico: #FF4444;
-      --alerta: #FFB020;
-      --ok: #4ADE80;
+      --border-light: #CBD8E2;
+      --shadow: 5px 5px 0 rgba(43, 164, 219, 0.16);
+      /* Estados semánticos (legibles sobre fondo blanco) */
+      --critico: #D62F2B;
+      --alerta: #C97A00;
+      --ok: #1E9E57;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -49,7 +49,7 @@
       inset: 0;
       pointer-events: none;
       opacity: 0.07;
-      background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40h24v-8h16v8h24M40 0v24h-8v16h8v24M56 56h8v8h-8z' stroke='%23A1813D' fill='none' stroke-width='0.6'/%3E%3Ccircle cx='40' cy='40' r='1.5' fill='%23A1813D'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40h24v-8h16v8h24M40 0v24h-8v16h8v24M56 56h8v8h-8z' stroke='%232BA4DB' fill='none' stroke-width='0.6'/%3E%3Ccircle cx='40' cy='40' r='1.5' fill='%232BA4DB'/%3E%3C/svg%3E");
       background-size: 80px 80px;
       z-index: 9999;
     }
@@ -152,7 +152,7 @@
       background: var(--nav-bg);
       border-top: 2px solid var(--nav-muted);
       z-index: 100;
-      box-shadow: 0 -4px 0 rgba(139, 109, 54, 0.12);
+      box-shadow: 0 -4px 0 rgba(43, 164, 219, 0.14);
     }
     .nav-btn {
       flex: 1;
@@ -284,7 +284,7 @@
       width: 100%;
       background: var(--critico);
       border: 2px solid var(--critico);
-      color: var(--ink);
+      color: #FFFFFF;
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.1em;
@@ -430,7 +430,7 @@
       min-height: 100px;
       max-height: 140px;
       line-height: 1.5;
-      box-shadow: inset 2px 2px 0 rgba(0, 255, 255, 0.08);
+      box-shadow: inset 2px 2px 0 rgba(43, 164, 219, 0.1);
     }
     .sync-input {
       width: 100%;
@@ -443,7 +443,7 @@
       min-height: 88px;
       resize: vertical;
       line-height: 1.5;
-      box-shadow: inset 2px 2px 0 rgba(212, 175, 55, 0.08);
+      box-shadow: inset 2px 2px 0 rgba(43, 164, 219, 0.08);
     }
     .sync-input::placeholder { color: var(--light); }
     .btn-action {
@@ -489,7 +489,7 @@
     }
     .toast.show { opacity: 1; }
     .aviso-apk {
-      background: rgba(212, 175, 55, 0.12);
+      background: rgba(43, 164, 219, 0.1);
       border-bottom: 2px solid var(--muted);
       color: var(--ink);
       font-size: 0.85rem;
@@ -670,7 +670,7 @@
     }
     .checkbox-field input[type="checkbox"]:checked {
       background: var(--muted);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath fill='%23000000' d='M1 5.2 4.1 8.3 11 1.4' stroke='%23000000' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath fill='%23FFFFFF' d='M1 5.2 4.1 8.3 11 1.4' stroke='%23FFFFFF' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: center;
       background-size: 11px 9px;
@@ -811,6 +811,46 @@
       text-transform: none;
       letter-spacing: normal;
     }
+
+    /* —— Fotos —— */
+    .foto-input-hidden { display: none; }
+    .foto-preview-wrap { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+    .foto-preview { width: 100%; max-width: 260px; border: 2px solid var(--muted); box-shadow: var(--shadow); }
+    .foto-preview-wrap .btn-action { width: auto; min-width: 140px; }
+    .card-foto { margin-top: 10px; }
+    .foto-thumb {
+      width: 84px;
+      height: 84px;
+      object-fit: cover;
+      border: 2px solid var(--muted);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    .card-sync { color: var(--ok); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; }
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.93);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10002;
+    }
+    .lightbox.show { display: flex; }
+    .lightbox img { max-width: 100%; max-height: 88vh; border: 2px solid var(--muted); box-shadow: var(--shadow); }
+    .lightbox-close {
+      position: fixed;
+      top: 12px;
+      right: 18px;
+      font-size: 2.2rem;
+      line-height: 1;
+      color: #fff;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
   </style>
 </head>
 <body>
@@ -827,6 +867,7 @@
   <div class="layout">
     <div class="main">
       <div id="tab-registro" class="tab-panel active">
+        <div class="logo-frame"><img class="logo-img" src="assets/logo.png" alt="Mesh Network Venezuela" /></div>
         <p class="kicker">Brigada de rescate · La Guaira · funciona sin internet</p>
         <h1 class="titulo-editorial">Registrar</h1>
         <div class="divider"></div>
@@ -848,7 +889,7 @@
           <div class="form-section-body">
             <div class="tipo-grid" id="tipo-chips">
               <button type="button" class="tipo-btn active" data-t="PERSONA_ATRAPADA">Persona atrapada</button>
-              <button type="button" class="tipo-btn" data-t="INFRAESTRUCTURA">Infraestructura dañada</button>
+              <button type="button" class="tipo-btn" data-t="INFRAESTRUCTURA_DANADA">Infraestructura dañada</button>
               <button type="button" class="tipo-btn" data-t="SIN_VIVIENDA">Familia sin vivienda</button>
             </div>
           </div>
@@ -896,6 +937,22 @@
               <button type="button" class="estado-btn" data-s="CRITICO">CRÍTICO</button>
               <button type="button" class="estado-btn active estado-por-localizar" data-s="POR LOCALIZAR">POR LOCALIZAR</button>
               <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <header class="form-section-header">
+            <p class="form-section-kicker">4 — Foto</p>
+            <h3 class="form-section-title">Foto (opcional)</h3>
+          </header>
+          <div class="form-section-body">
+            <p class="field-hint">Ayuda a identificar a la persona o el daño. Se comprime y se guarda en el teléfono.</p>
+            <input type="file" id="foto-input" accept="image/*" capture="environment" class="foto-input-hidden" />
+            <button type="button" class="btn-gps" id="btn-foto">Tomar / elegir foto</button>
+            <div id="foto-preview-wrap" class="foto-preview-wrap" hidden>
+              <img id="foto-preview" class="foto-preview" alt="Vista previa de la foto" />
+              <button type="button" class="btn-action btn-copy" id="btn-foto-quitar">Quitar foto</button>
             </div>
           </div>
         </section>
@@ -989,6 +1046,11 @@
               <textarea class="sync-input" id="import-input" placeholder="Pegue aquí el mensaje que recibió de otra brigada…"></textarea>
               <button type="button" class="btn-action btn-fusionar btn-spaced-sm" id="btn-fusionar">Agregar reportes recibidos</button>
             </div>
+            <div class="field-box field-box--flat">
+              <label for="btn-hub-push">Enviar a la red central (con internet)</label>
+              <p class="field-hint">Publica tus reportes (con foto) en la red para que el panel y otras brigadas los vean.</p>
+              <button type="button" class="btn-action btn-fusionar" id="btn-hub-push">Enviar todos a la red</button>
+            </div>
           </div>
         </details>
 
@@ -1006,6 +1068,7 @@
             entre brigadas y se publican a la red para que otras plataformas (desaparecidos, refugios, daños) los consulten sin duplicar.
           </p>
           <p class="panel-desc mt-md"><strong>Brigada:</strong> Brigada-Rescate-LG · <strong>SMS comando:</strong> <span id="comando-display">04140000000</span></p>
+          <a class="link-block" href="/admin.html">→ Abrir panel administrativo (coordinación)</a>
         </div>
 
         <section class="form-section" aria-labelledby="hub-buscar-title">
@@ -1080,6 +1143,11 @@
   </nav>
 
   <div class="toast" id="toast"></div>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+    <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Cerrar foto">×</button>
+    <img id="lightbox-img" alt="Foto ampliada" />
+  </div>
 
   <script>
     /** Paridad web con app móvil — localStorage ≈ SQLite en navegador */
@@ -1352,6 +1420,7 @@
     let latitud = undefined;
     let longitud = undefined;
     let censoPersonas = [];
+    let fotoB64 = '';
     let reportesCache = [];
 
     const RE_TELEFONO_VE = /^(0\d{10}|58\d{10})$/;
@@ -1574,6 +1643,10 @@
         const gps = item.latitud != null
           ? `<div class="card-gps">🛰️ ${formatearCoordenadas(item.latitud, item.longitud)}</div>`
           : '';
+        const foto = item.foto_estructura_b64
+          ? `<div class="card-foto"><img class="foto-thumb" src="${item.foto_estructura_b64}" alt="Foto de ${item.nombre_completo}" loading="lazy" /></div>`
+          : '';
+        const sync = item.hub_sincronizado_en ? '<span class="card-sync">✓ EN RED</span> · ' : '';
         let contacto = '';
         const telLimpio = String(item.telefono_contacto || '').replace(/\D/g, '');
         if (telLimpio) {
@@ -1598,10 +1671,11 @@
             ${item.telefono_contacto ? `<div class="card-notas">📞 ${item.telefono_contacto}</div>` : ''}
             <div class="card-ubicacion">🏙️ ${item.ciudad || 'La Guaira'} · 📍 ${item.ubicacion_exacta}</div>
             ${gps}
+            ${foto}
             ${item.notas_paramedicos ? `<div class="card-notas">${item.notas_paramedicos}</div>` : ''}
             ${contacto}
             ${nav}
-            <div class="card-time">${new Date(item.timestamp).toLocaleString('es-VE')}</div>
+            <div class="card-time">${sync}${new Date(item.timestamp).toLocaleString('es-VE')}</div>
           </div>`;
       }).join('');
     }
@@ -1681,6 +1755,81 @@
     $('btn-gps').addEventListener('click', () => capturarGps(false));
     capturarGps(true);
 
+    function comprimirImagen(file, maxDim, calidad) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('Imagen inválida'));
+          img.onload = () => {
+            let { width, height } = img;
+            if (width > height && width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', calidad));
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function mostrarFotoPreview(b64) {
+      fotoB64 = b64 || '';
+      const wrap = $('foto-preview-wrap');
+      if (fotoB64) {
+        $('foto-preview').src = fotoB64;
+        wrap.hidden = false;
+        $('btn-foto').textContent = 'Cambiar foto';
+      } else {
+        $('foto-preview').removeAttribute('src');
+        wrap.hidden = true;
+        $('btn-foto').textContent = 'Tomar / elegir foto';
+        $('foto-input').value = '';
+      }
+    }
+
+    $('btn-foto').addEventListener('click', () => $('foto-input').click());
+    $('btn-foto-quitar').addEventListener('click', () => mostrarFotoPreview(''));
+    $('foto-input').addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        toast('Procesando foto…');
+        const b64 = await comprimirImagen(file, 1024, 0.6);
+        mostrarFotoPreview(b64);
+        toast('✓ Foto lista');
+      } catch (_) {
+        toast('⚠ No se pudo procesar la imagen');
+      }
+    });
+
+    function abrirLightbox(src) {
+      if (!src) return;
+      $('lightbox-img').src = src;
+      $('lightbox').classList.add('show');
+    }
+    function cerrarLightbox() {
+      $('lightbox').classList.remove('show');
+      $('lightbox-img').removeAttribute('src');
+    }
+    $('lightbox-close').addEventListener('click', cerrarLightbox);
+    $('lightbox').addEventListener('click', (e) => { if (e.target === $('lightbox')) cerrarLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarLightbox(); });
+    $('lista').addEventListener('click', (e) => {
+      const thumb = e.target.closest('.foto-thumb');
+      if (thumb) abrirLightbox(thumb.src);
+    });
+
     $('btn-guardar').addEventListener('click', () => {
       if (!validarFormulario()) return;
       const ubicacion = $('ubicacion').value.trim();
@@ -1692,7 +1841,7 @@
       }
       latitud = coords.lat;
       longitud = coords.lng;
-      repo.guardar({
+      const nuevo = repo.guardar({
         fuente_origen: CONFIG.FUENTE_ORIGEN,
         tipo_registro: tipoSel,
         nombre_completo: $('nombre').value.trim() || 'Anónimo',
@@ -1710,7 +1859,7 @@
         tiene_hogar_actual: tipoSel === 'SIN_VIVIENDA' ? false : !$('sin-vivienda').checked,
         direccion_origen: $('direccion-origen').value.trim(),
         zona_afectada_tag: $('zona-tag').value.trim() || ciudadSel,
-        foto_estructura_b64: '',
+        foto_estructura_b64: fotoB64,
       });
       $('nombre').value = '';
       $('telefono').value = '';
@@ -1722,9 +1871,11 @@
       $('sin-vivienda').checked = false;
       censoPersonas = [];
       renderCensoChips();
+      mostrarFotoPreview('');
       aplicarTipoActivo('PERSONA_ATRAPADA');
       actualizarEstadoBotonGuardar();
       toast('✓ Punto guardado en disco local');
+      publicarEnHub(nuevo);
       irTab('reportes');
     });
 
@@ -1756,6 +1907,56 @@
     });
 
     const hubUrl = `${location.origin}${CONFIG.HUB_BASE}`;
+
+    async function publicarEnHub(reporte) {
+      try {
+        const res = await fetch(`${hubUrl}?action=registrar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reporte),
+        });
+        if (!res.ok) return false;
+        reporte.hub_sincronizado_en = Date.now();
+        repo.notificar();
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function publicarTodosEnHub() {
+      const pendientes = repo.obtenerTodos();
+      if (!pendientes.length) { toast('⚠ No hay reportes para enviar'); return; }
+      const btn = $('btn-hub-push');
+      btn.disabled = true;
+      btn.textContent = 'Enviando…';
+      let ok = 0;
+      try {
+        const res = await fetch(`${hubUrl}?action=registrar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reportes: pendientes }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          ok = (data.importados || 0) + (data.actualizados || 0);
+          const ahora = Date.now();
+          pendientes.forEach((r) => { r.hub_sincronizado_en = ahora; });
+          repo.notificar();
+          toast(`✓ ${ok} reporte(s) en la red`);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          toast('⚠ ' + mensajeErrorHub(data));
+        }
+      } catch (_) {
+        toast('⚠ Sin conexión. Se reintenta cuando haya internet.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar todos a la red';
+      }
+    }
+
+    $('btn-hub-push').addEventListener('click', publicarTodosEnHub);
 
     function mensajeErrorHub(data) {
       if (data?.code === 'KV_NO_CONFIGURADO') {
