@@ -8,7 +8,7 @@
 Mesh Network Venezuela v1.2.0 — rescate La Guaira
 
 1. Abre ESTE enlace EN TU ANDROID (no en PC):
-https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/b20f525e-b22e-48d8-a669-e2bf15ec1877
+https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/71951c7f-e43e-4577-9621-57b6515b43d8
 
 2. Instala la app. Si Play Protect bloquea: Play Store → Play Protect → engranaje → desactiva análisis → instala.
 
