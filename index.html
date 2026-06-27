@@ -772,15 +772,34 @@
       }
 
       cargar() {
+        let recuperados = 0;
+        const claves = [];
         try {
-          const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
-          if (raw) {
-            const arr = JSON.parse(raw);
-            if (Array.isArray(arr)) {
-              arr.forEach((r) => this.reportes.set(r.id, r));
-            }
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('@meshnetwork_venezuela_sqlite_web_v')) claves.push(k);
           }
-        } catch { /* disco corrupto — arrancar vacío */ }
+        } catch { /* acceso a localStorage bloqueado */ }
+        const numVer = (k) => Number((k.match(/_v(\d+)$/) || [])[1] || 0);
+        claves.sort((a, b) => numVer(a) - numVer(b));
+        if (!claves.includes(CONFIG.STORAGE_KEY)) claves.push(CONFIG.STORAGE_KEY);
+        for (const clave of claves) {
+          try {
+            const raw = localStorage.getItem(clave);
+            if (!raw) continue;
+            const arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) continue;
+            arr.forEach((r) => {
+              if (!r || !r.id) return;
+              const previo = this.reportes.get(r.id);
+              if (!previo || (Number(r.timestamp) || 0) >= (Number(previo.timestamp) || 0)) {
+                this.reportes.set(r.id, r);
+              }
+              if (clave !== CONFIG.STORAGE_KEY) recuperados++;
+            });
+          } catch { /* disco corrupto — ignorar esa clave */ }
+        }
+        if (recuperados > 0) this.persistir();
       }
 
       persistir() {
