@@ -867,7 +867,7 @@
   <div class="layout">
     <div class="main">
       <div id="tab-registro" class="tab-panel active">
-        <div class="logo-frame"><img class="logo-img" src="assets/logo.png" alt="Mesh Network Venezuela" /></div>
+        <div class="logo-frame"><img class="logo-img" id="brand-logo" src="assets/logo.png" alt="Mesh Network Venezuela" /></div>
         <p class="kicker">Brigada de rescate · La Guaira · funciona sin internet</p>
         <h1 class="titulo-editorial">Registrar</h1>
         <div class="divider"></div>
@@ -1068,7 +1068,6 @@
             entre brigadas y se publican a la red para que otras plataformas (desaparecidos, refugios, daños) los consulten sin duplicar.
           </p>
           <p class="panel-desc mt-md"><strong>Brigada:</strong> Brigada-Rescate-LG · <strong>SMS comando:</strong> <span id="comando-display">04140000000</span></p>
-          <a class="link-block" href="/admin.html">→ Abrir panel administrativo (coordinación)</a>
         </div>
 
         <section class="form-section" aria-labelledby="hub-buscar-title">
@@ -2033,6 +2032,24 @@
         toast('⚠ No se pudo cargar las zonas');
       }
     });
+
+    // Acceso oculto al panel admin: tocar el logo 5 veces seguidas.
+    (function accesoOcultoAdmin() {
+      const logo = $('brand-logo');
+      if (!logo) return;
+      let toques = 0;
+      let reloj = null;
+      logo.style.cursor = 'pointer';
+      logo.addEventListener('click', () => {
+        toques += 1;
+        if (reloj) clearTimeout(reloj);
+        reloj = setTimeout(() => { toques = 0; }, 1500);
+        if (toques >= 5) {
+          toques = 0;
+          window.location.href = '/admin.html';
+        }
+      });
+    })();
 
   </script>
   <script>

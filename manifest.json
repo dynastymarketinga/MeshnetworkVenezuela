@@ -4,10 +4,11 @@
   "description": "Unidad de Registro Táctico y Rescate Offline-First para zonas de desastre",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#D4AF37",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2BA4DB",
   "orientation": "portrait",
   "icons": [
+    { "src": "assets/logo.png", "sizes": "512x512", "type": "image/png" },
     { "src": "assets/logo.jpg", "sizes": "512x512", "type": "image/jpeg" }
   ]
 }

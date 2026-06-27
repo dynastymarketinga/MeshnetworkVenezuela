@@ -141,6 +141,10 @@
     .gate-box input:focus { border-color: var(--blue); }
     .gate-box .btn { width: 100%; background: var(--muted); color: var(--bg); border-color: var(--muted); }
     .gate-err { color: var(--critico); font-size: 0.8rem; margin-top: 8px; min-height: 1.2em; }
+    .brand-logo { width: 100%; max-width: 240px; display: block; margin: 0 auto 16px; }
+    .top-brand { display: flex; align-items: center; gap: 14px; }
+    .top-logo { height: 48px; width: auto; }
+    @media (max-width: 520px) { .top-logo { height: 38px; } }
   </style>
 </head>
 <body>
@@ -158,9 +162,12 @@
 
   <div class="wrap" id="app" hidden>
     <div class="top">
-      <div>
-        <p class="kicker">Coordinación de rescate · La Guaira</p>
-        <h1>Panel de registros</h1>
+      <div class="top-brand">
+        <img class="top-logo" src="assets/logo.png" alt="Mesh Network Venezuela" />
+        <div>
+          <p class="kicker">Coordinación de rescate · La Guaira</p>
+          <h1>Panel de registros</h1>
+        </div>
       </div>
       <div class="top-meta">
         <span><span class="dot" id="conn-dot"></span> <span id="conn-text">conectando…</span></span>

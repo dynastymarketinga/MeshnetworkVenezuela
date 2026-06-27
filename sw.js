@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION = 'mesh-v2';
+const CACHE_VERSION = 'mesh-v4';
 const CACHE_SHELL = CACHE_VERSION + '-shell';
 const CACHE_RUNTIME = CACHE_VERSION + '-runtime';
 
@@ -9,6 +9,7 @@ const PRECACHE_URLS = [
   '/index.html',
   '/admin.html',
   '/manifest.json',
+  '/assets/logo.png',
   '/assets/logo.jpg',
   'https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap',
 ];
