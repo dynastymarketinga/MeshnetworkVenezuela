@@ -7,6 +7,14 @@ export class SmsDirectService {
     return OperacionConfig.COMANDO_CENTRAL_SMS;
   }
 
+  public static normalizarVE(num: string): string {
+    const limpio = String(num ?? '').replace(/\D/g, '');
+    if (!limpio) return '';
+    if (limpio.startsWith('58')) return `+${limpio}`;
+    if (limpio.startsWith('0')) return `+58${limpio.slice(1)}`;
+    return `+58${limpio}`;
+  }
+
   public static async enviarMensaje(
     mensaje: string,
     numeroDestino?: string

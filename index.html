@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mesh Network Venezuela — Registro Táctico</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#00AEEF" />
+  <meta name="theme-color" content="#D4AF37" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="assets/logo.jpg" />
@@ -13,18 +13,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #F5F0E8;
-      --paper: #EDE8DF;
-      --paper-up: #FAF7F2;
-      --ink: #1C1C1C;
-      --muted: #6B6560;
-      --light: #9A948C;
-      --blue: #4A8FC7;
-      --blue-dark: #2E6A9E;
-      --critico: #B91C1C;
-      --alerta: #B45309;
-      --ok: #166534;
-      --shadow: 5px 5px 0 rgba(28,28,28,0.1);
+      /* Principal — contenido principal */
+      --bg: #000000;
+      --ink: #FFFFFF;
+      --muted: #D4AF37;
+      --light: #A1813D;
+      /* Secundario — paneles tech / SMS / charcoal */
+      --paper: #141414;
+      --paper-up: #1A1A1A;
+      --blue: #00FFFF;
+      --blue-dark: #00CCCC;
+      /* Bloque inferior — navegación */
+      --nav-bg: #F8F8F8;
+      --nav-ink: #000000;
+      --nav-muted: #8B6D36;
+      /* Bordes y efectos */
+      --border-light: #8B6D36;
+      --shadow: 5px 5px 0 rgba(212, 175, 55, 0.12);
+      /* Estados semánticos (legibles sobre fondo oscuro) */
+      --critico: #FF4444;
+      --alerta: #FFB020;
+      --ok: #4ADE80;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -39,8 +48,9 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      opacity: 0.04;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.07;
+      background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40h24v-8h16v8h24M40 0v24h-8v16h8v24M56 56h8v8h-8z' stroke='%23A1813D' fill='none' stroke-width='0.6'/%3E%3Ccircle cx='40' cy='40' r='1.5' fill='%23A1813D'/%3E%3C/svg%3E");
+      background-size: 80px 80px;
       z-index: 9999;
     }
     .layout {
@@ -50,13 +60,14 @@
     }
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
-      .sidebar { border-left: none; border-top: 2px solid var(--ink); margin: 0 20px 80px; }
+      .sidebar { border-left: none; border-top: 2px solid var(--blue); margin: 0 20px 80px; }
       #tab-sms.active { margin: 0 20px 80px; }
     }
     .main { padding: 24px 20px 80px; overflow-y: auto; max-width: 720px; margin: 0 auto; }
     .sidebar {
       background: var(--paper-up);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--blue);
+      border-left-width: 3px;
       padding: 20px;
       display: flex;
       flex-direction: column;
@@ -64,7 +75,7 @@
       box-shadow: var(--shadow);
     }
     .logo-frame {
-      border: 2px solid var(--ink);
+      border: 2px solid var(--muted);
       background: var(--paper-up);
       padding: 12px;
       margin-bottom: 20px;
@@ -87,17 +98,18 @@
       letter-spacing: -0.02em;
       margin-bottom: 12px;
     }
-    .divider { height: 3px; width: 48px; background: var(--ink); margin: 14px 0; }
+    .divider { height: 3px; width: 48px; background: var(--muted); margin: 14px 0; }
     .badge {
       font-size: 0.6rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--blue-dark);
+      color: var(--muted);
     }
     .panel {
       background: var(--paper-up);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--muted);
+      border-left: 3px solid var(--blue);
       padding: 20px;
       margin-bottom: 20px;
       box-shadow: var(--shadow);
@@ -120,7 +132,7 @@
     .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
     .stat-card {
       background: var(--paper-up);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--border-light);
       padding: 16px 12px;
       box-shadow: var(--shadow);
     }
@@ -139,10 +151,10 @@
       left: 0;
       right: 0;
       display: flex;
-      background: var(--paper-up);
-      border-top: 2px solid var(--ink);
+      background: var(--nav-bg);
+      border-top: 2px solid var(--nav-muted);
       z-index: 100;
-      box-shadow: 0 -4px 0 rgba(28,28,28,0.06);
+      box-shadow: 0 -4px 0 rgba(139, 109, 54, 0.12);
     }
     .nav-btn {
       flex: 1;
@@ -150,14 +162,14 @@
       background: transparent;
       padding: 12px 4px;
       cursor: pointer;
-      color: var(--muted);
+      color: var(--nav-muted);
       font-size: 0.6rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       font-family: inherit;
     }
-    .nav-btn.active { background: var(--bg); color: var(--ink); font-weight: 800; border-top: 3px solid var(--ink); }
+    .nav-btn.active { background: #EFEFEF; color: var(--nav-ink); font-weight: 800; border-top: 3px solid var(--nav-muted); }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
     #tab-sms { display: none; }
@@ -166,7 +178,7 @@
       display: flex;
       flex-direction: column;
       background: var(--paper-up);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--blue);
       padding: 20px;
       margin: 0 20px 80px;
       box-shadow: var(--shadow);
@@ -174,12 +186,12 @@
     }
     .field-box {
       background: var(--paper-up);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--border-light);
       padding: 16px;
       margin-bottom: 12px;
       box-shadow: var(--shadow);
     }
-    .field-box label {
+    .field-box label:not(.checkbox-field) {
       display: block;
       color: var(--ink);
       font-size: 0.6rem;
@@ -192,7 +204,7 @@
       width: 100%;
       background: var(--bg);
       border: none;
-      border-bottom: 2px solid var(--ink);
+      border-bottom: 2px solid var(--border-light);
       color: var(--ink);
       font-size: 1rem;
       font-family: inherit;
@@ -201,14 +213,14 @@
     }
     input::placeholder, textarea::placeholder { color: var(--light); }
     input:focus, textarea:focus {
-      border-bottom-color: var(--blue-dark);
+      border-bottom-color: var(--blue);
       background: var(--paper);
     }
     textarea {
       min-height: 88px;
       resize: vertical;
-      border: 1px solid #C4BDB4;
-      border-bottom: 2px solid var(--ink);
+      border: 1px solid var(--border-light);
+      border-bottom: 2px solid var(--border-light);
       padding: 12px;
       margin-top: 4px;
     }
@@ -217,28 +229,28 @@
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip {
       padding: 8px 14px;
-      border: 2px solid #C4BDB4;
+      border: 2px solid var(--border-light);
       background: var(--bg);
-      color: var(--muted);
+      color: var(--light);
       font-weight: 700;
       font-size: 0.78rem;
       cursor: pointer;
       font-family: inherit;
       transition: background 0.15s, border-color 0.15s;
     }
-    .chip:hover { border-color: var(--ink); color: var(--ink); }
+    .chip:hover { border-color: var(--muted); color: var(--muted); }
     .chip.active {
-      background: var(--ink);
-      border-color: var(--ink);
-      color: var(--paper-up);
+      background: var(--muted);
+      border-color: var(--muted);
+      color: var(--bg);
     }
     .estado-btn {
       flex: 1;
       min-width: 30%;
       padding: 12px 6px;
-      border: 2px solid #C4BDB4;
+      border: 2px solid var(--border-light);
       background: var(--bg);
-      color: var(--muted);
+      color: var(--light);
       font-size: 0.58rem;
       font-weight: 800;
       letter-spacing: 0.04em;
@@ -248,7 +260,7 @@
     }
     .estado-btn.active { color: var(--ink); font-weight: 900; }
     .gps-line {
-      color: var(--blue-dark);
+      color: var(--blue);
       font-size: 0.8rem;
       font-weight: 600;
       margin-top: 12px;
@@ -256,9 +268,9 @@
     }
     .btn-primary {
       width: 100%;
-      background: var(--ink);
-      border: 2px solid var(--ink);
-      color: var(--paper-up);
+      background: var(--muted);
+      border: 2px solid var(--muted);
+      color: var(--bg);
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.1em;
@@ -269,12 +281,12 @@
       box-shadow: var(--shadow);
       font-family: inherit;
     }
-    .btn-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+    .btn-primary:hover { background: var(--blue); border-color: var(--blue); color: var(--bg); }
     .btn-emergencia {
       width: 100%;
       background: var(--critico);
-      border: 2px solid var(--ink);
-      color: var(--paper-up);
+      border: 2px solid var(--critico);
+      color: var(--ink);
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.1em;
@@ -289,8 +301,8 @@
     .btn-gps {
       width: 100%;
       background: var(--blue-dark);
-      border: 2px solid var(--ink);
-      color: var(--paper-up);
+      border: 2px solid var(--blue);
+      color: var(--bg);
       font-size: 0.68rem;
       font-weight: 800;
       letter-spacing: 0.08em;
@@ -301,14 +313,14 @@
       font-family: inherit;
       box-shadow: var(--shadow);
     }
-    .btn-gps:hover { background: var(--ink); }
+    .btn-gps:hover { background: var(--blue); border-color: var(--blue); }
     .lista-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       margin-bottom: 16px;
       padding-bottom: 12px;
-      border-bottom: 2px solid var(--ink);
+      border-bottom: 2px solid var(--border-light);
     }
     .lista-titulo {
       font-family: 'Libre Baskerville', Georgia, serif;
@@ -317,7 +329,7 @@
       color: var(--ink);
     }
     .lista-count {
-      color: var(--blue-dark);
+      color: var(--blue);
       font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.05em;
@@ -326,7 +338,7 @@
     .lista { display: flex; flex-direction: column; gap: 12px; }
     .card {
       background: var(--paper-up);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--border-light);
       border-left-width: 5px;
       padding: 16px;
       box-shadow: var(--shadow);
@@ -347,7 +359,7 @@
     .card-nombre { font-size: 1rem; font-weight: 800; color: var(--ink); }
     .card-ubicacion { color: var(--muted); font-size: 0.85rem; margin-top: 6px; line-height: 1.5; }
     .card-gps {
-      color: var(--blue-dark);
+      color: var(--blue);
       font-size: 0.75rem;
       margin-top: 6px;
       font-family: ui-monospace, monospace;
@@ -359,7 +371,7 @@
       width: 100%;
       margin-top: 12px;
       background: var(--bg);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--border-light);
       color: var(--ink);
       font-size: 0.62rem;
       font-weight: 800;
@@ -370,7 +382,25 @@
       text-decoration: none;
       font-family: inherit;
     }
-    .btn-navegar:hover { background: var(--paper); }
+    .btn-navegar:hover { background: var(--paper); border-color: var(--muted); }
+    .card-acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .btn-contacto {
+      display: block;
+      width: 100%;
+      background: var(--blue-dark);
+      border: 2px solid var(--blue);
+      color: var(--bg);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 11px;
+      text-align: center;
+      text-decoration: none;
+      font-family: inherit;
+    }
+    .btn-contacto.llamar { background: var(--ok); }
+    .btn-contacto:hover { opacity: 0.92; }
     .empty {
       color: var(--muted);
       text-align: center;
@@ -392,8 +422,8 @@
     .sms-meta strong { color: var(--ink); font-weight: 800; }
     .sms-box {
       background: var(--bg);
-      border: 2px solid var(--ink);
-      color: var(--ink);
+      border: 2px solid var(--blue);
+      color: var(--blue);
       font-family: ui-monospace, monospace;
       font-size: 0.65rem;
       padding: 14px;
@@ -402,12 +432,12 @@
       min-height: 100px;
       max-height: 140px;
       line-height: 1.5;
-      box-shadow: inset 2px 2px 0 rgba(28,28,28,0.06);
+      box-shadow: inset 2px 2px 0 rgba(0, 255, 255, 0.08);
     }
     .sync-input {
       width: 100%;
       background: var(--bg);
-      border: 2px solid var(--ink);
+      border: 2px solid var(--border-light);
       color: var(--ink);
       font-family: ui-monospace, monospace;
       font-size: 0.65rem;
@@ -415,12 +445,12 @@
       min-height: 88px;
       resize: vertical;
       line-height: 1.5;
-      box-shadow: inset 2px 2px 0 rgba(28,28,28,0.06);
+      box-shadow: inset 2px 2px 0 rgba(212, 175, 55, 0.08);
     }
     .sync-input::placeholder { color: var(--light); }
     .btn-action {
       width: 100%;
-      border: 2px solid var(--ink);
+      border: 2px solid var(--border-light);
       font-size: 0.62rem;
       font-weight: 800;
       letter-spacing: 0.06em;
@@ -430,29 +460,25 @@
       font-family: inherit;
       box-shadow: var(--shadow);
     }
-    .btn-comando {
-      background: var(--critico);
-      color: var(--paper-up);
-      margin: 4px 0;
-    }
-    .btn-comando:hover { opacity: 0.92; }
     .btn-copy {
       background: var(--paper-up);
       color: var(--ink);
+      border-color: var(--muted);
     }
-    .btn-copy:hover { background: var(--paper); }
+    .btn-copy:hover { background: var(--paper); border-color: var(--blue); }
     .btn-fusionar {
       background: var(--blue-dark);
-      color: var(--paper-up);
+      color: var(--bg);
+      border-color: var(--blue);
     }
-    .btn-fusionar:hover { background: var(--ink); }
+    .btn-fusionar:hover { background: var(--blue); border-color: var(--blue); }
     .toast {
       position: fixed;
       bottom: 72px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--ink);
-      color: var(--paper-up);
+      background: var(--muted);
+      color: var(--bg);
       font-weight: 700;
       font-size: 0.85rem;
       padding: 12px 24px;
@@ -460,13 +486,13 @@
       transition: opacity 0.3s;
       pointer-events: none;
       z-index: 10000;
-      border: 2px solid var(--ink);
+      border: 2px solid var(--muted);
       box-shadow: var(--shadow);
     }
     .toast.show { opacity: 1; }
     .aviso-apk {
-      background: #FEF3C7;
-      border-bottom: 2px solid var(--ink);
+      background: rgba(212, 175, 55, 0.12);
+      border-bottom: 2px solid var(--muted);
       color: var(--ink);
       font-size: 0.85rem;
       line-height: 1.5;
@@ -475,7 +501,15 @@
     }
     .gps-manual { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--muted); }
     .gps-manual p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
-    .gps-manual .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .gps-manual .form-grid { gap: 10px; }
+    .gps-manual label:not(.checkbox-field) {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
     .hub-resultado { font-family: 'Instrument Sans', sans-serif; font-size: 0.85rem; line-height: 1.55; white-space: pre-wrap; }
     .pwa-banner {
       position: fixed;
@@ -488,12 +522,12 @@
       gap: 10px;
       flex-wrap: wrap;
       padding: 10px 14px;
-      background: #1C1C1C;
-      color: #FAF7F2;
+      background: var(--paper-up);
+      color: var(--ink);
       font-size: 0.82rem;
       line-height: 1.4;
-      border-bottom: 2px solid #00AEEF;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      border-bottom: 2px solid var(--blue);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     }
     .pwa-banner[hidden] { display: none !important; }
     .pwa-banner span { flex: 1; min-width: 180px; }
@@ -502,15 +536,15 @@
       font-weight: 700;
       font-size: 0.78rem;
       cursor: pointer;
-      border: 2px solid #00AEEF;
-      background: #00AEEF;
-      color: #1C1C1C;
+      border: 2px solid var(--blue);
+      background: var(--blue);
+      color: var(--bg);
       padding: 6px 12px;
     }
     #pwa-dismiss-btn {
       background: transparent;
-      color: #FAF7F2;
-      border-color: #6B6560;
+      color: var(--ink);
+      border-color: var(--border-light);
       padding: 4px 10px;
       font-size: 1.1rem;
       line-height: 1;
@@ -525,6 +559,180 @@
     }
     .field-alert.visible { display: block; }
     .btn-emergencia:disabled { opacity: 0.45; pointer-events: none; }
+
+    /* —— Form system —— */
+    .mt-sm { margin-top: 8px; }
+    .mt-md { margin-top: 12px; }
+    .mt-lg { margin-top: 24px; }
+    .panel-mt { margin-top: 24px; }
+    .stat-critico { color: var(--critico); }
+    .stat-ok { color: var(--ok); }
+    .link-block {
+      display: block;
+      margin-top: 8px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .text-muted-sm {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .btn-spaced { margin-top: 10px; }
+    .btn-spaced-sm { margin-top: 8px; }
+
+    .form-body { display: flex; flex-direction: column; gap: 0; }
+    .form-section {
+      background: var(--paper-up);
+      border: 2px solid var(--ink);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .form-section-header {
+      padding: 14px 16px 12px;
+      border-bottom: 2px solid var(--ink);
+      background: var(--paper);
+    }
+    .form-section-kicker {
+      font-size: 0.55rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 4px;
+    }
+    .form-section-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .form-section-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .form-section-body .field-box {
+      margin-bottom: 0;
+      box-shadow: none;
+    }
+    .form-section-body .field-box--flat {
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 520px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+    .form-actions { margin-top: 4px; }
+
+    .label-required::after {
+      content: ' *';
+      color: var(--critico);
+      font-weight: 800;
+    }
+    .field-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+
+    .checkbox-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--ink);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .checkbox-field input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      margin: 2px 0 0;
+      padding: 0;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg);
+      border: 2px solid var(--ink);
+      flex-shrink: 0;
+    }
+    .checkbox-field input[type="checkbox"]:checked {
+      background: var(--ink);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath fill='%23FAF7F2' d='M1 5.2 4.1 8.3 11 1.4' stroke='%23FAF7F2' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 11px 9px;
+    }
+    .checkbox-field input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    @media (max-width: 520px) {
+      .input-row { grid-template-columns: 1fr; }
+      .input-row .btn-action { width: 100%; }
+    }
+    .input-row .btn-action { width: auto; min-width: 108px; }
+
+    .chips-spaced { margin-top: 10px; }
+    .estado-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .estado-btn.active.estado-critico {
+      background: var(--critico);
+      border-color: var(--critico);
+      color: var(--paper-up);
+    }
+    .estado-btn.active.estado-por-localizar {
+      background: var(--alerta);
+      border-color: var(--alerta);
+      color: var(--paper-up);
+    }
+    .estado-btn.active.estado-localizado {
+      background: var(--ok);
+      border-color: var(--ok);
+      color: var(--paper-up);
+    }
+
+    .hub-result-box {
+      max-height: 200px;
+      overflow: auto;
+      margin-top: 8px;
+    }
+    .form-search-panel { margin-bottom: 12px; }
+
+    .card-estado-critico { border-left-color: var(--critico); }
+    .card-estado-alerta { border-left-color: var(--alerta); }
+    .card-estado-ok { border-left-color: var(--ok); }
+    .card-estado-label-critico { color: var(--critico); }
+    .card-estado-label-alerta { color: var(--alerta); }
+    .card-estado-label-ok { color: var(--ok); }
+    .card-flag-critico { color: var(--critico); }
+
+    .sidebar-form-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sidebar-form-block .field-box { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -536,7 +744,7 @@
   <div id="aviso-apk" class="aviso-apk" role="alert">
     <strong>¿Estás en Chrome o Safari?</strong> El GPS en la página web muchas veces <strong>no funciona</strong>, aunque des permiso.
     Para rescatistas en campo: <strong>instale la app en el teléfono Android</strong> (no use esta página).
-    <a href="https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/71951c7f-e43e-4577-9621-57b6515b43d8" style="display:block;margin-top:8px;font-weight:800;color:var(--ink)">→ Toca aquí para instalar la app</a>
+    <a href="https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/71951c7f-e43e-4577-9621-57b6515b43d8" class="link-block">→ Toca aquí para instalar la app</a>
   </div>
   <div class="layout">
     <div class="main">
@@ -546,16 +754,16 @@
         <h1 class="titulo-editorial">Mesh<br />Network</h1>
         <div class="divider"></div>
         <span class="badge">Rescate en La Guaira · GPS · SMS</span>
-        <div class="panel" style="margin-top:24px">
+        <div class="panel panel-mt">
           <p class="panel-kicker">01 — Operación activa</p>
           <h2 class="panel-title">Red de rescate local</h2>
           <p class="panel-desc" id="hero-desc">Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.</p>
           <div class="stats-row">
             <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Reportes</div></div>
-            <div class="stat-card"><div class="stat-num" id="stat-criticos" style="color:var(--critico)">0</div><div class="stat-lbl">Críticos</div></div>
+            <div class="stat-card"><div class="stat-num stat-critico" id="stat-criticos">0</div><div class="stat-lbl">Críticos</div></div>
           </div>
           <div class="stats-row">
-            <div class="stat-card"><div class="stat-num" id="stat-localizados" style="color:var(--ok)">0</div><div class="stat-lbl">Localizados</div></div>
+            <div class="stat-card"><div class="stat-num stat-ok" id="stat-localizados">0</div><div class="stat-lbl">Localizados</div></div>
             <div class="stat-card"><div class="stat-num" id="stat-zonas">6</div><div class="stat-lbl">Zonas</div></div>
           </div>
         </div>
@@ -569,112 +777,153 @@
           <p class="panel-desc">Complete los datos clave. No comparta información sensible de terceros sin permiso.</p>
         </div>
 
-      <div class="field-box">
-        <label for="telefono">Teléfono de contacto</label>
-        <input id="telefono" type="text" inputmode="numeric" maxlength="12" placeholder="04121234567" autocomplete="tel" />
-        <p id="alert-telefono" class="field-alert" role="alert">Teléfono inválido: use solo números de Venezuela (11-12 dígitos, ej. 04121234567).</p>
-      </div>
-
-      <div class="field-box">
-        <label>Ciudad</label>
-        <div class="chips" id="ciudad-chips"></div>
-      </div>
-
-      <div class="field-box">
-        <label for="nombre">Nombre completo</label>
-        <input id="nombre" type="text" placeholder="Ej: Juan Pérez (opcional)" />
-      </div>
-
-      <div class="row">
-        <div class="field-box">
-          <label for="edad">Edad</label>
-          <input id="edad" type="text" maxlength="12" placeholder="34, RN, BEBE…" />
-          <p id="alert-edad" class="field-alert" role="alert">Edad inválida: use un número de 0 a 115 o una palabra operativa (RN, BEBE, NN, NA, ND, N/A, DESCON).</p>
-        </div>
-        <div class="field-box">
-          <label>Género</label>
-          <div class="chips" id="genero-chips">
-            <button type="button" class="chip active" data-g="M">M</button>
-            <button type="button" class="chip" data-g="F">F</button>
-            <button type="button" class="chip" data-g="Otro">Otro</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="field-box">
-        <label for="ubicacion">Ubicación exacta *</label>
-        <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
-        <button type="button" class="btn-gps" id="btn-gps">Capturar coordenadas GPS</button>
-        <p class="gps-line" id="gps-display" hidden></p>
-        <div class="gps-manual" id="gps-manual">
-          <p>Si el botón de arriba no funciona en su navegador, escriba las coordenadas a mano (cópielas desde Google Maps: toque el punto → compartir → copiar coordenadas).</p>
-          <div class="row">
-            <div>
-              <label for="lat-manual">Latitud</label>
-              <input id="lat-manual" type="text" inputmode="decimal" placeholder="10.601234" />
+        <div class="form-body">
+          <section class="form-section" aria-labelledby="sec-contacto-title">
+            <header class="form-section-header">
+              <p class="form-section-kicker">A — Contacto</p>
+              <h3 class="form-section-title" id="sec-contacto-title">Datos de contacto</h3>
+            </header>
+            <div class="form-section-body">
+              <div class="field-box">
+                <label for="telefono">Teléfono de contacto</label>
+                <input id="telefono" type="text" inputmode="numeric" maxlength="12" placeholder="04121234567" autocomplete="tel" />
+                <p id="alert-telefono" class="field-alert" role="alert">Teléfono inválido: use solo números de Venezuela (11-12 dígitos, ej. 04121234567).</p>
+              </div>
+              <div class="field-box">
+                <label for="nombre">Nombre completo</label>
+                <input id="nombre" type="text" placeholder="Ej: Juan Pérez (opcional)" />
+              </div>
             </div>
-            <div>
-              <label for="lng-manual">Longitud</label>
-              <input id="lng-manual" type="text" inputmode="decimal" placeholder="-66.934567" />
+          </section>
+
+          <section class="form-section" aria-labelledby="sec-ubicacion-title">
+            <header class="form-section-header">
+              <p class="form-section-kicker">B — Ubicación</p>
+              <h3 class="form-section-title" id="sec-ubicacion-title">Dónde se encuentra</h3>
+            </header>
+            <div class="form-section-body">
+              <div class="field-box">
+                <label>Ciudad</label>
+                <div class="chips" id="ciudad-chips"></div>
+              </div>
+              <div class="field-box">
+                <label for="ubicacion" class="label-required">Ubicación exacta</label>
+                <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
+                <button type="button" class="btn-gps" id="btn-gps">Capturar coordenadas GPS</button>
+                <p class="gps-line" id="gps-display" hidden></p>
+                <div class="gps-manual" id="gps-manual">
+                  <p>Si el botón de arriba no funciona en su navegador, escriba las coordenadas a mano (cópielas desde Google Maps: toque el punto → compartir → copiar coordenadas).</p>
+                  <div class="form-grid">
+                    <div>
+                      <label for="lat-manual">Latitud</label>
+                      <input id="lat-manual" type="text" inputmode="decimal" placeholder="10.601234" />
+                    </div>
+                    <div>
+                      <label for="lng-manual">Longitud</label>
+                      <input id="lng-manual" type="text" inputmode="decimal" placeholder="-66.934567" />
+                    </div>
+                  </div>
+                  <button type="button" class="btn-action btn-copy btn-spaced" id="btn-usar-manual">Usar estas coordenadas</button>
+                </div>
+              </div>
+              <div class="field-box">
+                <label for="zona-tag">Zona afectada (sector)</label>
+                <input id="zona-tag" type="text" placeholder="Ej: Macuto-El Cojo" />
+              </div>
+              <div class="field-box">
+                <label for="direccion-origen">Dirección de origen</label>
+                <input id="direccion-origen" type="text" placeholder="De dónde es la familia" />
+              </div>
             </div>
-          </div>
-          <button type="button" class="btn-action btn-copy" id="btn-usar-manual" style="margin-top:10px">Usar estas coordenadas</button>
+          </section>
+
+          <section class="form-section" aria-labelledby="sec-triaje-title">
+            <header class="form-section-header">
+              <p class="form-section-kicker">C — Triaje</p>
+              <h3 class="form-section-title" id="sec-triaje-title">Estado de la persona</h3>
+            </header>
+            <div class="form-section-body">
+              <div class="form-grid">
+                <div class="field-box">
+                  <label for="edad">Edad</label>
+                  <input id="edad" type="text" maxlength="12" placeholder="34, RN, BEBE…" />
+                  <p id="alert-edad" class="field-alert" role="alert">Edad inválida: use un número de 0 a 115 o una palabra operativa (RN, BEBE, NN, NA, ND, N/A, DESCON).</p>
+                </div>
+                <div class="field-box">
+                  <label>Género</label>
+                  <div class="chips" id="genero-chips">
+                    <button type="button" class="chip active" data-g="M">M</button>
+                    <button type="button" class="chip" data-g="F">F</button>
+                    <button type="button" class="chip" data-g="Otro">Otro</button>
+                  </div>
+                </div>
+              </div>
+              <div class="field-box">
+                <label>Estado actual (prioridad: CRÍTICO → POR LOCALIZAR → LOCALIZADO)</label>
+                <div class="estado-chips" id="estado-chips">
+                  <button type="button" class="estado-btn" data-s="CRITICO">CRITICO</button>
+                  <button type="button" class="estado-btn active estado-por-localizar" data-s="POR LOCALIZAR">POR LOCALIZAR</button>
+                  <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section" aria-labelledby="sec-censo-title">
+            <header class="form-section-header">
+              <p class="form-section-kicker">D — Censo</p>
+              <h3 class="form-section-title" id="sec-censo-title">Grupo y vivienda</h3>
+            </header>
+            <div class="form-section-body">
+              <div class="field-box">
+                <label for="censo-input">Censo del grupo (nombre o cédula)</label>
+                <div class="input-row">
+                  <input id="censo-input" type="text" placeholder="Agregar persona" />
+                  <button type="button" class="btn-action btn-copy" id="btn-censo-add">Agregar</button>
+                </div>
+                <div class="chips chips-spaced" id="censo-chips"></div>
+                <p id="alert-censo" class="field-alert" role="alert">Entrada de censo inválida: use nombre (2-60 caracteres) o cédula venezolana (V/E/J + dígitos).</p>
+              </div>
+              <div class="field-box field-box--flat">
+                <label class="checkbox-field" for="sin-vivienda">
+                  <input type="checkbox" id="sin-vivienda" />
+                  <span>Requiere vivienda de emergencia</span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section" aria-labelledby="sec-notas-title">
+            <header class="form-section-header">
+              <p class="form-section-kicker">E — Notas</p>
+              <h3 class="form-section-title" id="sec-notas-title">Observaciones del paramédico</h3>
+            </header>
+            <div class="form-section-body">
+              <div class="field-box field-box--flat">
+                <label for="notas">Notas del paramédico</label>
+                <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
+              </div>
+            </div>
+          </section>
         </div>
-      </div>
 
-      <div class="field-box">
-        <label>Estado actual (prioridad: CRÍTICO → POR LOCALIZAR → LOCALIZADO)</label>
-        <div class="chips" id="estado-chips">
-          <button type="button" class="estado-btn" data-s="CRITICO">CRITICO</button>
-          <button type="button" class="estado-btn active" data-s="POR LOCALIZAR">POR LOCALIZAR</button>
-          <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
+        <div class="form-actions">
+          <button type="button" class="btn-emergencia" id="btn-guardar">Registrar punto de rescate</button>
         </div>
-      </div>
-
-      <div class="field-box">
-        <label for="zona-tag">Zona afectada (sector)</label>
-        <input id="zona-tag" type="text" placeholder="Ej: Macuto-El Cojo" />
-      </div>
-
-      <div class="field-box">
-        <label for="direccion-origen">Dirección de origen</label>
-        <input id="direccion-origen" type="text" placeholder="De dónde es la familia" />
-      </div>
-
-      <div class="field-box">
-        <label for="censo-input">Censo del grupo (nombre o cédula)</label>
-        <div class="row">
-          <input id="censo-input" type="text" placeholder="Agregar persona" style="flex:1" />
-          <button type="button" class="btn-action btn-copy" id="btn-censo-add">Agregar</button>
-        </div>
-        <div class="chips" id="censo-chips" style="margin-top:10px"></div>
-        <p id="alert-censo" class="field-alert" role="alert">Entrada de censo inválida: use nombre (2-60 caracteres) o cédula venezolana (V/E/J + dígitos).</p>
-      </div>
-
-      <div class="field-box">
-        <label><input type="checkbox" id="sin-vivienda" /> Requiere vivienda de emergencia</label>
-      </div>
-
-      <div class="field-box">
-        <label for="notas">Notas del paramédico</label>
-        <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
-      </div>
-
-      <button type="button" class="btn-emergencia" id="btn-guardar">Registrar punto de rescate</button>
       </div>
 
       <div id="tab-reportes" class="tab-panel">
-      <div class="lista-header">
-        <span class="lista-titulo">Reportes en dispositivo</span>
-        <span class="lista-count" id="count">0 activos</span>
-      </div>
-      <div class="field-box" style="margin-bottom:12px">
-        <label for="busqueda-tactica">Buscar persona o zona</label>
-        <input id="busqueda-tactica" type="search" placeholder="Buscar por nombre, cédula o sector…" />
-      </div>
-      <div class="lista" id="lista">
-        <p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>
-      </div>
+        <div class="lista-header">
+          <span class="lista-titulo">Reportes en dispositivo</span>
+          <span class="lista-count" id="count">0 activos</span>
+        </div>
+        <div class="field-box form-search-panel">
+          <label for="busqueda-tactica">Buscar persona o zona</label>
+          <input id="busqueda-tactica" type="search" placeholder="Buscar por nombre, cédula o sector…" />
+        </div>
+        <div class="lista" id="lista">
+          <p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>
+        </div>
       </div>
 
       <div id="tab-comando" class="tab-panel">
@@ -683,7 +932,7 @@
           <p class="panel-kicker">04 — Comando central</p>
           <h2 class="panel-title">Comando Central La Guaira</h2>
           <p class="panel-desc">Mesh Network Venezuela opera de forma autónoma. Los reportes se transmiten por SMS al comando cuando hay señal.</p>
-          <p class="panel-desc" style="margin-top:12px"><strong>Brigada:</strong> Brigada-Rescate-LG</p>
+          <p class="panel-desc mt-md"><strong>Brigada:</strong> Brigada-Rescate-LG</p>
           <p class="panel-desc"><strong>SMS:</strong> <span id="comando-display">04140000000</span></p>
         </div>
         <button type="button" class="btn-primary" onclick="irTab('registro')">Ir a registro en campo</button>
@@ -698,39 +947,75 @@
             <strong> Los rescatistas en la calle deben usar la app instalada en el teléfono.</strong>
           </p>
         </div>
-        <div class="field-box">
-          <label for="hub-buscar-query">Buscar por nombre o cédula</label>
-          <input id="hub-buscar-query" type="text" placeholder="Ej: María López" />
-          <button type="button" class="btn-action btn-copy" id="btn-hub-buscar" style="margin-top:8px">Buscar en la red</button>
-          <pre class="sms-box hub-resultado" id="hub-buscar-out" style="max-height:200px;overflow:auto;margin-top:8px">Escriba un nombre y toque «Buscar en la red».</pre>
-        </div>
-        <div class="field-box">
-          <label>Zonas con más damnificados</label>
-          <button type="button" class="btn-action btn-fusionar" id="btn-hub-zonas">Ver zonas afectadas</button>
-          <pre class="sms-box hub-resultado" id="hub-zonas-out" style="max-height:200px;overflow:auto;margin-top:8px">Toque el botón para ver el resumen por sector.</pre>
-        </div>
-        <div class="field-box">
-          <label>Todos los reportes en la red</label>
-          <button type="button" class="btn-action btn-copy" id="btn-hub-consultar">Ver listado completo</button>
-          <pre class="sms-box hub-resultado" id="hub-consultar-out" style="max-height:200px;overflow:auto">Toque «Ver listado completo» para consultar.</pre>
-        </div>
-        <p class="panel-desc" style="margin-top:8px;font-size:0.85rem;color:var(--muted)">
+
+        <section class="form-section" aria-labelledby="hub-buscar-title">
+          <header class="form-section-header">
+            <p class="form-section-kicker">Consulta</p>
+            <h3 class="form-section-title" id="hub-buscar-title">Buscar persona</h3>
+          </header>
+          <div class="form-section-body">
+            <div class="field-box field-box--flat">
+              <label for="hub-buscar-query">Buscar por nombre o cédula</label>
+              <input id="hub-buscar-query" type="text" placeholder="Ej: María López" />
+              <button type="button" class="btn-action btn-copy btn-spaced-sm" id="btn-hub-buscar">Buscar en la red</button>
+              <pre class="sms-box hub-resultado hub-result-box" id="hub-buscar-out">Escriba un nombre y toque «Buscar en la red».</pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="hub-zonas-title">
+          <header class="form-section-header">
+            <p class="form-section-kicker">Resumen</p>
+            <h3 class="form-section-title" id="hub-zonas-title">Zonas afectadas</h3>
+          </header>
+          <div class="form-section-body">
+            <div class="field-box field-box--flat">
+              <label for="btn-hub-zonas">Zonas con más damnificados</label>
+              <button type="button" class="btn-action btn-fusionar" id="btn-hub-zonas">Ver zonas afectadas</button>
+              <pre class="sms-box hub-resultado hub-result-box" id="hub-zonas-out">Toque el botón para ver el resumen por sector.</pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="hub-listado-title">
+          <header class="form-section-header">
+            <p class="form-section-kicker">Listado</p>
+            <h3 class="form-section-title" id="hub-listado-title">Todos los reportes</h3>
+          </header>
+          <div class="form-section-body">
+            <div class="field-box field-box--flat">
+              <label for="btn-hub-consultar">Todos los reportes en la red</label>
+              <button type="button" class="btn-action btn-copy" id="btn-hub-consultar">Ver listado completo</button>
+              <pre class="sms-box hub-resultado hub-result-box" id="hub-consultar-out">Toque «Ver listado completo» para consultar.</pre>
+            </div>
+          </div>
+        </section>
+
+        <p class="text-muted-sm">
           Si administra otra página de ayuda y necesita conectarla, escríbanos — esta sección es para coordinación entre equipos, no para registrar en campo.
         </p>
       </div>
     </div>
 
     <aside class="sidebar tab-panel" id="tab-sms">
-      <h2>Compartir por SMS</h2>
+      <h2>Compartir con otra brigada</h2>
       <p class="sms-meta">
-        Número del comando: <strong id="comando-num">04140000000</strong><br />
-        Si son muchos reportes, el mensaje puede salir en varias partes — envíe todas.
+        Copie sus reportes y péguelos en un mensaje a otra brigada. Si son muchos, el texto puede salir en varias partes — envíe todas.
       </p>
-      <div class="sms-box" id="sms-output">Sin reportes todavía</div>
-      <button type="button" class="btn-action btn-copy" id="btn-copy">Copiar mensaje para enviar</button>
-      <button type="button" class="btn-action btn-comando" id="btn-comando">Enviar al comando central</button>
-      <textarea class="sync-input" id="import-input" placeholder="Pegue aquí el mensaje de texto que recibió de otra brigada…"></textarea>
-      <button type="button" class="btn-action btn-fusionar" id="btn-fusionar">Agregar reportes recibidos</button>
+
+      <div class="sidebar-form-block">
+        <div class="field-box">
+          <label for="sms-output">Reportes para compartir</label>
+          <div class="sms-box" id="sms-output" role="status">Sin reportes todavía</div>
+          <button type="button" class="btn-action btn-copy btn-spaced-sm" id="btn-copy">Copiar reportes para compartir</button>
+        </div>
+
+        <div class="field-box">
+          <label for="import-input">Importar de otra brigada</label>
+          <textarea class="sync-input" id="import-input" placeholder="Pegue aquí el mensaje que recibió de otra brigada…"></textarea>
+          <button type="button" class="btn-action btn-fusionar btn-spaced-sm" id="btn-fusionar">Agregar reportes recibidos</button>
+        </div>
+      </div>
     </aside>
   </div>
 
@@ -762,7 +1047,7 @@
     };
 
     const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LOCALIZADO: 2 };
-    const BORDE = { CRITICO: '#B91C1C', 'POR LOCALIZAR': '#B45309', LOCALIZADO: '#166534' };
+    const BORDE = { CRITICO: '#FF4444', 'POR LOCALIZAR': '#FFB020', LOCALIZADO: '#4ADE80' };
 
     class StorageReporteRepository {
       constructor() {
@@ -998,6 +1283,11 @@
       return '+58' + limpio;
     }
 
+    function mensajeParaPersona(item) {
+      const lugar = item.zona_afectada_tag || item.ubicacion_exacta || item.ciudad || 'su zona';
+      return `Brigada de Rescate La Guaira (Mesh Network). Registramos su caso en ${lugar}. Responda a este mensaje o llame a este mismo numero para coordinar la ayuda.`;
+    }
+
     const repo = new StorageReporteRepository();
     let generoSel = 'M';
     let estadoSel = 'POR LOCALIZAR';
@@ -1059,7 +1349,6 @@
     }
 
     const $ = (id) => document.getElementById(id);
-    $('comando-num').textContent = CONFIG.COMANDO_CENTRAL_SMS;
     const cmdDisplay = $('comando-display');
     if (cmdDisplay) cmdDisplay.textContent = CONFIG.COMANDO_CENTRAL_SMS;
 
@@ -1111,7 +1400,7 @@
       const c = BORDE[estadoSel];
       btn.style.background = c;
       btn.style.borderColor = c;
-      btn.style.color = '#FAF7F2';
+      btn.style.color = '#FFFFFF';
     }
 
     document.querySelectorAll('#estado-chips .estado-btn').forEach((btn) => {
@@ -1211,27 +1500,39 @@
         return;
       }
       lista.innerHTML = visibles.map((item) => {
-        const borde = BORDE[item.estado_actual] || '#888';
+        const est = CARD_ESTADO[item.estado_actual] || { card: '', label: '' };
         const nav = item.latitud != null && item.longitud != null
           ? `<a class="btn-navegar" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${item.latitud},${item.longitud}&travelmode=walking">Navegar al punto</a>`
           : '';
         const gps = item.latitud != null
           ? `<div class="card-gps">🛰️ ${formatearCoordenadas(item.latitud, item.longitud)}</div>`
           : '';
+        let contacto = '';
+        const telLimpio = String(item.telefono_contacto || '').replace(/\D/g, '');
+        if (telLimpio) {
+          const numero = smsNumeroInternacional(telLimpio);
+          const sep = /iphone|ipad|ipod/i.test(navigator.userAgent) ? '&' : '?';
+          const cuerpo = encodeURIComponent(mensajeParaPersona(item));
+          contacto = `<div class="card-acciones">
+              <a class="btn-contacto" href="sms:${numero}${sep}body=${cuerpo}">Enviar mensaje</a>
+              <a class="btn-contacto llamar" href="tel:${numero}">Llamar</a>
+            </div>`;
+        }
         return `
-          <div class="card" style="border-left-color:${borde}">
+          <div class="card ${est.card}">
             <div class="card-top">
-              <span class="card-estado" style="color:${borde}">${item.estado_actual}</span>
+              <span class="card-estado ${est.label}">${item.estado_actual}</span>
               <span class="card-id">${item.id}</span>
             </div>
             <div class="card-nombre">${item.nombre_completo}${item.edad !== '0' ? ' · ' + item.edad + ' años' : ''} · ${item.genero}</div>
             ${item.zona_afectada_tag ? `<div class="card-notas">Zona: ${item.zona_afectada_tag}</div>` : ''}
-            ${item.tiene_hogar_actual === false ? '<div class="card-notas" style="color:var(--critico)">SIN VIVIENDA</div>' : ''}
+            ${item.tiene_hogar_actual === false ? '<div class="card-notas card-flag-critico">SIN VIVIENDA</div>' : ''}
             ${item.censo_personas?.length ? `<div class="card-notas">Censo (${item.censo_personas.length}): ${item.censo_personas.join(', ')}</div>` : ''}
             ${item.telefono_contacto ? `<div class="card-notas">📞 ${item.telefono_contacto}</div>` : ''}
             <div class="card-ubicacion">🏙️ ${item.ciudad || 'La Guaira'} · 📍 ${item.ubicacion_exacta}</div>
             ${gps}
             ${item.notas_paramedicos ? `<div class="card-notas">${item.notas_paramedicos}</div>` : ''}
+            ${contacto}
             ${nav}
             <div class="card-time">${new Date(item.timestamp).toLocaleString('es-VE')}</div>
           </div>`;
@@ -1363,15 +1664,6 @@
         document.body.removeChild(ta);
       }
       toast(`📲 Mensaje copiado (${cadena.length} caracteres)`);
-    });
-
-    $('btn-comando').addEventListener('click', () => {
-      const lotes = partirCadenaEnLotes(repo.comprimirParaSMS());
-      const encabezado = `[${CONFIG.BRIGADA_ID}] ${CONFIG.NOMBRE_COMANDO}\n`;
-      const cuerpo = encabezado + lotes[0];
-      const href = `sms:${smsNumeroInternacional(CONFIG.COMANDO_CENTRAL_SMS)}?body=${encodeURIComponent(cuerpo)}`;
-      window.location.href = href;
-      toast(`🚨 SMS lote 1/${lotes.length} — envíe cada lote cuando haya señal`);
     });
 
     $('btn-fusionar').addEventListener('click', () => {

@@ -4,6 +4,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StatusBar,
@@ -89,9 +90,6 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   const [guardando, setGuardando] = useState(false);
   const [importando, setImportando] = useState(false);
   const [obteniendoGps, setObteniendoGps] = useState(false);
-  const [enviandoSms, setEnviandoSms] = useState(false);
-  const [lotesPendientes, setLotesPendientes] = useState<string[]>([]);
-  const [indiceLote, setIndiceLote] = useState(0);
   const [tabActiva, setTabActiva] = useState<TabId>('inicio');
   const [censoPersonas, setCensoPersonas] = useState<string[]>([]);
   const [tieneHogarActual, setTieneHogarActual] = useState(true);
@@ -329,76 +327,6 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     );
   }, [repository, reportes.length]);
 
-  const enviarLoteSms = useCallback(
-    async (lotes: string[], indice: number) => {
-      const mensaje = lotes[indice];
-      const resultado = await SmsDirectService.enviarMensaje(mensaje);
-
-      if (lotes.length === 1) {
-        if (resultado === 'cancelado') {
-          Alert.alert('SMS', 'Envío cancelado. Datos copiados en portapapeles.');
-        }
-        setLotesPendientes([]);
-        setIndiceLote(0);
-        return;
-      }
-
-      const quedan = indice + 1 < lotes.length;
-      Alert.alert(
-        `📨 SMS ${indice + 1}/${lotes.length}`,
-        resultado === 'cancelado'
-          ? 'Envío cancelado. Use COMPRIMIR o reintente el lote.'
-          : quedan
-            ? `Lote ${indice + 1} enviado. Falta(n) ${lotes.length - indice - 1} lote(s).`
-            : 'Todos los lotes SMS fueron procesados.',
-        quedan
-          ? [
-              { text: 'Cancelar', style: 'cancel' },
-              {
-                text: `ENVIAR LOTE ${indice + 2}/${lotes.length}`,
-                onPress: () => {
-                  setIndiceLote(indice + 1);
-                  void enviarLoteSms(lotes, indice + 1);
-                },
-              },
-            ]
-          : [{ text: 'OK' }]
-      );
-    },
-    []
-  );
-
-  const enviarAlComandoCentral = useCallback(async () => {
-    if (reportes.length === 0) {
-      Alert.alert('Sin datos', 'No hay reportes para enviar al comando.');
-      return;
-    }
-
-    setEnviandoSms(true);
-    try {
-      const lotes = repository.comprimirParaSMSEnLotes();
-      const encabezado = `[${OperacionConfig.BRIGADA_ID}] ${OperacionConfig.NOMBRE_COMANDO}\n`;
-      const mensaje = encabezado + lotes[0];
-      await Clipboard.setStringAsync(lotes.map((l, i) => `${encabezado}Lote ${i + 1}/${lotes.length}\n${l}`).join('\n\n'));
-      setLotesPendientes(lotes.map((l) => encabezado + l));
-      setIndiceLote(0);
-      const resultado = await SmsDirectService.enviarAlComandoCentral(mensaje);
-      if (lotes.length > 1) {
-        Alert.alert(
-          '🚨 COMANDO CENTRAL',
-          `SMS 1/${lotes.length} abierto para ${OperacionConfig.COMANDO_CENTRAL_SMS}.\nEnvíe cada lote cuando haya señal.`
-        );
-      } else if (resultado === 'cancelado') {
-        Alert.alert('SMS', 'Envío cancelado. Datos en portapapeles.');
-      }
-    } catch (error) {
-      const mensaje = error instanceof Error ? error.message : 'Error al abrir SMS.';
-      Alert.alert('⚠ COMANDO CENTRAL', mensaje);
-    } finally {
-      setEnviandoSms(false);
-    }
-  }, [repository, reportes.length]);
-
   const navegarAlPunto = useCallback(async (item: ReporteEmergencia) => {
     if (item.latitud === 0 && item.longitud === 0) {
       Alert.alert('Sin GPS', 'Este reporte no tiene coordenadas para navegar.');
@@ -416,17 +344,41 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     }
   }, []);
 
-  const enviarSiguienteLote = useCallback(async () => {
-    const siguiente = indiceLote + 1;
-    if (lotesPendientes.length === 0 || siguiente >= lotesPendientes.length) return;
-    setEnviandoSms(true);
-    try {
-      setIndiceLote(siguiente);
-      await enviarLoteSms(lotesPendientes, siguiente);
-    } finally {
-      setEnviandoSms(false);
+  const mensajeParaPersona = useCallback((item: ReporteEmergencia): string => {
+    const lugar =
+      item.zona_afectada_tag || item.ubicacion_exacta || item.ciudad || 'su zona';
+    return `Brigada de Rescate La Guaira (Mesh Network). Registramos su caso en ${lugar}. Responda a este mensaje o llame a este mismo numero para coordinar la ayuda.`;
+  }, []);
+
+  const contactarPersona = useCallback(
+    async (item: ReporteEmergencia) => {
+      const numero = SmsDirectService.normalizarVE(item.telefono_contacto);
+      if (!numero) {
+        Alert.alert('Sin teléfono', 'Este reporte no tiene un teléfono de contacto.');
+        return;
+      }
+      try {
+        await SmsDirectService.enviarMensaje(mensajeParaPersona(item), numero);
+      } catch (error) {
+        const mensaje = error instanceof Error ? error.message : 'No se pudo abrir SMS.';
+        Alert.alert('⚠ MENSAJE', mensaje);
+      }
+    },
+    [mensajeParaPersona]
+  );
+
+  const llamarPersona = useCallback(async (item: ReporteEmergencia) => {
+    const numero = SmsDirectService.normalizarVE(item.telefono_contacto);
+    if (!numero) {
+      Alert.alert('Sin teléfono', 'Este reporte no tiene un teléfono de contacto.');
+      return;
     }
-  }, [lotesPendientes, indiceLote, enviarLoteSms]);
+    try {
+      await Linking.openURL(`tel:${numero}`);
+    } catch {
+      Alert.alert('⚠ LLAMADA', 'No se pudo iniciar la llamada.');
+    }
+  }, []);
 
   const pegarYFusionar = useCallback(async () => {
     setImportando(true);
@@ -508,6 +460,24 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         {item.telefono_contacto ? (
           <Text style={styles.cardContacto}>{item.telefono_contacto}</Text>
         ) : null}
+        {item.telefono_contacto ? (
+          <View style={styles.cardAcciones}>
+            <TouchableOpacity
+              style={[styles.btnContacto, styles.btnMensaje]}
+              onPress={() => contactarPersona(item)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.btnContactoText}>ENVIAR MENSAJE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.btnContacto, styles.btnLlamar]}
+              onPress={() => llamarPersona(item)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.btnContactoText}>LLAMAR</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <Text style={styles.cardCiudad}>{item.ciudad}</Text>
         <Text style={styles.cardUbicacion}>{item.ubicacion_exacta}</Text>
         {item.latitud !== 0 || item.longitud !== 0 ? (
@@ -535,7 +505,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         </Text>
       </View>
     );
-  }, [navegarAlPunto, fotosCache]);
+  }, [navegarAlPunto, contactarPersona, llamarPersona, fotosCache]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -1308,6 +1278,31 @@ const styles = StyleSheet.create({
   },
   btnNavegarText: {
     color: T.ink,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  cardAcciones: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  btnContacto: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: T.border,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  btnMensaje: {
+    backgroundColor: T.accentDark,
+  },
+  btnLlamar: {
+    backgroundColor: T.ok,
+  },
+  btnContactoText: {
+    color: T.bg,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.2,

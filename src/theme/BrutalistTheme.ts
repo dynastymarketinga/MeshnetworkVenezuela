@@ -1,19 +1,27 @@
-/** Paleta editorial brutalista — off-white, tinta, sombras papel */
+/** Paleta premium dark/gold/cyan — alineada con index.html web */
 export const BrutalistTheme = {
-  bg: '#F5F0E8',
-  paper: '#EDE8DF',
-  paperElevated: '#FAF7F2',
-  ink: '#1C1C1C',
-  inkMuted: '#6B6560',
-  inkLight: '#9A948C',
-  meshBlue: '#4A8FC7',
-  meshBlueDark: '#2E6A9E',
-  border: '#1C1C1C',
-  borderLight: '#C4BDB4',
-  critico: '#B91C1C',
-  alerta: '#B45309',
-  ok: '#166534',
-  shadow: '#1C1C1C',
+  /* Principal */
+  bg: '#000000',
+  ink: '#FFFFFF',
+  inkMuted: '#D4AF37',
+  inkLight: '#A1813D',
+  /* Secundario */
+  paper: '#141414',
+  paperElevated: '#1A1A1A',
+  meshBlue: '#00FFFF',
+  meshBlueDark: '#00CCCC',
+  /* Bloque inferior / nav */
+  navBg: '#F8F8F8',
+  navInk: '#000000',
+  navMuted: '#8B6D36',
+  /* Bordes */
+  border: '#D4AF37',
+  borderLight: '#8B6D36',
+  /* Estados semánticos */
+  critico: '#FF4444',
+  alerta: '#FFB020',
+  ok: '#4ADE80',
+  shadow: '#D4AF37',
 } as const;
 
 export const paperShadow = {

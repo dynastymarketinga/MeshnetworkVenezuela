@@ -2,7 +2,7 @@
 
 Herramienta **offline-first** para paramédicos y brigadas de rescate en **La Guaira**. Registra personas, infraestructura dañada y familias sin vivienda con GPS, persiste en SQLite y transmite por **SMS manual** (`MNv2`) cuando hay señal GSM.
 
-- **App de campo:** APK Android v1.1.0 (`com.vic_arx.meshnetworkvenezuela`)
+- **App de campo:** APK Android v1.2.0 (`com.vic_arx.meshnetworkvenezuela`)
 - **Hub integración:** [meshnetwork-venezuela.vercel.app/api/hub](https://meshnetwork-venezuela.vercel.app/api/hub) (otras apps; requiere Vercel KV)
 - **Demo web:** [meshnetwork-venezuela.vercel.app](https://meshnetwork-venezuela.vercel.app) (no sustituye el APK)
 - **Repo:** [github.com/dynastymarketinga/MeshnetworkVenezuela](https://github.com/dynastymarketinga/MeshnetworkVenezuela)
@@ -17,7 +17,7 @@ Herramienta **offline-first** para paramédicos y brigadas de rescate en **La Gu
 | Tipos de registro | Persona atrapada, infraestructura, sin vivienda |
 | Enlace entre brigadas | SMS `MNv2\|1/3\|…` (compatible MNv1) |
 | Fusión | `INSERT OR IGNORE` / `REPLACE` si timestamp mayor |
-| UI | OLED táctico `#000000` / `#00AEEF` |
+| UI | Editorial brutalista claro: papel `#F5F0E8`, tinta `#1C1C1C`, acento azul `#4A8FC7` |
 
 ---
 

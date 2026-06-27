@@ -1,6 +1,10 @@
 /** Configuración operativa — editar número antes del despliegue en La Guaira */
 export const OperacionConfig = {
-  /** Central Bomberos / Protección Civil — formato sin espacios: 0414XXXXXXX */
+  /**
+   * ⚠️ PLACEHOLDER — NO ES UN NÚMERO REAL. DEBE reemplazarse antes de desplegar.
+   * Central Bomberos / Protección Civil — formato sin espacios: 0414XXXXXXX.
+   * Si se despliega con este valor ('04140000000'), los SMS al comando NO llegarán.
+   */
   COMANDO_CENTRAL_SMS: '04140000000',
   NOMBRE_COMANDO: 'Comando Central La Guaira',
   BRIGADA_ID: 'Brigada-Rescate-LG',
