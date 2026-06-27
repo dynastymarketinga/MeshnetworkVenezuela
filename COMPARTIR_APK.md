@@ -8,7 +8,7 @@
 Mesh Network Venezuela — app de rescate La Guaira
 
 1. Abre ESTE enlace EN TU ANDROID (no en PC):
-https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/3fba0ec4-6b7c-4e0e-85a0-2fc79f84a95b
+https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/b20f525e-b22e-48d8-a669-e2bf15ec1877
 
 2. Instala la app (permite «orígenes desconocidos» si pregunta).
 
