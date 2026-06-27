@@ -1,5 +1,11 @@
 import { kv } from '@vercel/kv';
-import { reporteEmergenciaSchema, type ReporteEmergenciaValidado } from './validateReporte';
+import {
+  agregarPorZonas,
+  coincideBusqueda,
+  reporteEmergenciaSchema,
+  type ReporteEmergenciaValidado,
+  type ZonaAgregada,
+} from './validateReporte';
 
 const HUB_KEY = 'mesh:hub:reportes';
 
@@ -15,11 +21,8 @@ function assertKvConfigurado(): void {
   }
 }
 
-export async function consultarTodos(): Promise<ReporteEmergenciaValidado[]> {
-  assertKvConfigurado();
-  const datos = await kv.get<Record<string, ReporteEmergenciaValidado>>(HUB_KEY);
-  if (!datos) return [];
-  return Object.values(datos).sort((a, b) => {
+function ordenar(reportes: ReporteEmergenciaValidado[]): ReporteEmergenciaValidado[] {
+  return [...reportes].sort((a, b) => {
     const prioridad = (s: string) =>
       s === 'CRITICO' ? 0 : s === 'POR LOCALIZAR' ? 1 : s === 'LOCALIZADO' ? 2 : 3;
     const pa = prioridad(a.estado_actual);
@@ -27,6 +30,28 @@ export async function consultarTodos(): Promise<ReporteEmergenciaValidado[]> {
     if (pa !== pb) return pa - pb;
     return b.timestamp - a.timestamp;
   });
+}
+
+export async function consultarTodos(): Promise<ReporteEmergenciaValidado[]> {
+  assertKvConfigurado();
+  const datos = await kv.get<Record<string, ReporteEmergenciaValidado>>(HUB_KEY);
+  if (!datos) return [];
+  return ordenar(Object.values(datos));
+}
+
+export async function buscarPersona(
+  query: string,
+  incluirFoto: boolean
+): Promise<ReporteEmergenciaValidado[]> {
+  const todos = await consultarTodos();
+  const coincidencias = todos.filter((r) => coincideBusqueda(r, query));
+  if (incluirFoto) return coincidencias;
+  return coincidencias.map((r) => ({ ...r, foto_estructura_b64: '' }));
+}
+
+export async function consultarZonas(): Promise<ZonaAgregada[]> {
+  const todos = await consultarTodos();
+  return agregarPorZonas(todos);
 }
 
 export async function registrar(

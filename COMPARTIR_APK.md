@@ -5,18 +5,18 @@
 ## Mensaje para WhatsApp (copiar y pegar)
 
 ```
-Mesh Network Venezuela — app de rescate La Guaira
+Mesh Network Venezuela v1.2.0 — rescate La Guaira
 
 1. Abre ESTE enlace EN TU ANDROID (no en PC):
 https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/b20f525e-b22e-48d8-a669-e2bf15ec1877
 
-2. Instala la app (permite «orígenes desconocidos» si pregunta).
+2. Instala la app. Si Play Protect bloquea: Play Store → Play Protect → engranaje → desactiva análisis → instala.
 
-3. Abre la app → Registro → toca «Capturar coordenadas GPS» → PERMITIR ubicación.
+3. Abre la app → Registro → Capturar GPS → PERMITIR ubicación y cámara.
 
-4. Complete ubicación + datos → «Registrar punto de rescate».
+4. Complete datos, censo del grupo, zona → Registrar punto de rescate.
 
-5. Ve a Reportes: ahí debe aparecer el punto guardado.
+5. Reportes: buscador táctico + lista guardada. Con internet sube solo al Hub.
 ```
 
 > Tras una build nueva en Expo, sustituye el enlace por el último build en la cuenta `victorx2`.
@@ -26,12 +26,13 @@ https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/b20f525
 | Causa | Solución |
 |-------|----------|
 | Abrió la web en Chrome, no la app | Reinstalar desde el enlace de arriba |
-| GPS no funciona en la página | Normal en navegador — instale la **app** o en la web escriba latitud/longitud a mano (desde Google Maps) |
+| GPS no funciona en la página | Normal en navegador — instale la **app** o escriba coordenadas a mano |
+| Botones abajo chocan con el menú del teléfono | Actualice a APK **v1.2.0** (safe area corregido) |
 | No capturó GPS | Debe tocar el botón azul antes de registrar |
-| No registró | Sin GPS + ubicación escrita no guarda nada |
+| Play Protect bloqueó | Ver paso 2 del mensaje |
 
 ## Versión actual
 
-APK **1.1.0** — MNv2, UI OLED, Hub separado en Vercel para otras apps.
+APK **1.2.0** — Damnificados, censo, foto evicción, buscador táctico, sync auto Hub MNv2.1.
 
-Ver **`HUB_INTEGRACION_DESARROLLADORES.md`** para integradores.
+Ver **`HUB_INTEGRACION_DESARROLLADORES.md`** para integradores (ayudavenezuela, terremotovenezuela, etc.).

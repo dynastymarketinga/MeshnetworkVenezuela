@@ -12,6 +12,8 @@ import {
   ReporteEntrada,
   TIPOS_REGISTRO,
   TipoRegistro,
+  construirCensoBusqueda,
+  normalizarTextoBusqueda,
 } from '../../domain/entities/Reporte';
 import {
   IReporteRepository,
@@ -25,6 +27,24 @@ import { OperacionConfig } from '../../config/OperacionConfig';
 import { obtenerBaseDeDatos } from '../database/SQLiteDatabase';
 
 const LEGACY_STORAGE_KEY = '@meshnetwork_venezuela_reportes_v1';
+
+const SELECT_LISTA = `
+  id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
+  ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp,
+  censo_personas, tiene_hogar_actual, direccion_origen, zona_afectada_tag,
+  hub_sincronizado_en, censo_busqueda
+`;
+
+const ORDER_PRIORIDAD = `
+  ORDER BY
+    CASE estado
+      WHEN 'CRITICO' THEN 0
+      WHEN 'POR LOCALIZAR' THEN 1
+      WHEN 'LOCALIZADO' THEN 2
+      ELSE 3
+    END,
+    timestamp DESC
+`;
 
 interface ReporteRow {
   id: string;
@@ -42,11 +62,52 @@ interface ReporteRow {
   estado_estructura: string;
   notas: string;
   timestamp: number;
+  censo_personas: string;
+  tiene_hogar_actual: number;
+  direccion_origen: string;
+  zona_afectada_tag: string;
+  hub_sincronizado_en: number | null;
+  censo_busqueda: string;
+  foto_estructura_b64?: string;
 }
 
 type Listener = (reportes: ReporteEmergencia[]) => void;
 
 type ModoInsercion = 'ignore' | 'replace_si_mas_reciente';
+
+function parsearCenso(raw: string | null | undefined): string[] {
+  if (!raw?.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((x): x is string => typeof x === 'string' && x.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function defaultsEntrada(entrada: Partial<ReporteEntrada>): ReporteEntrada {
+  return {
+    fuente_origen: entrada.fuente_origen ?? OperacionConfig.FUENTE_ORIGEN,
+    tipo_registro: entrada.tipo_registro ?? 'PERSONA_ATRAPADA',
+    nombre_completo: entrada.nombre_completo ?? 'Anónimo',
+    edad: entrada.edad ?? '0',
+    genero: entrada.genero ?? 'M',
+    ubicacion_exacta: entrada.ubicacion_exacta ?? '',
+    latitud: entrada.latitud ?? 0,
+    longitud: entrada.longitud ?? 0,
+    estado_actual: entrada.estado_actual ?? 'POR LOCALIZAR',
+    telefono_contacto: entrada.telefono_contacto ?? '',
+    estado_estructura: entrada.estado_estructura ?? 'SEGURO',
+    notas_paramedicos: entrada.notas_paramedicos ?? '',
+    ciudad: entrada.ciudad ?? 'La Guaira',
+    censo_personas: entrada.censo_personas ?? [],
+    tiene_hogar_actual: entrada.tiene_hogar_actual ?? true,
+    direccion_origen: entrada.direccion_origen ?? '',
+    zona_afectada_tag: entrada.zona_afectada_tag ?? '',
+    foto_estructura_b64: entrada.foto_estructura_b64 ?? '',
+  };
+}
 
 export class SQLiteReporteRepository implements IReporteRepository {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -81,8 +142,9 @@ export class SQLiteReporteRepository implements IReporteRepository {
     return (ESTADOS_ESTRUCTURA as readonly string[]).includes(valor);
   }
 
-  private filaAReporte(row: ReporteRow): ReporteEmergencia {
-    return {
+  private filaAReporte(row: ReporteRow, incluirFoto = false): ReporteEmergencia {
+    const censo = parsearCenso(row.censo_personas);
+    const reporte: ReporteEmergencia = {
       id: row.id,
       fuente_origen: row.fuente_origen,
       tipo_registro: this.esTipoValido(row.tipo_registro)
@@ -102,7 +164,14 @@ export class SQLiteReporteRepository implements IReporteRepository {
         : 'SEGURO',
       notas_paramedicos: row.notas,
       timestamp: row.timestamp,
+      censo_personas: censo,
+      tiene_hogar_actual: row.tiene_hogar_actual !== 0,
+      direccion_origen: row.direccion_origen ?? '',
+      zona_afectada_tag: row.zona_afectada_tag ?? '',
+      foto_estructura_b64: incluirFoto ? (row.foto_estructura_b64 ?? '') : '',
+      hub_sincronizado_en: row.hub_sincronizado_en ?? null,
     };
+    return reporte;
   }
 
   private comprimir(reporte: ReporteEmergencia): ReporteComprimidoMNv2 {
@@ -122,9 +191,13 @@ export class SQLiteReporteRepository implements IReporteRepository {
       m: reporte.notas_paramedicos,
       t: reporte.timestamp,
     };
-    if (reporte.ciudad?.trim()) {
-      base.y = reporte.ciudad.trim();
+    if (reporte.ciudad?.trim()) base.y = reporte.ciudad.trim();
+    if (reporte.censo_personas.length > 0) {
+      base.cp = reporte.censo_personas.join(';');
     }
+    if (!reporte.tiene_hogar_actual) base.hv = 0;
+    if (reporte.direccion_origen.trim()) base.do = reporte.direccion_origen.trim();
+    if (reporte.zona_afectada_tag.trim()) base.zt = reporte.zona_afectada_tag.trim();
     return base;
   }
 
@@ -134,6 +207,9 @@ export class SQLiteReporteRepository implements IReporteRepository {
 
   private expandir(item: ReporteComprimidoLegacy): ReporteEmergencia {
     if (this.esMNv2(item)) {
+      const censo = item.cp
+        ? item.cp.split(';').map((s) => s.trim()).filter(Boolean)
+        : [];
       return {
         id: item.i,
         fuente_origen: item.o || OperacionConfig.FUENTE_ORIGEN,
@@ -150,6 +226,12 @@ export class SQLiteReporteRepository implements IReporteRepository {
         estado_estructura: this.esEstructuraValida(item.r) ? item.r : 'SEGURO',
         notas_paramedicos: item.m ?? '',
         timestamp: item.t,
+        censo_personas: censo,
+        tiene_hogar_actual: item.hv === undefined ? true : item.hv === 1,
+        direccion_origen: item.do ?? '',
+        zona_afectada_tag: item.zt ?? '',
+        foto_estructura_b64: '',
+        hub_sincronizado_en: null,
       };
     }
 
@@ -170,6 +252,12 @@ export class SQLiteReporteRepository implements IReporteRepository {
       estado_estructura: 'SEGURO',
       notas_paramedicos: legacy.o ?? '',
       timestamp: legacy.t,
+      censo_personas: [],
+      tiene_hogar_actual: true,
+      direccion_origen: '',
+      zona_afectada_tag: '',
+      foto_estructura_b64: '',
+      hub_sincronizado_en: null,
     };
   }
 
@@ -179,7 +267,19 @@ export class SQLiteReporteRepository implements IReporteRepository {
     return typeof r.i === 'string' && r.i.length > 0 && typeof r.t === 'number' && this.esEstadoValido(r.s);
   }
 
-  private valoresInsert(reporte: ReporteEmergencia): (string | number)[] {
+  private censoJson(reporte: ReporteEmergencia): string {
+    return JSON.stringify(reporte.censo_personas ?? []);
+  }
+
+  private censoBusqueda(reporte: ReporteEmergencia): string {
+    return construirCensoBusqueda(
+      reporte.nombre_completo,
+      reporte.censo_personas,
+      reporte.notas_paramedicos
+    );
+  }
+
+  private valoresInsert(reporte: ReporteEmergencia): (string | number | null)[] {
     return [
       reporte.id,
       reporte.fuente_origen,
@@ -196,25 +296,22 @@ export class SQLiteReporteRepository implements IReporteRepository {
       reporte.estado_estructura,
       reporte.notas_paramedicos,
       reporte.timestamp,
+      this.censoJson(reporte),
+      reporte.tiene_hogar_actual ? 1 : 0,
+      reporte.direccion_origen,
+      reporte.zona_afectada_tag,
+      reporte.foto_estructura_b64 ?? '',
+      reporte.hub_sincronizado_en ?? null,
+      this.censoBusqueda(reporte),
     ];
   }
 
   private async recargarCache(): Promise<void> {
     if (!this.db) return;
-    const filas = await this.db.getAllAsync<ReporteRow>(`
-      SELECT id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
-             ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp
-      FROM reportes
-      ORDER BY
-        CASE estado
-          WHEN 'CRITICO' THEN 0
-          WHEN 'POR LOCALIZAR' THEN 1
-          WHEN 'LOCALIZADO' THEN 2
-          ELSE 3
-        END,
-        timestamp DESC
-    `);
-    this.cache = filas.map((f) => this.filaAReporte(f));
+    const filas = await this.db.getAllAsync<ReporteRow>(
+      `SELECT ${SELECT_LISTA} FROM reportes ${ORDER_PRIORIDAD}`
+    );
+    this.cache = filas.map((f) => this.filaAReporte(f, false));
   }
 
   private async insertarReporte(
@@ -223,8 +320,8 @@ export class SQLiteReporteRepository implements IReporteRepository {
   ): Promise<'insertado' | 'actualizado' | 'ignorado'> {
     if (!this.db) throw new Error('Base de datos no inicializada.');
 
-    const existente = await this.db.getFirstAsync<{ timestamp: number }>(
-      'SELECT timestamp FROM reportes WHERE id = ?',
+    const existente = await this.db.getFirstAsync<{ timestamp: number; hub_sincronizado_en: number | null }>(
+      'SELECT timestamp, hub_sincronizado_en FROM reportes WHERE id = ?',
       reporte.id
     );
 
@@ -234,22 +331,28 @@ export class SQLiteReporteRepository implements IReporteRepository {
       }
     }
 
-    const sql =
-      modo === 'ignore' && !existente
-        ? `INSERT OR IGNORE INTO reportes (
-            id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
-            ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        : `INSERT OR REPLACE INTO reportes (
-            id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
-            ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
     if (modo === 'ignore' && existente) {
       return 'ignorado';
     }
 
-    const resultado = await this.db.runAsync(sql, ...this.valoresInsert(reporte));
+    const hubSync =
+      reporte.hub_sincronizado_en !== undefined
+        ? reporte.hub_sincronizado_en
+        : existente?.hub_sincronizado_en ?? null;
+
+    const reporteFinal: ReporteEmergencia = {
+      ...reporte,
+      hub_sincronizado_en: hubSync,
+    };
+
+    const sql = `INSERT OR REPLACE INTO reportes (
+      id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
+      ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp,
+      censo_personas, tiene_hogar_actual, direccion_origen, zona_afectada_tag,
+      foto_estructura_b64, hub_sincronizado_en, censo_busqueda
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    const resultado = await this.db.runAsync(sql, ...this.valoresInsert(reporteFinal));
     if ((resultado.changes ?? 0) === 0) return 'ignorado';
     return existente ? 'actualizado' : 'insertado';
   }
@@ -272,21 +375,10 @@ export class SQLiteReporteRepository implements IReporteRepository {
         if (!r?.id || !r.estado_actual || typeof r.timestamp !== 'number') continue;
         await this.insertarReporte(
           {
+            ...defaultsEntrada(r),
             id: r.id,
-            fuente_origen: r.fuente_origen ?? OperacionConfig.FUENTE_ORIGEN,
-            tipo_registro: r.tipo_registro ?? 'PERSONA_ATRAPADA',
-            nombre_completo: r.nombre_completo ?? 'Anónimo',
-            edad: r.edad ?? '0',
-            genero: r.genero ?? 'M',
-            telefono_contacto: r.telefono_contacto ?? '',
-            ciudad: r.ciudad ?? 'La Guaira',
-            ubicacion_exacta: r.ubicacion_exacta ?? '',
-            latitud: r.latitud ?? 0,
-            longitud: r.longitud ?? 0,
-            estado_actual: r.estado_actual,
-            estado_estructura: r.estado_estructura ?? 'SEGURO',
-            notas_paramedicos: r.notas_paramedicos ?? '',
             timestamp: r.timestamp,
+            hub_sincronizado_en: null,
           },
           'ignore'
         );
@@ -306,11 +398,12 @@ export class SQLiteReporteRepository implements IReporteRepository {
   }
 
   public async guardar(entrada: ReporteEntrada): Promise<ReporteEmergencia> {
+    const base = defaultsEntrada(entrada);
     const nuevo: ReporteEmergencia = {
-      ...entrada,
-      fuente_origen: entrada.fuente_origen || OperacionConfig.FUENTE_ORIGEN,
+      ...base,
       id: this.generarId(),
       timestamp: Date.now(),
+      hub_sincronizado_en: null,
     };
     await this.insertarReporte(nuevo, 'ignore');
     await this.recargarCache();
@@ -320,6 +413,79 @@ export class SQLiteReporteRepository implements IReporteRepository {
 
   public obtenerTodos(): ReporteEmergencia[] {
     return this.cache;
+  }
+
+  public async buscarPorPersona(query: string): Promise<ReporteEmergencia[]> {
+    if (!this.db) return [];
+    const q = normalizarTextoBusqueda(query);
+    if (!q) return this.cache;
+
+    const filas = await this.db.getAllAsync<ReporteRow>(
+      `SELECT ${SELECT_LISTA} FROM reportes
+       WHERE censo_busqueda LIKE ? OR nombre LIKE ?
+       ${ORDER_PRIORIDAD}`,
+      `%${q}%`,
+      `%${q}%`
+    );
+    return filas.map((f) => this.filaAReporte(f, false));
+  }
+
+  public async obtenerPorZona(zona: string): Promise<ReporteEmergencia[]> {
+    if (!this.db) return [];
+    const q = normalizarTextoBusqueda(zona);
+    if (!q) return this.cache;
+
+    const filas = await this.db.getAllAsync<ReporteRow>(
+      `SELECT ${SELECT_LISTA} FROM reportes
+       WHERE LOWER(zona_afectada_tag) LIKE ? OR LOWER(ciudad) LIKE ?
+       ${ORDER_PRIORIDAD}`,
+      `%${q}%`,
+      `%${q}%`
+    );
+    return filas.map((f) => this.filaAReporte(f, false));
+  }
+
+  public async obtenerPendientesHubSync(): Promise<ReporteEmergencia[]> {
+    if (!this.db) return [];
+    const filas = await this.db.getAllAsync<ReporteRow>(
+      `SELECT ${SELECT_LISTA}, foto_estructura_b64 FROM reportes
+       WHERE hub_sincronizado_en IS NULL OR timestamp > hub_sincronizado_en
+       ${ORDER_PRIORIDAD}`
+    );
+    return filas.map((f) => this.filaAReporte(f, true));
+  }
+
+  public async marcarSincronizadoHub(ids: string[]): Promise<void> {
+    if (!this.db || ids.length === 0) return;
+    const ahora = Date.now();
+    await this.db.withTransactionAsync(async () => {
+      for (const id of ids) {
+        await this.db!.runAsync(
+          'UPDATE reportes SET hub_sincronizado_en = ? WHERE id = ?',
+          ahora,
+          id
+        );
+      }
+    });
+    await this.recargarCache();
+    this.notificar();
+  }
+
+  public async generarPayloadUniversal(): Promise<ReporteEmergencia[]> {
+    if (!this.db) return [];
+    const filas = await this.db.getAllAsync<ReporteRow>(
+      `SELECT ${SELECT_LISTA}, foto_estructura_b64 FROM reportes ${ORDER_PRIORIDAD}`
+    );
+    return filas.map((f) => this.filaAReporte(f, true));
+  }
+
+  public async obtenerFotoPorId(id: string): Promise<string | null> {
+    if (!this.db) return null;
+    const row = await this.db.getFirstAsync<{ foto_estructura_b64: string }>(
+      'SELECT foto_estructura_b64 FROM reportes WHERE id = ?',
+      id
+    );
+    return row?.foto_estructura_b64?.trim() || null;
   }
 
   public comprimirParaSMS(): string {

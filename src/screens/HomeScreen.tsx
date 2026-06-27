@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -8,12 +8,17 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
+import { CensoPersonasInput } from '../components/CensoPersonasInput';
+import { FotoEviccionCapture } from '../components/FotoEviccionCapture';
+import { TacticalSearchBar } from '../components/TacticalSearchBar';
 import {
   ESTADOS_ESTRUCTURA,
   EstadoEstructura,
@@ -25,6 +30,8 @@ import {
 import { OperacionConfig } from '../config/OperacionConfig';
 import { TacticalTheme, tacticalGlow } from '../theme/TacticalTheme';
 import { SQLiteReporteRepository } from '../infrastructure/repositories/SQLiteReporteRepository';
+import { CameraCaptureService } from '../infrastructure/services/CameraCaptureService';
+import { HubSyncService } from '../infrastructure/services/HubSyncService';
 import { LocationService } from '../infrastructure/services/LocationService';
 import { NavigationService } from '../infrastructure/services/NavigationService';
 import { SmsDirectService } from '../infrastructure/services/SmsDirectService';
@@ -61,7 +68,11 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const [reportes, setReportes] = useState<ReporteEmergencia[]>([]);
+  const [reportesFiltrados, setReportesFiltrados] = useState<ReporteEmergencia[]>([]);
+  const [busquedaTactica, setBusquedaTactica] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [telefonoContacto, setTelefonoContacto] = useState('');
   const [ciudad, setCiudad] = useState('La Guaira');
@@ -82,6 +93,14 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   const [lotesPendientes, setLotesPendientes] = useState<string[]>([]);
   const [indiceLote, setIndiceLote] = useState(0);
   const [tabActiva, setTabActiva] = useState<TabId>('inicio');
+  const [censoPersonas, setCensoPersonas] = useState<string[]>([]);
+  const [tieneHogarActual, setTieneHogarActual] = useState(true);
+  const [direccionOrigen, setDireccionOrigen] = useState('');
+  const [zonaAfectadaTag, setZonaAfectadaTag] = useState('');
+  const [fotoEstructuraB64, setFotoEstructuraB64] = useState('');
+  const [capturandoFoto, setCapturandoFoto] = useState(false);
+  const [fotosCache, setFotosCache] = useState<Record<string, string>>({});
+  const [pendientesHub, setPendientesHub] = useState(0);
 
   const stats = useMemo(() => {
     const criticos = reportes.filter((r) => r.estado_actual === 'CRITICO').length;
@@ -108,6 +127,54 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     return repository.suscribir(setReportes);
   }, [repository]);
 
+  useEffect(() => {
+    const unsub = HubSyncService.suscribirPendientes(setPendientesHub);
+    const stopAuto = HubSyncService.iniciarAutoSync(repository);
+    void repository.obtenerPendientesHubSync().then((p) => setPendientesHub(p.length));
+    return () => {
+      unsub();
+      stopAuto();
+    };
+  }, [repository]);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const q = busquedaTactica.trim();
+    if (!q) {
+      setReportesFiltrados(reportes);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      void (async () => {
+        const porPersona = await repository.buscarPorPersona(q);
+        const porZona = await repository.obtenerPorZona(q);
+        const ids = new Set<string>();
+        const merged: ReporteEmergencia[] = [];
+        for (const r of [...porPersona, ...porZona]) {
+          if (!ids.has(r.id)) {
+            ids.add(r.id);
+            merged.push(r);
+          }
+        }
+        setReportesFiltrados(merged.length > 0 ? merged : reportes);
+      })();
+    }, 150);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [busquedaTactica, reportes, repository]);
+
+  useEffect(() => {
+    reportes.forEach((r) => {
+      if (fotosCache[r.id]) return;
+      void repository.obtenerFotoPorId(r.id).then((foto) => {
+        if (foto) {
+          setFotosCache((prev) => (prev[r.id] ? prev : { ...prev, [r.id]: foto }));
+        }
+      });
+    });
+  }, [reportes, repository]);
+
   const alertarErrorGps = useCallback((error: unknown) => {
     const mensaje = error instanceof Error ? error.message : 'No se pudo obtener GPS.';
     if (mensaje === 'PERMISO_GPS_DENEGADO') {
@@ -133,6 +200,28 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     setTipoRegistro('PERSONA_ATRAPADA');
     setEstadoEstructura('SEGURO');
     setNotas('');
+    setCensoPersonas([]);
+    setTieneHogarActual(true);
+    setDireccionOrigen('');
+    setZonaAfectadaTag('');
+    setFotoEstructuraB64('');
+  }, []);
+
+  const capturarFotoEviccion = useCallback(async () => {
+    setCapturandoFoto(true);
+    try {
+      const resultado = await CameraCaptureService.capturarFotoEviccion();
+      if (!resultado) return;
+      setFotoEstructuraB64(resultado.base64);
+      if (resultado.advertencia) {
+        Alert.alert('Foto guardada', resultado.advertencia);
+      }
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : 'No se pudo capturar la foto.';
+      Alert.alert('Cámara', mensaje);
+    } finally {
+      setCapturandoFoto(false);
+    }
   }, []);
 
   const capturarGps = useCallback(async () => {
@@ -185,7 +274,13 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         estado_actual: estado,
         estado_estructura: estadoEstructura,
         notas_paramedicos: notas.trim(),
+        censo_personas: censoPersonas,
+        tiene_hogar_actual: tieneHogarActual,
+        direccion_origen: direccionOrigen.trim(),
+        zona_afectada_tag: zonaAfectadaTag.trim() || `${ciudad.trim()}`,
+        foto_estructura_b64: fotoEstructuraB64,
       });
+      void HubSyncService.trasGuardar(repository);
       limpiarFormulario();
       setTabActiva('reportes');
     } catch (error) {
@@ -211,6 +306,11 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     tipoRegistro,
     estadoEstructura,
     notas,
+    censoPersonas,
+    tieneHogarActual,
+    direccionOrigen,
+    zonaAfectadaTag,
+    fotoEstructuraB64,
     limpiarFormulario,
     alertarErrorGps,
   ]);
@@ -367,12 +467,15 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
       <Text style={styles.kicker}>Unidad de registro táctico · La Guaira</Text>
       <Text style={styles.tituloEditorial}>Mesh{'\n'}Network</Text>
       <View style={styles.divider} />
-      <Text style={styles.badge}>SQLite · GPS · SMS · APK</Text>
+      <Text style={styles.badge}>{OperacionConfig.VERSION_DATOS} · GPS · SMS · Hub</Text>
     </View>
   );
 
   const renderItem = useCallback(({ item }: { item: ReporteEmergencia }) => {
     const borde = BORDE_ESTADO[item.estado_actual];
+    const fotoUri = fotosCache[item.id]
+      ? `data:image/jpeg;base64,${fotosCache[item.id]}`
+      : null;
 
     return (
       <View style={[styles.card, { borderLeftColor: borde }]}>
@@ -388,6 +491,20 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           {ETIQUETA_TIPO[item.tipo_registro]} · {item.fuente_origen}
           {item.tipo_registro !== 'PERSONA_ATRAPADA' ? ` · ${item.estado_estructura}` : ''}
         </Text>
+        {item.zona_afectada_tag ? (
+          <Text style={styles.cardZona}>Zona: {item.zona_afectada_tag}</Text>
+        ) : null}
+        <Text style={styles.cardHogar}>
+          {item.tiene_hogar_actual ? 'Con vivienda' : 'SIN VIVIENDA — requiere refugio'}
+        </Text>
+        {item.censo_personas.length > 0 ? (
+          <Text style={styles.cardCenso}>
+            Censo ({item.censo_personas.length}): {item.censo_personas.join(', ')}
+          </Text>
+        ) : null}
+        {item.direccion_origen ? (
+          <Text style={styles.cardOrigen}>Origen: {item.direccion_origen}</Text>
+        ) : null}
         {item.telefono_contacto ? (
           <Text style={styles.cardContacto}>{item.telefono_contacto}</Text>
         ) : null}
@@ -397,6 +514,9 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           <Text style={styles.cardGps}>
             {LocationService.formatearCoordenadas(item.latitud, item.longitud)}
           </Text>
+        ) : null}
+        {fotoUri ? (
+          <Image source={{ uri: fotoUri }} style={styles.cardFoto} accessibilityLabel="Foto evicción" />
         ) : null}
         {item.notas_paramedicos ? (
           <Text style={styles.cardNotas}>{item.notas_paramedicos}</Text>
@@ -415,10 +535,10 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         </Text>
       </View>
     );
-  }, [navegarAlPunto]);
+  }, [navegarAlPunto, fotosCache]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor={TacticalTheme.bg} />
 
       <KeyboardAvoidingView
@@ -426,7 +546,10 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {tabActiva === 'inicio' ? (
-          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
+          >
             {renderHeader()}
 
             <View style={styles.panel}>
@@ -474,7 +597,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         {tabActiva === 'registro' ? (
           <ScrollView
             style={styles.flex}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.panel}>
@@ -654,6 +777,67 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             ) : null}
 
             <View style={styles.fieldBox}>
+              <Text style={styles.label}>Zona afectada (sector)</Text>
+              <TextInput
+                style={styles.input}
+                value={zonaAfectadaTag}
+                onChangeText={setZonaAfectadaTag}
+                placeholder="Ej: Macuto-El Cojo"
+                placeholderTextColor="#555555"
+              />
+              <View style={[styles.chips, { marginTop: 10 }]}>
+                {OperacionConfig.ZONAS_SUGERIDAS.map((z) => (
+                  <TouchableOpacity
+                    key={z}
+                    style={[styles.chip, zonaAfectadaTag === z && styles.chipActivo]}
+                    onPress={() => setZonaAfectadaTag(z)}
+                  >
+                    <Text style={[styles.chipText, zonaAfectadaTag === z && styles.chipTextActivo]}>
+                      {z}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Dirección de origen</Text>
+              <TextInput
+                style={styles.input}
+                value={direccionOrigen}
+                onChangeText={setDireccionOrigen}
+                placeholder="De dónde es la familia originalmente"
+                placeholderTextColor="#555555"
+              />
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Censo del grupo / refugio</Text>
+              <CensoPersonasInput personas={censoPersonas} onChange={setCensoPersonas} />
+            </View>
+
+            <View style={styles.fieldBox}>
+              <View style={styles.switchRow}>
+                <Text style={styles.labelSwitch}>Requiere vivienda de emergencia</Text>
+                <Switch
+                  value={!tieneHogarActual}
+                  onValueChange={(v) => setTieneHogarActual(!v)}
+                  trackColor={{ false: TacticalTheme.inkDim, true: TacticalTheme.critico }}
+                  thumbColor={TacticalTheme.ink}
+                />
+              </View>
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Foto de evicción / estructura</Text>
+              <FotoEviccionCapture
+                base64={fotoEstructuraB64}
+                capturando={capturandoFoto}
+                onCapturar={capturarFotoEviccion}
+              />
+            </View>
+
+            <View style={styles.fieldBox}>
               <Text style={styles.label}>Notas del paramédico</Text>
               <TextInput
                 style={[styles.input, styles.inputMultiline]}
@@ -681,15 +865,18 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 
         {tabActiva === 'reportes' ? (
           <FlatList
-            data={reportes}
+            data={busquedaTactica.trim() ? reportesFiltrados : reportes}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             style={styles.lista}
-            contentContainerStyle={styles.listaContent}
+            contentContainerStyle={[styles.listaContent, { paddingBottom: insets.bottom + 88 }]}
             ListHeaderComponent={
               <View style={styles.listaHeader}>
                 <Text style={styles.listaTitulo}>Reportes en dispositivo</Text>
-                <Text style={styles.listaCount}>{reportes.length} activos</Text>
+                <Text style={styles.listaCount}>
+                  {(busquedaTactica.trim() ? reportesFiltrados : reportes).length} activos
+                </Text>
+                <TacticalSearchBar value={busquedaTactica} onChangeText={setBusquedaTactica} />
               </View>
             }
             ListEmptyComponent={
@@ -701,13 +888,21 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         ) : null}
 
         {tabActiva === 'sms' ? (
-          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
+          >
             <View style={[styles.panel, styles.smsPanel]}>
               <Text style={styles.smsTitle}>Enlace SMS</Text>
+              {pendientesHub > 0 ? (
+                <Text style={styles.smsPendiente}>
+                  {pendientesHub} pendiente(s) de subir al Hub (auto con internet)
+                </Text>
+              ) : null}
               <Text style={styles.smsMeta}>
                 Comando: <Text style={styles.smsMetaStrong}>{OperacionConfig.COMANDO_CENTRAL_SMS}</Text>
                 {'\n'}
-                Llaves: i o x n e g u lt lg s c r m t · Lotes MNv2|1/3|...
+                Protocolo {OperacionConfig.VERSION_DATOS} · Lotes MNv2|1/3|... (sin foto)
               </Text>
               <ScrollView style={styles.smsBox} nestedScrollEnabled>
                 <Text style={styles.smsBoxText} selectable>
@@ -766,7 +961,10 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         ) : null}
 
         {tabActiva === 'comando' ? (
-          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
+          >
             {renderHeader()}
             <View style={styles.panel}>
               <Text style={styles.panelKicker}>04 — Comando central</Text>
@@ -792,7 +990,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           </ScrollView>
         ) : null}
 
-        <View style={[styles.bottomNav, tacticalGlow]}>
+        <View style={[styles.bottomNav, tacticalGlow, { paddingBottom: insets.bottom + 8 }]}>
           {TABS.map((tab) => {
             const activa = tabActiva === tab.id;
             return (
@@ -1071,6 +1269,17 @@ const styles = StyleSheet.create({
   cardId: { color: T.inkDim, fontSize: 9, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
   cardNombre: { color: T.ink, fontSize: 17, fontWeight: '800', letterSpacing: -0.3 },
   cardMeta: { color: T.accent, fontSize: 11, marginTop: 4, fontWeight: '700' },
+  cardZona: { color: T.accentDark, fontSize: 11, marginTop: 6, fontWeight: '800' },
+  cardHogar: { color: T.alerta, fontSize: 11, marginTop: 4, fontWeight: '700' },
+  cardCenso: { color: T.inkMuted, fontSize: 12, marginTop: 6, lineHeight: 18 },
+  cardOrigen: { color: T.inkMuted, fontSize: 12, marginTop: 4, fontStyle: 'italic' },
+  cardFoto: {
+    width: '100%',
+    height: 120,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: T.border,
+  },
   cardContacto: { color: T.ok, fontSize: 13, marginTop: 6, fontWeight: '600' },
   cardCiudad: {
     color: T.inkMuted,
@@ -1113,6 +1322,12 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.5,
     marginBottom: 4,
+  },
+  smsPendiente: {
+    color: T.alerta,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   smsMeta: { color: T.inkMuted, fontSize: 13, lineHeight: 22, marginBottom: 4 },
   smsMetaStrong: { color: T.ink, fontWeight: '800' },
@@ -1209,8 +1424,20 @@ const styles = StyleSheet.create({
     backgroundColor: T.surfaceElevated,
     borderTopWidth: 2,
     borderTopColor: T.border,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+    paddingBottom: 10,
     paddingTop: 10,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  labelSwitch: {
+    color: T.ink,
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
   },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
   navItemActiva: { backgroundColor: T.surface },

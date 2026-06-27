@@ -13,4 +13,6 @@ export {
   TIPOS_REGISTRO,
   ESTADOS_ESTRUCTURA,
   ESTADOS_REPORTE,
+  normalizarTextoBusqueda,
+  construirCensoBusqueda,
 } from '../../../shared/reporte.types';

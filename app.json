@@ -2,7 +2,7 @@
   "expo": {
     "name": "MeshnetworkVenezuela",
     "slug": "meshnetwork-venezuela",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/logo.jpg",
     "userInterfaceStyle": "dark",
@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.vicarx.meshnetworkvenezuela",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "MeshnetworkVenezuela usa GPS para registrar y navegar a puntos exactos de rescate en La Guaira.",
+        "NSCameraUsageDescription": "MeshnetworkVenezuela captura fotos de estructuras dañadas para verificación en campo.",
         "LSApplicationQueriesSchemes": [
           "maps",
           "comgooglemaps",
@@ -36,8 +37,10 @@
         "SEND_SMS",
         "RECEIVE_SMS",
         "INTERNET",
+        "CAMERA",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA"
       ],
       "intentFilters": [
         {
@@ -62,6 +65,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "MeshnetworkVenezuela usa GPS para registrar y navegar a puntos exactos de rescate en La Guaira."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Permita la cámara para fotografiar estructuras dañadas en el registro de damnificados."
         }
       ],
       "expo-sqlite"

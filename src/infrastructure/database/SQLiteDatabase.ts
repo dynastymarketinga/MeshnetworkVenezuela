@@ -67,12 +67,38 @@ async function migrarColumnasReportes(db: SQLite.SQLiteDatabase): Promise<void> 
   if (!nombres.has('estado_estructura')) {
     await agregar(`ALTER TABLE reportes ADD COLUMN estado_estructura TEXT NOT NULL DEFAULT 'SEGURO'`);
   }
+  if (!nombres.has('censo_personas')) {
+    await agregar(`ALTER TABLE reportes ADD COLUMN censo_personas TEXT NOT NULL DEFAULT '[]'`);
+  }
+  if (!nombres.has('tiene_hogar_actual')) {
+    await agregar(`ALTER TABLE reportes ADD COLUMN tiene_hogar_actual INTEGER NOT NULL DEFAULT 1`);
+  }
+  if (!nombres.has('direccion_origen')) {
+    await agregar(`ALTER TABLE reportes ADD COLUMN direccion_origen TEXT NOT NULL DEFAULT ''`);
+  }
+  if (!nombres.has('zona_afectada_tag')) {
+    await agregar(`ALTER TABLE reportes ADD COLUMN zona_afectada_tag TEXT NOT NULL DEFAULT ''`);
+  }
+  if (!nombres.has('foto_estructura_b64')) {
+    await agregar(`ALTER TABLE reportes ADD COLUMN foto_estructura_b64 TEXT NOT NULL DEFAULT ''`);
+  }
+  if (!nombres.has('hub_sincronizado_en')) {
+    await agregar(`ALTER TABLE reportes ADD COLUMN hub_sincronizado_en INTEGER`);
+  }
+  if (!nombres.has('censo_busqueda')) {
+    await agregar(`ALTER TABLE reportes ADD COLUMN censo_busqueda TEXT NOT NULL DEFAULT ''`);
+  }
   if (nombres.has('latitud')) {
     await db.execAsync(`UPDATE reportes SET latitud = 0 WHERE latitud IS NULL`);
   }
   if (nombres.has('longitud')) {
     await db.execAsync(`UPDATE reportes SET longitud = 0 WHERE longitud IS NULL`);
   }
+
+  await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_reportes_zona ON reportes(zona_afectada_tag)`);
+  await db.execAsync(
+    `CREATE INDEX IF NOT EXISTS idx_reportes_censo_busqueda ON reportes(censo_busqueda)`
+  );
 }
 
 export async function cerrarBaseDeDatos(): Promise<void> {

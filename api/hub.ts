@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { aplicarCors, responderError, responderJson } from './_lib/cors';
-import { consultarTodos, registrar } from './_lib/hubStore';
+import { buscarPersona, consultarTodos, consultarZonas, registrar } from './_lib/hubStore';
 import { registrarBodySchema, type ReporteEmergenciaValidado } from './_lib/validateReporte';
 
 function validarApiKey(req: VercelRequest): boolean {
@@ -21,6 +21,13 @@ function extraerReportes(body: unknown): ReporteEmergenciaValidado[] {
   return [parsed.data];
 }
 
+function queryParam(req: VercelRequest, key: string): string | undefined {
+  const val = req.query[key];
+  if (typeof val === 'string') return val;
+  if (Array.isArray(val)) return val[0];
+  return undefined;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   aplicarCors(res);
 
@@ -29,15 +36,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const action =
-    typeof req.query.action === 'string'
-      ? req.query.action
-      : Array.isArray(req.query.action)
-        ? req.query.action[0]
-        : undefined;
+  const action = queryParam(req, 'action');
 
   if (!action) {
-    responderError(res, 400, 'ACCION_REQUERIDA', 'Use ?action=consultar o ?action=registrar');
+    responderError(
+      res,
+      400,
+      'ACCION_REQUERIDA',
+      'Use ?action=consultar|registrar|buscar|zonas'
+    );
     return;
   }
 
@@ -49,10 +56,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       }
       const reportes = await consultarTodos();
       responderJson(res, 200, {
-        version: '1.0',
-        protocolo: 'MNv2',
+        version: '1.2',
+        protocolo: 'MNv2.1',
         total: reportes.length,
         reportes,
+      });
+      return;
+    }
+
+    if (action === 'buscar') {
+      if (req.method !== 'GET') {
+        responderError(res, 405, 'METODO_NO_PERMITIDO', 'buscar requiere GET');
+        return;
+      }
+      const query = queryParam(req, 'query')?.trim() ?? '';
+      if (!query) {
+        responderError(res, 400, 'QUERY_REQUERIDA', 'Use ?action=buscar&query=NombrePersona');
+        return;
+      }
+      const incluirFoto = queryParam(req, 'incluir_foto') === '1';
+      const coincidencias = await buscarPersona(query, incluirFoto);
+      responderJson(res, 200, {
+        version: '1.2',
+        protocolo: 'MNv2.1',
+        query,
+        total: coincidencias.length,
+        coincidencias,
+      });
+      return;
+    }
+
+    if (action === 'zonas') {
+      if (req.method !== 'GET') {
+        responderError(res, 405, 'METODO_NO_PERMITIDO', 'zonas requiere GET');
+        return;
+      }
+      const zonas = await consultarZonas();
+      responderJson(res, 200, {
+        version: '1.2',
+        protocolo: 'MNv2.1',
+        total: zonas.length,
+        zonas,
       });
       return;
     }
@@ -69,8 +113,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       const reportes = extraerReportes(req.body);
       const resultado = await registrar(reportes);
       responderJson(res, 200, {
-        version: '1.0',
-        protocolo: 'MNv2',
+        version: '1.2',
+        protocolo: 'MNv2.1',
         ...resultado,
         total: resultado.importados + resultado.actualizados + resultado.ignorados,
       });

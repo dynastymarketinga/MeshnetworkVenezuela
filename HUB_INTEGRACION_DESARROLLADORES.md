@@ -4,7 +4,64 @@ API centralizada en **Vercel KV** para reducir fragmentación entre apps de cris
 
 **Base URL:** `https://meshnetwork-venezuela.vercel.app/api/hub`
 
-La **APK Mesh Network** opera offline + SMS y **no** llama a este Hub. Otras webs/apps sí.
+La **APK Mesh Network v1.2.0** opera offline + SMS y **sincroniza automáticamente al Hub** cuando hay internet (con fotos). Otras webs/apps consultan el Hub.
+
+---
+
+## GET — Buscar persona (desaparecidos / refugios)
+
+```http
+GET /api/hub?action=buscar&query=María+López
+GET /api/hub?action=buscar&query=04141234567&incluir_foto=1
+```
+
+Busca en `nombre_completo`, `censo_personas`, `notas_paramedicos`, `zona_afectada_tag`.
+
+**Respuesta 200:**
+
+```json
+{
+  "version": "1.2",
+  "protocolo": "MNv2.1",
+  "query": "María López",
+  "total": 1,
+  "coincidencias": [ /* ReporteEmergencia[] */ ]
+}
+```
+
+**Ejemplo (terremotovenezuela.app / ayudavenezuela.app):**
+
+```javascript
+const nombre = 'Mayerlyng Regnault';
+const res = await fetch(
+  `https://meshnetwork-venezuela.vercel.app/api/hub?action=buscar&query=${encodeURIComponent(nombre)}`
+);
+const { coincidencias } = await res.json();
+if (coincidencias.length) {
+  console.log('Registrada en refugio:', coincidencias[0].ubicacion_exacta);
+}
+```
+
+---
+
+## GET — Mapa de zonas (reconstrucción)
+
+```http
+GET /api/hub?action=zonas
+```
+
+**Respuesta 200:**
+
+```json
+{
+  "version": "1.2",
+  "protocolo": "MNv2.1",
+  "total": 3,
+  "zonas": [
+    { "tag": "Macuto-El Cojo", "total": 12, "sin_vivienda": 8, "colapso_total": 3, "criticos": 2 }
+  ]
+}
+```
 
 ---
 

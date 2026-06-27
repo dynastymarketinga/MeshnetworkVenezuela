@@ -486,7 +486,7 @@
         <p class="kicker">Unidad de registro táctico · La Guaira</p>
         <h1 class="titulo-editorial">Mesh<br />Network</h1>
         <div class="divider"></div>
-        <span class="badge">SQLite · GPS · SMS · APK</span>
+        <span class="badge">MNv2.1 · GPS · SMS · Hub</span>
         <div class="panel" style="margin-top:24px">
           <p class="panel-kicker">01 — Operación activa</p>
           <h2 class="panel-title">Red de rescate local</h2>
@@ -571,6 +571,29 @@
       </div>
 
       <div class="field-box">
+        <label for="zona-tag">Zona afectada (sector)</label>
+        <input id="zona-tag" type="text" placeholder="Ej: Macuto-El Cojo" />
+      </div>
+
+      <div class="field-box">
+        <label for="direccion-origen">Dirección de origen</label>
+        <input id="direccion-origen" type="text" placeholder="De dónde es la familia" />
+      </div>
+
+      <div class="field-box">
+        <label for="censo-input">Censo del grupo (nombre o cédula)</label>
+        <div class="row">
+          <input id="censo-input" type="text" placeholder="Agregar persona" style="flex:1" />
+          <button type="button" class="btn-action btn-copy" id="btn-censo-add">Agregar</button>
+        </div>
+        <div class="chips" id="censo-chips" style="margin-top:10px"></div>
+      </div>
+
+      <div class="field-box">
+        <label><input type="checkbox" id="sin-vivienda" /> Requiere vivienda de emergencia</label>
+      </div>
+
+      <div class="field-box">
         <label for="notas">Notas del paramédico</label>
         <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
       </div>
@@ -582,6 +605,10 @@
       <div class="lista-header">
         <span class="lista-titulo">Reportes en dispositivo</span>
         <span class="lista-count" id="count">0 activos</span>
+      </div>
+      <div class="field-box" style="margin-bottom:12px">
+        <label for="busqueda-tactica">Buscador táctico (persona / zona)</label>
+        <input id="busqueda-tactica" type="search" placeholder="Buscar por nombre, cédula o sector…" />
       </div>
       <div class="lista" id="lista">
         <p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>
@@ -608,6 +635,17 @@
             Para desarrolladores de otras plataformas. La APK de campo opera offline; este Hub unifica registros cuando hay internet.
           </p>
           <p class="panel-desc" style="margin-top:12px;font-family:monospace;font-size:0.8rem" id="hub-url-display"></p>
+        </div>
+        <div class="field-box">
+          <label>Buscar persona en Hub (GET ?action=buscar)</label>
+          <input id="hub-buscar-query" type="text" placeholder="Nombre de desaparecido…" />
+          <button type="button" class="btn-action btn-copy" id="btn-hub-buscar" style="margin-top:8px">Buscar en Hub</button>
+          <pre class="sms-box" id="hub-buscar-out" style="max-height:160px;overflow:auto;margin-top:8px">—</pre>
+        </div>
+        <div class="field-box">
+          <label>Mapa de zonas afectadas (GET ?action=zonas)</label>
+          <button type="button" class="btn-action btn-fusionar" id="btn-hub-zonas">Ver zonas</button>
+          <pre class="sms-box" id="hub-zonas-out" style="max-height:200px;overflow:auto;margin-top:8px">—</pre>
         </div>
         <div class="field-box">
           <label>Consultar base maestra (GET)</label>
@@ -655,12 +693,13 @@
   <script>
     /** Paridad web con app móvil — localStorage ≈ SQLite en navegador */
     const CONFIG = {
-      STORAGE_KEY: '@meshnetwork_venezuela_sqlite_web_v3',
+      STORAGE_KEY: '@meshnetwork_venezuela_sqlite_web_v4',
       COMANDO_CENTRAL_SMS: '04140000000',
       BRIGADA_ID: 'Brigada-Rescate-LG',
       NOMBRE_COMANDO: 'Comando Central La Guaira',
       FUENTE_ORIGEN: 'MeshApp',
       SMS_PROTOCOLO: 'MNv2',
+      VERSION_DATOS: 'MNv2.1',
       SMS_PROTOCOLO_LEGACY: 'MNv1',
       SMS_MAX: 140,
       HUB_BASE: '/api/hub',
@@ -728,6 +767,10 @@
           t: r.timestamp,
         };
         if (r.ciudad) base.y = r.ciudad;
+        if (r.censo_personas?.length) base.cp = r.censo_personas.join(';');
+        if (r.tiene_hogar_actual === false) base.hv = 0;
+        if (r.direccion_origen) base.do = r.direccion_origen;
+        if (r.zona_afectada_tag) base.zt = r.zona_afectada_tag;
         return base;
       }
 
@@ -749,6 +792,11 @@
             estado_estructura: c.r || 'SEGURO',
             notas_paramedicos: c.m || '',
             timestamp: Number(c.t) || Date.now(),
+            censo_personas: c.cp ? c.cp.split(';').map((s) => s.trim()).filter(Boolean) : [],
+            tiene_hogar_actual: c.hv === undefined ? true : c.hv === 1,
+            direccion_origen: c.do || '',
+            zona_afectada_tag: c.zt || '',
+            foto_estructura_b64: '',
           };
         }
         return {
@@ -767,11 +815,25 @@
           estado_estructura: 'SEGURO',
           notas_paramedicos: c.o || '',
           timestamp: Number(c.t) || Date.now(),
+          censo_personas: [],
+          tiene_hogar_actual: true,
+          direccion_origen: '',
+          zona_afectada_tag: '',
+          foto_estructura_b64: '',
         };
       }
 
       guardar(entrada) {
-        const nuevo = { ...entrada, id: this.generarId(), timestamp: Date.now() };
+        const nuevo = {
+          censo_personas: [],
+          tiene_hogar_actual: true,
+          direccion_origen: '',
+          zona_afectada_tag: '',
+          foto_estructura_b64: '',
+          ...entrada,
+          id: this.generarId(),
+          timestamp: Date.now(),
+        };
         this.reportes.set(nuevo.id, nuevo);
         this.notificar();
         return nuevo;
@@ -868,6 +930,8 @@
     let ciudadSel = 'La Guaira';
     let latitud = undefined;
     let longitud = undefined;
+    let censoPersonas = [];
+    let reportesCache = [];
 
     const $ = (id) => document.getElementById(id);
     $('comando-num').textContent = CONFIG.COMANDO_CENTRAL_SMS;
@@ -937,8 +1001,51 @@
       setTimeout(() => t.classList.remove('show'), 2800);
     }
 
+    function normalizarBusqueda(t) {
+      return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
+
+    function filtrarReportes(reportes, q) {
+      const nq = normalizarBusqueda(q);
+      if (!nq) return reportes;
+      return reportes.filter((r) => {
+        const blob = normalizarBusqueda([
+          r.nombre_completo,
+          r.zona_afectada_tag,
+          r.ciudad,
+          r.direccion_origen,
+          ...(r.censo_personas || []),
+        ].join(' '));
+        return blob.includes(nq);
+      });
+    }
+
+    function renderCensoChips() {
+      const wrap = $('censo-chips');
+      wrap.innerHTML = censoPersonas.map((p, i) =>
+        `<button type="button" class="chip active" data-idx="${i}">${p} ×</button>`
+      ).join('');
+      wrap.querySelectorAll('.chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          censoPersonas = censoPersonas.filter((_, i) => i !== Number(btn.dataset.idx));
+          renderCensoChips();
+        });
+      });
+    }
+
+    $('btn-censo-add').addEventListener('click', () => {
+      const v = $('censo-input').value.trim();
+      if (!v) return;
+      if (!censoPersonas.includes(v)) censoPersonas.push(v);
+      $('censo-input').value = '';
+      renderCensoChips();
+    });
+
     function renderLista(reportes) {
-      $('count').textContent = `${reportes.length} activos`;
+      reportesCache = reportes;
+      const q = $('busqueda-tactica')?.value || '';
+      const visibles = filtrarReportes(reportes, q);
+      $('count').textContent = `${visibles.length} activos`;
       $('sms-output').textContent = repo.comprimirParaSMS();
       const criticos = reportes.filter((r) => r.estado_actual === 'CRITICO').length;
       const localizados = reportes.filter((r) => r.estado_actual === 'LOCALIZADO').length;
@@ -951,11 +1058,11 @@
         ? `Hay ${reportes.length} reporte(s) en ${zonas || CONFIG.CIUDADES.length} zona(s). Los datos se cruzan con la red de brigadas por ubicación y triaje.`
         : 'Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.';
       const lista = $('lista');
-      if (!reportes.length) {
+      if (!visibles.length) {
         lista.innerHTML = '<p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>';
         return;
       }
-      lista.innerHTML = reportes.map((item) => {
+      lista.innerHTML = visibles.map((item) => {
         const borde = BORDE[item.estado_actual] || '#888';
         const nav = item.latitud != null && item.longitud != null
           ? `<a class="btn-navegar" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${item.latitud},${item.longitud}&travelmode=walking">Navegar al punto</a>`
@@ -970,6 +1077,9 @@
               <span class="card-id">${item.id}</span>
             </div>
             <div class="card-nombre">${item.nombre_completo}${item.edad !== '0' ? ' · ' + item.edad + ' años' : ''} · ${item.genero}</div>
+            ${item.zona_afectada_tag ? `<div class="card-notas">Zona: ${item.zona_afectada_tag}</div>` : ''}
+            ${item.tiene_hogar_actual === false ? '<div class="card-notas" style="color:var(--critico)">SIN VIVIENDA</div>' : ''}
+            ${item.censo_personas?.length ? `<div class="card-notas">Censo (${item.censo_personas.length}): ${item.censo_personas.join(', ')}</div>` : ''}
             ${item.telefono_contacto ? `<div class="card-notas">📞 ${item.telefono_contacto}</div>` : ''}
             <div class="card-ubicacion">🏙️ ${item.ciudad || 'La Guaira'} · 📍 ${item.ubicacion_exacta}</div>
             ${gps}
@@ -981,6 +1091,8 @@
     }
 
     repo.suscribir(renderLista);
+
+    $('busqueda-tactica')?.addEventListener('input', () => renderLista(reportesCache));
 
     function mensajeErrorGps(err) {
       if (!err) return 'No se pudo obtener la ubicación.';
@@ -1068,12 +1180,22 @@
         estado_actual: estadoSel,
         estado_estructura: 'SEGURO',
         notas_paramedicos: $('notas').value.trim(),
+        censo_personas: [...censoPersonas],
+        tiene_hogar_actual: !$('sin-vivienda').checked,
+        direccion_origen: $('direccion-origen').value.trim(),
+        zona_afectada_tag: $('zona-tag').value.trim() || ciudadSel,
+        foto_estructura_b64: '',
       });
       $('nombre').value = '';
       $('telefono').value = '';
       $('edad').value = '';
       $('ubicacion').value = '';
       $('notas').value = '';
+      $('zona-tag').value = '';
+      $('direccion-origen').value = '';
+      $('sin-vivienda').checked = false;
+      censoPersonas = [];
+      renderCensoChips();
       toast('✓ Punto guardado en disco local');
       irTab('reportes');
     });
@@ -1139,6 +1261,30 @@
         toast(`Hub: ${data.total ?? 0} registros`);
       } catch (e) {
         toast('⚠ Error consultando Hub');
+      }
+    });
+
+    $('btn-hub-buscar').addEventListener('click', async () => {
+      const query = $('hub-buscar-query').value.trim();
+      if (!query) { toast('⚠ Escriba un nombre'); return; }
+      try {
+        const res = await fetch(`${hubUrl}?action=buscar&query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        $('hub-buscar-out').textContent = JSON.stringify(data, null, 2);
+        toast(`Hub: ${data.total ?? 0} coincidencia(s)`);
+      } catch (e) {
+        toast('⚠ Error buscando en Hub');
+      }
+    });
+
+    $('btn-hub-zonas').addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${hubUrl}?action=zonas`);
+        const data = await res.json();
+        $('hub-zonas-out').textContent = JSON.stringify(data, null, 2);
+        toast(`Hub: ${data.total ?? 0} zona(s)`);
+      } catch (e) {
+        toast('⚠ Error consultando zonas');
       }
     });
 
