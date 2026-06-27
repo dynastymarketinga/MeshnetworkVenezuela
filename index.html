@@ -3,78 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MESHNETWORK VENEZUELA — Registro Táctico Operativo</title>
+  <title>Mesh Network Venezuela — Registro Táctico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --bg: #F5F0E8;
+      --paper: #EDE8DF;
+      --paper-up: #FAF7F2;
+      --ink: #1C1C1C;
+      --muted: #6B6560;
+      --light: #9A948C;
+      --blue: #4A8FC7;
+      --blue-dark: #2E6A9E;
+      --critico: #B91C1C;
+      --alerta: #B45309;
+      --ok: #166534;
+      --shadow: 5px 5px 0 rgba(28,28,28,0.1);
+    }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #000;
-      color: #fff;
+      font-family: 'Instrument Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
       min-height: 100vh;
+      position: relative;
     }
-    .hero-top {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: #001A4D;
-      border-bottom: 2px solid #FFCC00;
-      padding: 10px;
-      font-weight: 800;
-    }
-    .hero-section {
-      background: #0A1428;
-      border: 1px solid #003893;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .hero-title {
-      display: inline-block;
-      background: #fff;
-      color: #003893;
-      font-size: 0.7rem;
-      font-weight: 900;
-      padding: 4px 10px;
-      border-radius: 4px;
-      margin-bottom: 10px;
-    }
-    .hero-desc { color: #ccc; font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; }
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .stat-card {
-      background: #fff;
-      border: 2px solid #003893;
-      border-radius: 8px;
-      padding: 14px 8px;
-      text-align: center;
-    }
-    .stat-num { color: #003893; font-size: 1.5rem; font-weight: 900; }
-    .stat-lbl { color: #003893; font-size: 0.6rem; font-weight: 800; margin-top: 4px; }
-    .bottom-nav {
+    body::before {
+      content: '';
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      background: #fff;
-      border-top: 1px solid #ddd;
-      z-index: 100;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 9999;
     }
-    .nav-btn {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 8px 4px 10px;
-      cursor: pointer;
-      color: #666;
-      font-size: 0.65rem;
-      font-weight: 700;
-    }
-    .nav-btn.active { background: #E8F0FE; color: #003893; border-top: 3px solid #FFCC00; }
-    .tab-panel { display: none; padding-bottom: 70px; }
-    .tab-panel.active { display: block; }
-    #tab-sms { display: none; }
-    #tab-sms.active { display: flex; flex-direction: column; }
     .layout {
       display: grid;
       grid-template-columns: 1fr 360px;
@@ -84,48 +47,115 @@
       .layout { grid-template-columns: 1fr; }
       .sidebar { border-left: none; border-top: 1px solid #222; }
     }
-    .main { padding: 20px; overflow-y: auto; }
+    .main { padding: 24px 20px 80px; overflow-y: auto; max-width: 720px; margin: 0 auto; }
     .sidebar {
-      background: #0a0a0a;
-      border-left: 1px solid #222;
+      background: var(--paper-up);
+      border: 2px solid var(--ink);
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      box-shadow: var(--shadow);
     }
-    .header {
-      text-align: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #222;
+    .logo-frame {
+      border: 2px solid var(--ink);
+      background: var(--paper-up);
+      padding: 12px;
       margin-bottom: 20px;
+      box-shadow: var(--shadow);
     }
-    .emblema {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      border: 2px solid #00AEEF;
-      background: #0a0a0a;
-      font-size: 22px;
-      gap: 4px;
+    .logo-img { width: 100%; height: auto; display: block; }
+    .kicker {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .titulo-editorial {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 2.75rem;
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
       margin-bottom: 12px;
     }
-    .titulo { font-size: 1.25rem; font-weight: 900; letter-spacing: 0.5px; }
-    .subtitulo { color: #00FF00; font-size: 0.8rem; font-weight: 700; margin-top: 6px; }
+    .divider { height: 3px; width: 48px; background: var(--ink); margin: 14px 0; }
     .badge {
-      display: inline-block;
-      background: #111;
-      border: 1px solid #1a3a4a;
-      color: #00AEEF;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 700;
-      letter-spacing: 1px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      margin-top: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue-dark);
     }
+    .panel {
+      background: var(--paper-up);
+      border: 2px solid var(--ink);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .panel-kicker {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 6px;
+    }
+    .panel-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .panel-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .stat-card {
+      background: var(--paper-up);
+      border: 2px solid var(--ink);
+      padding: 16px 12px;
+      box-shadow: var(--shadow);
+    }
+    .stat-num { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; }
+    .stat-lbl {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: var(--paper-up);
+      border-top: 2px solid var(--ink);
+      z-index: 100;
+      box-shadow: 0 -4px 0 rgba(28,28,28,0.06);
+    }
+    .nav-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px 4px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-family: inherit;
+    }
+    .nav-btn.active { background: var(--bg); color: var(--ink); font-weight: 800; border-top: 3px solid var(--ink); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    #tab-sms { display: none; }
+    #tab-sms.active { display: flex; flex-direction: column; }
     .section-label {
       color: #00AEEF;
       font-size: 0.7rem;
@@ -327,36 +357,35 @@
   </style>
 </head>
 <body>
-  <div class="hero-top"><span>💛</span><span>La Guaira nos necesita</span></div>
-
   <div class="layout">
     <div class="main">
       <div id="tab-inicio" class="tab-panel active">
-        <header class="header">
-          <h1 class="titulo">🐕 MESHNETWORK VENEZUELA</h1>
-          <p class="subtitulo">Unidad de Registro Táctico y Rescate</p>
-          <span class="badge">OPERATIVO · SQLITE · GPS · APK</span>
-        </header>
-        <div class="hero-section">
-          <span class="hero-title">RED DE RESCATE ACTIVA</span>
-          <p class="hero-desc" id="hero-desc">Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.</p>
+        <div class="logo-frame"><img class="logo-img" src="assets/logo.jpg" alt="Mesh Network Venezuela" /></div>
+        <p class="kicker">Unidad de registro táctico · La Guaira</p>
+        <h1 class="titulo-editorial">Mesh<br />Network</h1>
+        <div class="divider"></div>
+        <span class="badge">SQLite · GPS · SMS · APK</span>
+        <div class="panel" style="margin-top:24px">
+          <p class="panel-kicker">01 — Operación activa</p>
+          <h2 class="panel-title">Red de rescate local</h2>
+          <p class="panel-desc" id="hero-desc">Registre puntos con GPS. Sincronización manual por SMS entre brigadas.</p>
           <div class="stats-row">
-            <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">REPORTES ACTIVOS</div></div>
-            <div class="stat-card"><div class="stat-num" id="stat-criticos" style="color:#CF142B">0</div><div class="stat-lbl">CRÍTICOS</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Reportes</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-criticos" style="color:var(--critico)">0</div><div class="stat-lbl">Críticos</div></div>
           </div>
           <div class="stats-row">
-            <div class="stat-card"><div class="stat-num" id="stat-localizados" style="color:#00843D">0</div><div class="stat-lbl">LOCALIZADOS</div></div>
-            <div class="stat-card"><div class="stat-num" id="stat-zonas">6</div><div class="stat-lbl">ZONAS</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-localizados" style="color:var(--ok)">0</div><div class="stat-lbl">Localizados</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-zonas">6</div><div class="stat-lbl">Zonas</div></div>
           </div>
         </div>
-        <button type="button" class="btn-emergencia" onclick="irTab('registro')">🆘 REGISTRAR PERSONA AFECTADA</button>
-        <a class="btn-gps" href="https://herovenezuela.com" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px">🌐 VER RED CIUDADANA (HEROVENEZUELA)</a>
+        <button type="button" class="btn-primary" onclick="irTab('registro')">Registrar punto de rescate</button>
       </div>
 
       <div id="tab-registro" class="tab-panel">
-        <div class="hero-section">
-          <span class="hero-title">PERSONAS AFECTADAS</span>
-          <p class="hero-desc">Cuéntanos qué ayuda necesitas. Completa los datos clave del punto de rescate.</p>
+        <div class="panel">
+          <p class="panel-kicker">02 — Personas afectadas</p>
+          <h2 class="panel-title">Registro en campo</h2>
+          <p class="panel-desc">Complete los datos clave. No comparta información sensible de terceros sin permiso.</p>
         </div>
 
       <div class="field-box">
@@ -390,9 +419,9 @@
       </div>
 
       <div class="field-box">
-        <label for="ubicacion">📍 Ubicación exacta * (La Guaira)</label>
+        <label for="ubicacion">Ubicación exacta *</label>
         <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
-        <button type="button" class="btn-gps" id="btn-gps" style="margin-top:10px;margin-bottom:0">🛰️ CAPTURAR COORDENADAS GPS</button>
+        <button type="button" class="btn-gps" id="btn-gps">Capturar coordenadas GPS</button>
         <p class="gps-line" id="gps-display" hidden></p>
       </div>
 
@@ -410,40 +439,52 @@
         <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
       </div>
 
-      <button type="button" class="btn-emergencia" id="btn-guardar">💾 REGISTRAR PUNTO DE RESCATE</button>
+      <button type="button" class="btn-emergencia" id="btn-guardar">Registrar punto de rescate</button>
       </div>
 
       <div id="tab-reportes" class="tab-panel">
       <div class="lista-header">
-        <span class="lista-titulo">▸ LISTA DE REPORTES (DISCO LOCAL)</span>
+        <span class="lista-titulo">Reportes en dispositivo</span>
         <span class="lista-count" id="count">0 activos</span>
       </div>
       <div class="lista" id="lista">
         <p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>
       </div>
       </div>
+
+      <div id="tab-comando" class="tab-panel">
+        <div class="logo-frame"><img class="logo-img" src="assets/logo.jpg" alt="Mesh Network" /></div>
+        <div class="panel">
+          <p class="panel-kicker">04 — Comando central</p>
+          <h2 class="panel-title">Comando Central La Guaira</h2>
+          <p class="panel-desc">Mesh Network Venezuela opera de forma autónoma. Los reportes se transmiten por SMS al comando cuando hay señal.</p>
+          <p class="panel-desc" style="margin-top:12px"><strong>Brigada:</strong> Brigada-Rescate-LG</p>
+          <p class="panel-desc"><strong>SMS:</strong> <span id="comando-display">04140000000</span></p>
+        </div>
+        <button type="button" class="btn-primary" onclick="irTab('registro')">Ir a registro en campo</button>
+      </div>
     </div>
 
     <aside class="sidebar tab-panel" id="tab-sms">
-      <h2>📲 Transmisión SMS (contingencia)</h2>
+      <h2>Enlace SMS</h2>
       <p class="sms-meta">
         Comando: <strong id="comando-num">04140000000</strong><br />
         Llaves: i n e g u s o t la lo · Lotes MNv1|1/3|...
       </p>
       <div class="sms-box" id="sms-output">[]</div>
-      <button type="button" class="btn-action btn-copy" id="btn-copy">📲 COPIAR CADENA COMPRIMIDA</button>
-      <button type="button" class="btn-action btn-comando" id="btn-comando">🚨 ENVIAR AL COMANDO CENTRAL</button>
-      <textarea class="sync-input" id="import-input" placeholder="Pegue cadena JSON o lotes MNv1|1/3|... (uno por línea)"></textarea>
-      <button type="button" class="btn-action btn-fusionar" id="btn-fusionar">📥 PEGAR Y FUSIONAR</button>
+      <button type="button" class="btn-action btn-copy" id="btn-copy">Copiar cadena comprimida</button>
+      <button type="button" class="btn-action btn-comando" id="btn-comando">Enviar al comando central</button>
+      <textarea class="sync-input" id="import-input" placeholder="Pegue cadena JSON o lotes MNv1|1/3|..."></textarea>
+      <button type="button" class="btn-action btn-fusionar" id="btn-fusionar">Pegar y fusionar</button>
     </aside>
   </div>
 
   <nav class="bottom-nav">
-    <button type="button" class="nav-btn active" data-tab="inicio">🏠<br>Inicio</button>
-    <button type="button" class="nav-btn" data-tab="registro">🆘<br>Ayuda</button>
-    <button type="button" class="nav-btn" data-tab="reportes">📋<br>Reportes</button>
-    <button type="button" class="nav-btn" data-tab="sms">📲<br>SMS</button>
-    <button type="button" class="nav-btn" onclick="window.open('https://herovenezuela.com','_blank')">🌐<br>Red</button>
+    <button type="button" class="nav-btn active" data-tab="inicio">Inicio</button>
+    <button type="button" class="nav-btn" data-tab="registro">Registro</button>
+    <button type="button" class="nav-btn" data-tab="reportes">Reportes</button>
+    <button type="button" class="nav-btn" data-tab="sms">Enlace</button>
+    <button type="button" class="nav-btn" data-tab="comando">Comando</button>
   </nav>
 
   <div class="toast" id="toast"></div>
@@ -461,7 +502,7 @@
     };
 
     const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LOCALIZADO: 2 };
-    const BORDE = { CRITICO: '#FF0000', 'POR LOCALIZAR': '#FF8800', LOCALIZADO: '#00FF00' };
+    const BORDE = { CRITICO: '#B91C1C', 'POR LOCALIZAR': '#B45309', LOCALIZADO: '#166534' };
 
     class StorageReporteRepository {
       constructor() {
@@ -631,6 +672,21 @@
 
     const $ = (id) => document.getElementById(id);
     $('comando-num').textContent = CONFIG.COMANDO_CENTRAL_SMS;
+    const cmdDisplay = $('comando-display');
+    if (cmdDisplay) cmdDisplay.textContent = CONFIG.COMANDO_CENTRAL_SMS;
+
+    function irTab(id) {
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn[data-tab]').forEach((b) => b.classList.remove('active'));
+      const panel = $('tab-' + id);
+      if (panel) panel.classList.add('active');
+      const nav = document.querySelector(`.nav-btn[data-tab="${id}"]`);
+      if (nav) nav.classList.add('active');
+    }
+
+    document.querySelectorAll('.nav-btn[data-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => irTab(btn.dataset.tab));
+    });
 
     const ciudadChips = $('ciudad-chips');
     CONFIG.CIUDADES.forEach((c) => {
@@ -645,21 +701,6 @@
         ciudadSel = c;
       });
       ciudadChips.appendChild(btn);
-    });
-
-    function irTab(id) {
-      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
-      document.querySelectorAll('.nav-btn[data-tab]').forEach((b) => b.classList.remove('active'));
-      const panel = $('tab-' + id);
-      if (panel) panel.classList.add('active');
-      const nav = document.querySelector(`.nav-btn[data-tab="${id}"]`);
-      if (nav) nav.classList.add('active');
-      if (id === 'sms') $('tab-sms').classList.add('active');
-      else $('tab-sms').classList.remove('active');
-    }
-
-    document.querySelectorAll('.nav-btn[data-tab]').forEach((btn) => {
-      btn.addEventListener('click', () => irTab(btn.dataset.tab));
     });
 
     document.querySelectorAll('#genero-chips .chip').forEach((btn) => {
@@ -715,7 +756,7 @@
       lista.innerHTML = reportes.map((item) => {
         const borde = BORDE[item.estado_actual] || '#888';
         const nav = item.latitud != null && item.longitud != null
-          ? `<a class="btn-navegar" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${item.latitud},${item.longitud}&travelmode=walking">🗺️ NAVEGAR AL PUNTO</a>`
+          ? `<a class="btn-navegar" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${item.latitud},${item.longitud}&travelmode=walking">Navegar al punto</a>`
           : '';
         const gps = item.latitud != null
           ? `<div class="card-gps">🛰️ ${formatearCoordenadas(item.latitud, item.longitud)}</div>`

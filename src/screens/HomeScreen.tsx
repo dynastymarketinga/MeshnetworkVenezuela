@@ -4,7 +4,6 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   ScrollView,
   StatusBar,
@@ -17,6 +16,7 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { EstadoReporte, ReporteEmergencia } from '../domain/entities/Reporte';
 import { OperacionConfig } from '../config/OperacionConfig';
+import { BrutalistTheme, paperShadow } from '../theme/BrutalistTheme';
 import { SQLiteReporteRepository } from '../infrastructure/repositories/SQLiteReporteRepository';
 import { LocationService } from '../infrastructure/services/LocationService';
 import { NavigationService } from '../infrastructure/services/NavigationService';
@@ -25,20 +25,20 @@ import { SmsDirectService } from '../infrastructure/services/SmsDirectService';
 const ESTADOS: EstadoReporte[] = ['CRITICO', 'POR LOCALIZAR', 'LOCALIZADO'];
 const GENEROS = ['M', 'F', 'Otro'];
 
-type TabId = 'inicio' | 'registro' | 'reportes' | 'sms' | 'red';
+type TabId = 'inicio' | 'registro' | 'reportes' | 'sms' | 'comando';
 
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'inicio', label: 'Inicio', icon: '🏠' },
-  { id: 'registro', label: 'Ayuda', icon: '🆘' },
-  { id: 'reportes', label: 'Reportes', icon: '📋' },
-  { id: 'sms', label: 'SMS', icon: '📲' },
-  { id: 'red', label: 'Red', icon: '🌐' },
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'inicio', label: 'Inicio' },
+  { id: 'registro', label: 'Registro' },
+  { id: 'reportes', label: 'Reportes' },
+  { id: 'sms', label: 'Enlace' },
+  { id: 'comando', label: 'Comando' },
 ];
 
 const BORDE_ESTADO: Record<EstadoReporte, string> = {
-  CRITICO: '#FF0000',
-  'POR LOCALIZAR': '#FF8800',
-  LOCALIZADO: '#00FF00',
+  CRITICO: BrutalistTheme.critico,
+  'POR LOCALIZAR': BrutalistTheme.alerta,
+  LOCALIZADO: BrutalistTheme.ok,
 };
 
 interface HomeScreenProps {
@@ -340,13 +340,17 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     }
   }, [repository, cadenaImport]);
 
-  const abrirRedCiudadana = useCallback(async () => {
-    try {
-      await Linking.openURL(OperacionConfig.RED_CIUDADANA_URL);
-    } catch {
-      Alert.alert('Red ciudadana', 'No se pudo abrir herovenezuela.com');
-    }
-  }, []);
+  const renderHeader = (): React.JSX.Element => (
+    <View style={styles.header}>
+      <View style={styles.logoFrame}>
+        <Image source={require('../../assets/logo.jpg')} style={styles.logo} />
+      </View>
+      <Text style={styles.kicker}>Unidad de registro táctico · La Guaira</Text>
+      <Text style={styles.tituloEditorial}>Mesh{'\n'}Network</Text>
+      <View style={styles.divider} />
+      <Text style={styles.badge}>SQLite · GPS · SMS · APK</Text>
+    </View>
+  );
 
   const renderItem = useCallback(({ item }: { item: ReporteEmergencia }) => {
     const borde = BORDE_ESTADO[item.estado_actual];
@@ -362,13 +366,13 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           {item.edad !== '0' ? ` · ${item.edad} años` : ''} · {item.genero}
         </Text>
         {item.telefono_contacto ? (
-          <Text style={styles.cardContacto}>📞 {item.telefono_contacto}</Text>
+          <Text style={styles.cardContacto}>{item.telefono_contacto}</Text>
         ) : null}
-        <Text style={styles.cardCiudad}>🏙️ {item.ciudad}</Text>
-        <Text style={styles.cardUbicacion}>📍 {item.ubicacion_exacta}</Text>
+        <Text style={styles.cardCiudad}>{item.ciudad}</Text>
+        <Text style={styles.cardUbicacion}>{item.ubicacion_exacta}</Text>
         {item.latitud !== undefined && item.longitud !== undefined ? (
           <Text style={styles.cardGps}>
-            🛰️ {LocationService.formatearCoordenadas(item.latitud, item.longitud)}
+            {LocationService.formatearCoordenadas(item.latitud, item.longitud)}
           </Text>
         ) : null}
         {item.notas_paramedicos ? (
@@ -380,7 +384,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             onPress={() => navegarAlPunto(item)}
             activeOpacity={0.8}
           >
-            <Text style={styles.btnNavegarText}>🗺️ NAVEGAR AL PUNTO</Text>
+            <Text style={styles.btnNavegarText}>NAVEGAR AL PUNTO</Text>
           </TouchableOpacity>
         ) : null}
         <Text style={styles.cardTime}>
@@ -392,12 +396,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
-
-      <View style={styles.heroTopBar}>
-        <Text style={styles.heroHeart}>💛</Text>
-        <Text style={styles.heroSlogan}>La Guaira nos necesita</Text>
-      </View>
+      <StatusBar barStyle="dark-content" backgroundColor={BrutalistTheme.bg} />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -405,47 +404,48 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
       >
         {tabActiva === 'inicio' ? (
           <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
-            <View style={styles.header}>
-              <Image source={require('../../assets/logo.jpg')} style={styles.logo} />
-              <Text style={styles.titulo}>🐕 MESHNETWORK VENEZUELA</Text>
-              <Text style={styles.subtitulo}>Unidad de Registro Táctico y Rescate</Text>
-              <Text style={styles.badge}>OPERATIVO · SQLITE · GPS · APK</Text>
-            </View>
+            {renderHeader()}
 
-            <View style={styles.heroSection}>
-              <Text style={styles.heroSectionTitle}>RED DE RESCATE ACTIVA</Text>
-              <Text style={styles.heroSectionDesc}>
+            <View style={styles.panel}>
+              <Text style={styles.panelKicker}>01 — Operación activa</Text>
+              <Text style={styles.panelTitle}>Red de rescate local</Text>
+              <Text style={styles.panelDesc}>
                 {stats.total > 0
-                  ? `Hay ${stats.total} reporte(s) registrados en ${stats.ciudades} zona(s) de La Guaira. Los datos se cruzan con la red de brigadas por ubicación y triaje.`
-                  : 'Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS cuando hay señal.'}
+                  ? `${stats.total} reporte(s) en ${stats.ciudades} zona(s). Datos cruzados por ubicación y triaje entre brigadas.`
+                  : 'Registre puntos con GPS. Sincronización manual por SMS cuando hay señal GSM.'}
               </Text>
               <View style={styles.statsRow}>
-                <View style={styles.statCard}>
+                <View style={[styles.statCard, paperShadow]}>
                   <Text style={styles.statNumber}>{stats.total}</Text>
-                  <Text style={styles.statLabel}>REPORTES ACTIVOS</Text>
+                  <Text style={styles.statLabel}>Reportes</Text>
                 </View>
-                <View style={styles.statCard}>
-                  <Text style={[styles.statNumber, styles.statCritico]}>{stats.criticos}</Text>
-                  <Text style={styles.statLabel}>CRÍTICOS</Text>
+                <View style={[styles.statCard, paperShadow]}>
+                  <Text style={[styles.statNumber, { color: BrutalistTheme.critico }]}>
+                    {stats.criticos}
+                  </Text>
+                  <Text style={styles.statLabel}>Críticos</Text>
                 </View>
               </View>
               <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                  <Text style={[styles.statNumber, styles.statVerde]}>{stats.localizados}</Text>
-                  <Text style={styles.statLabel}>LOCALIZADOS</Text>
+                <View style={[styles.statCard, paperShadow]}>
+                  <Text style={[styles.statNumber, { color: BrutalistTheme.ok }]}>
+                    {stats.localizados}
+                  </Text>
+                  <Text style={styles.statLabel}>Localizados</Text>
                 </View>
-                <View style={styles.statCard}>
+                <View style={[styles.statCard, paperShadow]}>
                   <Text style={styles.statNumber}>{stats.ciudades}</Text>
-                  <Text style={styles.statLabel}>ZONAS</Text>
+                  <Text style={styles.statLabel}>Zonas</Text>
                 </View>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.btnHeroPrimary} onPress={() => setTabActiva('registro')}>
-              <Text style={styles.btnHeroPrimaryText}>🆘 REGISTRAR PERSONA AFECTADA</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btnHeroSecondary} onPress={abrirRedCiudadana}>
-              <Text style={styles.btnHeroSecondaryText}>🌐 VER RED CIUDADANA (HEROVENEZUELA)</Text>
+            <TouchableOpacity
+              style={[styles.btnPrimary, paperShadow]}
+              onPress={() => setTabActiva('registro')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.btnPrimaryText}>Registrar punto de rescate</Text>
             </TouchableOpacity>
           </ScrollView>
         ) : null}
@@ -456,10 +456,11 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.heroSection}>
-              <Text style={styles.heroSectionTitle}>PERSONAS AFECTADAS</Text>
-              <Text style={styles.heroSectionDesc}>
-                Cuéntanos qué ayuda necesitas. Completa los datos clave del punto de rescate.
+            <View style={styles.panel}>
+              <Text style={styles.panelKicker}>02 — Personas afectadas</Text>
+              <Text style={styles.panelTitle}>Registro en campo</Text>
+              <Text style={styles.panelDesc}>
+                Complete los datos clave del punto. No comparta información sensible de terceros sin permiso.
               </Text>
             </View>
 
@@ -493,10 +494,10 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 {OperacionConfig.CIUDADES_LA_GUAIRA.map((c) => (
                   <TouchableOpacity
                     key={c}
-                    style={[styles.chip, ciudad === c && styles.chipActivoHero]}
+                    style={[styles.chip, ciudad === c && styles.chipActivo]}
                     onPress={() => setCiudad(c)}
                   >
-                    <Text style={[styles.chipText, ciudad === c && styles.chipTextActivoHero]}>
+                    <Text style={[styles.chipText, ciudad === c && styles.chipTextActivo]}>
                       {c}
                     </Text>
                   </TouchableOpacity>
@@ -523,10 +524,10 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                   {GENEROS.map((g) => (
                     <TouchableOpacity
                       key={g}
-                      style={[styles.chip, genero === g && styles.chipActivoHero]}
+                      style={[styles.chip, genero === g && styles.chipActivo]}
                       onPress={() => setGenero(g)}
                     >
-                      <Text style={[styles.chipText, genero === g && styles.chipTextActivoHero]}>
+                      <Text style={[styles.chipText, genero === g && styles.chipTextActivo]}>
                         {g}
                       </Text>
                     </TouchableOpacity>
@@ -536,7 +537,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             </View>
 
             <View style={styles.fieldBox}>
-              <Text style={styles.label}>📍 Ubicación exacta *</Text>
+              <Text style={styles.label}>Ubicación exacta *</Text>
               <TextInput
                 style={[styles.input, styles.inputGrande]}
                 value={ubicacion}
@@ -551,7 +552,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 activeOpacity={0.8}
               >
                 <Text style={styles.btnGpsText}>
-                  {obteniendoGps ? 'OBTENIENDO GPS...' : '🛰️ CAPTURAR COORDENADAS GPS'}
+                  {obteniendoGps ? 'Obteniendo GPS…' : 'Capturar coordenadas GPS'}
                 </Text>
               </TouchableOpacity>
               {latitud !== undefined && longitud !== undefined ? (
@@ -604,7 +605,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
               disabled={guardando}
             >
               <Text style={styles.btnEmergenciaText}>
-                {guardando ? 'GUARDANDO EN DISCO...' : '💾 REGISTRAR PUNTO DE RESCATE'}
+                {guardando ? 'Guardando en disco…' : 'Registrar punto de rescate'}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -618,11 +619,14 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             style={styles.lista}
             contentContainerStyle={styles.listaContent}
             ListHeaderComponent={
-              <Text style={styles.listaTitulo}>▸ Reportes en dispositivo ({reportes.length})</Text>
+              <>
+                {renderHeader()}
+                <Text style={styles.listaTitulo}>Reportes en dispositivo ({reportes.length})</Text>
+              </>
             }
             ListEmptyComponent={
               <Text style={styles.emptyText}>
-                Sin registros. Use la pestaña Ayuda para registrar un punto.
+                Sin registros. Use Registro para añadir un punto.
               </Text>
             }
           />
@@ -630,11 +634,14 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 
         {tabActiva === 'sms' ? (
           <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
-            <View style={styles.syncPanelInline}>
-              <Text style={styles.syncLabel}>▸ TRANSMISIÓN MANUAL POR SMS</Text>
+            <View style={styles.panel}>
+              <Text style={styles.panelKicker}>03 — Enlace SMS</Text>
+              <Text style={styles.panelTitle}>Transmisión manual</Text>
               <Text style={styles.syncHint}>
-                Comando: {OperacionConfig.COMANDO_CENTRAL_SMS} · Lotes MNv1|1/3|...
+                Comando {OperacionConfig.COMANDO_CENTRAL_SMS} · Lotes MNv1|1/3|…
               </Text>
+            </View>
+            <View style={styles.syncPanelInline}>
               <TextInput
                 style={styles.syncInput}
                 value={cadenaImport}
@@ -651,7 +658,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 activeOpacity={0.8}
               >
                 <Text style={styles.btnComandoText}>
-                  {enviandoSms ? 'ABRIENDO SMS...' : '🚨 ENVIAR AL COMANDO CENTRAL'}
+                  {enviandoSms ? 'Abriendo SMS…' : 'Enviar al comando central'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -661,7 +668,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 activeOpacity={0.8}
               >
                 <Text style={styles.btnSmsDirectoText}>
-                  {enviandoSms ? 'ABRIENDO SMS...' : '📨 ENVIAR SMS DIRECTO (LOTE 1)'}
+                  {enviandoSms ? 'Abriendo SMS…' : 'Enviar SMS directo (lote 1)'}
                 </Text>
               </TouchableOpacity>
               {lotesPendientes.length > 1 && indiceLote < lotesPendientes.length - 1 ? (
@@ -671,13 +678,13 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                   activeOpacity={0.8}
                 >
                   <Text style={styles.btnSiguienteLoteText}>
-                    📨 ENVIAR LOTE {indiceLote + 2}/{lotesPendientes.length}
+                    Enviar lote {indiceLote + 2}/{lotesPendientes.length}
                   </Text>
                 </TouchableOpacity>
               ) : null}
               <View style={styles.syncButtons}>
                 <TouchableOpacity style={styles.btnSMSHalf} onPress={comprimirParaSMS} activeOpacity={0.8}>
-                  <Text style={styles.btnSMSText}>📲 COMPRIMIR</Text>
+                  <Text style={styles.btnSMSText}>Comprimir</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.btnImportHalf, importando && styles.btnDisabled]}
@@ -686,7 +693,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                   disabled={importando}
                 >
                   <Text style={styles.btnImportText}>
-                    {importando ? 'FUSIONANDO...' : '📥 PEGAR Y FUSIONAR'}
+                    {importando ? 'Fusionando…' : 'Pegar y fusionar'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -694,33 +701,36 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           </ScrollView>
         ) : null}
 
-        {tabActiva === 'red' ? (
+        {tabActiva === 'comando' ? (
           <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
-            <View style={styles.heroSection}>
-              <Text style={styles.heroSectionTitle}>RED CIUDADANA ACTIVA</Text>
-              <Text style={styles.heroSectionDesc}>
-                MeshnetworkVenezuela complementa la red de voluntarios y acopios. Los reportes tácticos
-                de rescate se transmiten por SMS al comando central cuando la señal lo permite.
+            {renderHeader()}
+            <View style={styles.panel}>
+              <Text style={styles.panelKicker}>04 — Comando central</Text>
+              <Text style={styles.panelTitle}>{OperacionConfig.NOMBRE_COMANDO}</Text>
+              <Text style={styles.panelDesc}>
+                Mesh Network Venezuela opera de forma autónoma. Los reportes tácticos se transmiten
+                por SMS al comando cuando la señal lo permite.
               </Text>
-              <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                  <Text style={styles.statNumber}>{OperacionConfig.BRIGADA_ID}</Text>
-                  <Text style={styles.statLabel}>BRIGADA LOCAL</Text>
-                </View>
+              <View style={[styles.statCard, paperShadow, { marginTop: 12 }]}>
+                <Text style={styles.comandoLabel}>Brigada</Text>
+                <Text style={styles.comandoValor}>{OperacionConfig.BRIGADA_ID}</Text>
+                <Text style={styles.comandoLabel}>SMS comando</Text>
+                <Text style={styles.comandoValor}>{OperacionConfig.COMANDO_CENTRAL_SMS}</Text>
+                <Text style={styles.comandoLabel}>Protocolo</Text>
+                <Text style={styles.comandoValor}>{OperacionConfig.VERSION_DATOS}</Text>
               </View>
-              <Text style={styles.redInfo}>Comando: {OperacionConfig.NOMBRE_COMANDO}</Text>
-              <Text style={styles.redInfo}>SMS: {OperacionConfig.COMANDO_CENTRAL_SMS}</Text>
             </View>
-            <TouchableOpacity style={styles.btnHeroPrimary} onPress={abrirRedCiudadana}>
-              <Text style={styles.btnHeroPrimaryText}>🌐 ABRIR HEROVENEZUELA.COM</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btnHeroSecondary} onPress={() => setTabActiva('registro')}>
-              <Text style={styles.btnHeroSecondaryText}>🆘 REGISTRAR AYUDA EN CAMPO</Text>
+            <TouchableOpacity
+              style={[styles.btnPrimary, paperShadow]}
+              onPress={() => setTabActiva('registro')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.btnPrimaryText}>Ir a registro en campo</Text>
             </TouchableOpacity>
           </ScrollView>
         ) : null}
 
-        <View style={styles.bottomNav}>
+        <View style={[styles.bottomNav, paperShadow]}>
           {TABS.map((tab) => {
             const activa = tabActiva === tab.id;
             return (
@@ -728,9 +738,8 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 key={tab.id}
                 style={[styles.navItem, activa && styles.navItemActiva]}
                 onPress={() => setTabActiva(tab.id)}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
-                <Text style={styles.navIcon}>{tab.icon}</Text>
                 <Text style={[styles.navLabel, activa && styles.navLabelActiva]}>{tab.label}</Text>
                 {activa ? <View style={styles.navIndicator} /> : null}
               </TouchableOpacity>
@@ -742,336 +751,386 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   );
 }
 
+const T = BrutalistTheme;
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#000000' },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 16 },
-  heroTopBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    backgroundColor: '#001A4D',
-    borderBottomWidth: 2,
-    borderBottomColor: '#FFCC00',
-  },
-  heroHeart: { fontSize: 18 },
-  heroSlogan: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
-  heroSection: {
-    backgroundColor: '#0A1428',
-    borderWidth: 1,
-    borderColor: '#003893',
-    borderRadius: 10,
-    padding: 16,
+  container: { flex: 1, backgroundColor: T.bg },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 24, paddingTop: 8 },
+  header: { marginBottom: 24 },
+  logoFrame: {
+    backgroundColor: T.paperElevated,
+    borderWidth: 2,
+    borderColor: T.border,
+    padding: 12,
     marginBottom: 16,
+    ...paperShadow,
   },
-  heroSectionTitle: {
-    color: '#003893',
-    backgroundColor: '#FFFFFF',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
+  logo: { width: '100%', height: 140, resizeMode: 'contain' },
+  kicker: {
+    color: T.inkMuted,
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-    overflow: 'hidden',
+    fontWeight: '600',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
-  heroSectionDesc: { color: '#CCCCCC', fontSize: 13, lineHeight: 20, marginBottom: 14 },
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  tituloEditorial: {
+    color: T.ink,
+    fontSize: 42,
+    fontWeight: '900',
+    letterSpacing: -1,
+    lineHeight: 44,
+  },
+  divider: { height: 3, backgroundColor: T.ink, width: 48, marginVertical: 14 },
+  badge: {
+    color: T.meshBlueDark,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  panel: {
+    backgroundColor: T.paperElevated,
+    borderWidth: 2,
+    borderColor: T.border,
+    padding: 18,
+    marginBottom: 16,
+    ...paperShadow,
+  },
+  panelKicker: {
+    color: T.meshBlue,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  panelTitle: {
+    color: T.ink,
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    marginBottom: 10,
+  },
+  panelDesc: { color: T.inkMuted, fontSize: 14, lineHeight: 22 },
+  statsRow: { flexDirection: 'row', gap: 12, marginTop: 16 },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: T.paperElevated,
     borderWidth: 2,
-    borderColor: '#003893',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-  },
-  statNumber: { color: '#003893', fontSize: 22, fontWeight: '900' },
-  statCritico: { color: '#CF142B' },
-  statVerde: { color: '#00843D' },
-  statLabel: {
-    color: '#003893',
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  btnHeroPrimary: {
-    backgroundColor: '#003893',
-    borderRadius: 8,
+    borderColor: T.border,
     paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 10,
+    paddingHorizontal: 10,
+    alignItems: 'flex-start',
   },
-  btnHeroPrimaryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-  btnHeroSecondary: {
-    backgroundColor: '#111111',
-    borderWidth: 2,
-    borderColor: '#FFCC00',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  btnHeroSecondaryText: { color: '#FFCC00', fontSize: 12, fontWeight: '800' },
-  redInfo: { color: '#888888', fontSize: 12, marginTop: 6 },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#DDDDDD',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-    paddingTop: 6,
-  },
-  navItem: { flex: 1, alignItems: 'center', paddingVertical: 4, position: 'relative' },
-  navItemActiva: { backgroundColor: '#E8F0FE' },
-  navIcon: { fontSize: 18 },
-  navLabel: { color: '#666666', fontSize: 9, fontWeight: '700', marginTop: 2 },
-  navLabelActiva: { color: '#003893' },
-  navIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: '20%',
-    right: '20%',
-    height: 3,
-    backgroundColor: '#FFCC00',
-    borderRadius: 2,
-  },
-  syncPanelInline: { paddingBottom: 8 },
-  chipActivoHero: { backgroundColor: '#003893', borderColor: '#003893' },
-  chipTextActivoHero: { color: '#FFFFFF' },
-  cardContacto: { color: '#FFCC00', fontSize: 13, marginTop: 4, fontWeight: '600' },
-  cardCiudad: { color: '#888888', fontSize: 12, marginTop: 2 },
-  header: {
-    alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#222222',
-    marginBottom: 16,
-  },
-  logo: { width: 120, height: 72, resizeMode: 'contain', marginBottom: 10 },
-  emblema: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: '#00AEEF',
-    backgroundColor: '#0A0A0A',
-    marginBottom: 12,
-  },
-  emblemaIcon: { fontSize: 24 },
-  emblemaSignal: { fontSize: 16, marginLeft: 2 },
-  titulo: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '900',
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  subtitulo: {
-    color: '#00FF00',
-    fontSize: 13,
+  statNumber: { color: T.ink, fontSize: 28, fontWeight: '900', letterSpacing: -1 },
+  statLabel: {
+    color: T.inkMuted,
+    fontSize: 9,
     fontWeight: '700',
-    textAlign: 'center',
-    marginTop: 6,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 4,
   },
-  badge: {
-    color: '#00AEEF',
-    fontSize: 10,
+  btnPrimary: {
+    backgroundColor: T.ink,
+    borderWidth: 2,
+    borderColor: T.border,
+    paddingVertical: 18,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  btnPrimaryText: {
+    color: T.paperElevated,
+    fontSize: 13,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  comandoLabel: {
+    color: T.inkMuted,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
     marginTop: 10,
   },
+  comandoValor: { color: T.ink, fontSize: 15, fontWeight: '800', marginTop: 2 },
   fieldBox: {
-    backgroundColor: '#0A0A0A',
-    borderWidth: 1,
-    borderColor: '#222222',
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 10,
+    backgroundColor: T.paperElevated,
+    borderWidth: 2,
+    borderColor: T.border,
+    padding: 14,
+    marginBottom: 12,
+    ...paperShadow,
   },
   label: {
-    color: '#888888',
-    fontSize: 12,
-    fontWeight: '600',
+    color: T.ink,
+    fontSize: 10,
+    fontWeight: '800',
     marginBottom: 8,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: '#111111',
+    backgroundColor: T.bg,
     borderWidth: 1,
-    borderColor: '#222222',
-    borderRadius: 4,
-    color: '#FFFFFF',
+    borderColor: T.borderLight,
+    borderBottomWidth: 2,
+    borderBottomColor: T.border,
+    color: T.ink,
     fontSize: 16,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   inputGrande: { fontSize: 17, minHeight: 48 },
-  inputMultiline: { minHeight: 72, textAlignVertical: 'top' },
+  inputMultiline: { minHeight: 88, textAlignVertical: 'top' },
   btnGps: {
-    marginTop: 10,
-    backgroundColor: '#003893',
-    borderRadius: 6,
-    paddingVertical: 12,
+    marginTop: 12,
+    backgroundColor: T.meshBlueDark,
+    borderWidth: 2,
+    borderColor: T.border,
+    paddingVertical: 14,
     alignItems: 'center',
   },
-  btnGpsText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
-  gpsActivo: { color: '#00FF00', fontSize: 11, fontWeight: '700', marginTop: 8 },
-  row: { flexDirection: 'row', gap: 10 },
-  half: { flex: 1 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#222222',
-    backgroundColor: '#111111',
+  btnGpsText: {
+    color: T.paperElevated,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
-  chipActivo: { backgroundColor: '#00AEEF', borderColor: '#00AEEF' },
-  chipText: { color: '#888888', fontWeight: '700', fontSize: 13 },
-  chipTextActivo: { color: '#000000' },
+  gpsActivo: { color: T.meshBlueDark, fontSize: 12, fontWeight: '600', marginTop: 10 },
+  row: { flexDirection: 'row', gap: 12 },
+  half: { flex: 1 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: T.borderLight,
+    backgroundColor: T.bg,
+  },
+  chipActivo: { backgroundColor: T.ink, borderColor: T.border },
+  chipText: { color: T.inkMuted, fontWeight: '700', fontSize: 12 },
+  chipTextActivo: { color: T.paperElevated },
   estadoBtn: {
     flex: 1,
     minWidth: '30%',
-    paddingVertical: 10,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#222222',
-    backgroundColor: '#111111',
+    paddingVertical: 12,
+    borderWidth: 2,
+    borderColor: T.borderLight,
+    backgroundColor: T.bg,
     alignItems: 'center',
   },
-  estadoText: { color: '#888888', fontSize: 10, fontWeight: '800', textAlign: 'center' },
-  estadoTextActivo: { color: '#000000' },
+  estadoText: {
+    color: T.inkMuted,
+    fontSize: 9,
+    fontWeight: '800',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  estadoTextActivo: { color: T.ink },
   btnEmergencia: {
-    backgroundColor: '#FF0000',
-    borderRadius: 8,
+    backgroundColor: T.critico,
+    borderWidth: 2,
+    borderColor: T.border,
     paddingVertical: 20,
-    marginTop: 6,
-    marginBottom: 20,
+    marginTop: 8,
+    marginBottom: 24,
     alignItems: 'center',
+    ...paperShadow,
   },
-  btnEmergenciaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
-  btnDisabled: { opacity: 0.6 },
-  listaTitulo: { color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 8 },
-  lista: { flex: 1, paddingHorizontal: 16 },
-  listaContent: { paddingBottom: 8 },
+  btnEmergenciaText: {
+    color: T.paperElevated,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  btnDisabled: { opacity: 0.5 },
+  listaTitulo: {
+    color: T.ink,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  lista: { flex: 1, paddingHorizontal: 20 },
+  listaContent: { paddingBottom: 16 },
   card: {
-    backgroundColor: '#0A0A0A',
-    borderWidth: 1,
-    borderColor: '#222222',
-    borderLeftWidth: 4,
-    borderRadius: 6,
-    padding: 14,
-    marginBottom: 10,
+    backgroundColor: T.paperElevated,
+    borderWidth: 2,
+    borderColor: T.border,
+    borderLeftWidth: 5,
+    padding: 16,
+    marginBottom: 12,
+    ...paperShadow,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  cardEstado: { fontSize: 11, fontWeight: '900' },
-  cardId: { color: '#555555', fontSize: 9, fontWeight: '600' },
-  cardNombre: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  cardUbicacion: { color: '#CCCCCC', fontSize: 14, marginTop: 4 },
-  cardGps: { color: '#00AEEF', fontSize: 12, marginTop: 4, fontWeight: '600' },
-  cardNotas: { color: '#888888', fontSize: 12, marginTop: 6, fontStyle: 'italic' },
+  cardEstado: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
+  cardId: { color: T.inkLight, fontSize: 9, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
+  cardNombre: { color: T.ink, fontSize: 17, fontWeight: '800', letterSpacing: -0.3 },
+  cardContacto: { color: T.meshBlueDark, fontSize: 13, marginTop: 6, fontWeight: '600' },
+  cardCiudad: {
+    color: T.inkMuted,
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  cardUbicacion: { color: T.inkMuted, fontSize: 14, marginTop: 6, lineHeight: 20 },
+  cardGps: {
+    color: T.meshBlueDark,
+    fontSize: 12,
+    marginTop: 6,
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  cardNotas: { color: T.inkMuted, fontSize: 13, marginTop: 8, fontStyle: 'italic', lineHeight: 20 },
   btnNavegar: {
-    backgroundColor: '#003366',
-    borderWidth: 1,
-    borderColor: '#00AEEF',
-    borderRadius: 6,
+    backgroundColor: T.bg,
+    borderWidth: 2,
+    borderColor: T.border,
     paddingVertical: 12,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 12,
   },
-  btnNavegarText: { color: '#00AEEF', fontSize: 13, fontWeight: '900', letterSpacing: 0.5 },
-  cardTime: { color: '#555555', fontSize: 10, marginTop: 8 },
-  emptyText: { color: '#555555', textAlign: 'center', marginTop: 20, fontSize: 13 },
-  syncPanel: {
-    backgroundColor: '#0A0A0A',
-    borderTopWidth: 1,
-    borderTopColor: '#222222',
-    padding: 12,
-  },
-  syncLabel: {
-    color: '#00AEEF',
-    fontSize: 10,
+  btnNavegarText: {
+    color: T.ink,
+    fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 1,
-    marginBottom: 4,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
-  syncHint: { color: '#555555', fontSize: 10, marginBottom: 8 },
+  cardTime: { color: T.inkLight, fontSize: 10, marginTop: 10 },
+  emptyText: { color: T.inkMuted, textAlign: 'center', marginTop: 32, fontSize: 14, lineHeight: 22 },
+  syncPanelInline: { paddingBottom: 8 },
+  syncHint: { color: T.inkMuted, fontSize: 12, marginBottom: 12, lineHeight: 18 },
   syncInput: {
-    backgroundColor: '#111111',
-    borderWidth: 1,
-    borderColor: '#222222',
-    borderRadius: 4,
-    color: '#00FF00',
+    backgroundColor: T.paperElevated,
+    borderWidth: 2,
+    borderColor: T.border,
+    color: T.ink,
     fontSize: 11,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    minHeight: 72,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    minHeight: 88,
     textAlignVertical: 'top',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   btnComando: {
-    backgroundColor: '#8B0000',
+    backgroundColor: T.critico,
     borderWidth: 2,
-    borderColor: '#FF0000',
-    borderRadius: 6,
+    borderColor: T.border,
     paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
+    ...paperShadow,
   },
-  btnComandoText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900', letterSpacing: 0.5 },
+  btnComandoText: {
+    color: T.paperElevated,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
   btnSmsDirecto: {
-    backgroundColor: '#CF142B',
-    borderRadius: 6,
+    backgroundColor: T.ink,
+    borderWidth: 2,
+    borderColor: T.border,
     paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  btnSmsDirectoText: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
+  btnSmsDirectoText: {
+    color: T.paperElevated,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   btnSiguienteLote: {
-    backgroundColor: '#FF8800',
-    borderRadius: 6,
+    backgroundColor: T.alerta,
+    borderWidth: 2,
+    borderColor: T.border,
     paddingVertical: 12,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  btnSiguienteLoteText: { color: '#000000', fontSize: 12, fontWeight: '900' },
-  syncButtons: { flexDirection: 'row', gap: 8 },
+  btnSiguienteLoteText: {
+    color: T.paperElevated,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  syncButtons: { flexDirection: 'row', gap: 10 },
   btnSMSHalf: {
     flex: 1,
-    backgroundColor: '#111111',
-    borderWidth: 1,
-    borderColor: '#222222',
-    borderRadius: 6,
+    backgroundColor: T.paperElevated,
+    borderWidth: 2,
+    borderColor: T.border,
     paddingVertical: 14,
     alignItems: 'center',
   },
   btnImportHalf: {
     flex: 1,
-    backgroundColor: '#003893',
-    borderRadius: 6,
+    backgroundColor: T.meshBlueDark,
+    borderWidth: 2,
+    borderColor: T.border,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  btnSMSText: { color: '#00FF00', fontSize: 11, fontWeight: '800', textAlign: 'center' },
-  btnImportText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800', textAlign: 'center' },
+  btnSMSText: {
+    color: T.ink,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  btnImportText: {
+    color: T.paperElevated,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: T.paperElevated,
+    borderTopWidth: 2,
+    borderTopColor: T.border,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+    paddingTop: 10,
+  },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
+  navItemActiva: { backgroundColor: T.bg },
+  navLabel: {
+    color: T.inkMuted,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  navLabelActiva: { color: T.ink, fontWeight: '900' },
+  navIndicator: {
+    position: 'absolute',
+    top: 0,
+    left: '15%',
+    right: '15%',
+    height: 3,
+    backgroundColor: T.ink,
+  },
 });

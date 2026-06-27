@@ -3,6 +3,10 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import HomeScreen from './src/screens/HomeScreen';
 import { SQLiteReporteRepository } from './src/infrastructure/repositories/SQLiteReporteRepository';
 
+import { BrutalistTheme } from './src/theme/BrutalistTheme';
+
+const T = BrutalistTheme;
+
 export default function App(): React.JSX.Element {
   const repository = useMemo(() => new SQLiteReporteRepository(), []);
   const [listo, setListo] = useState(false);
@@ -17,18 +21,18 @@ export default function App(): React.JSX.Element {
 
   if (errorCarga) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#FF0000', fontWeight: '800' }}>{errorCarga}</Text>
+      <View style={{ flex: 1, backgroundColor: T.bg, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: T.critico, fontWeight: '800' }}>{errorCarga}</Text>
       </View>
     );
   }
 
   if (!listo) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#00AEEF" />
-        <Text style={{ color: '#00FF00', marginTop: 16, fontWeight: '700' }}>
-          Cargando registros tácticos...
+      <View style={{ flex: 1, backgroundColor: T.bg, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={T.ink} />
+        <Text style={{ color: T.inkMuted, marginTop: 16, fontWeight: '700', letterSpacing: 1 }}>
+          Cargando registros…
         </Text>
       </View>
     );
