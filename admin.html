@@ -7,151 +7,265 @@
   <meta name="theme-color" content="#2BA4DB" />
   <link rel="apple-touch-icon" href="assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #FFFFFF;
-      --ink: #14181C;
-      --muted: #1E87BC;
-      --light: #8A95A2;
-      --paper: #EEF5FA;
-      --paper-up: #F7FAFC;
-      --blue: #2BA4DB;
-      --border-light: #CBD8E2;
-      --shadow: 5px 5px 0 rgba(43, 164, 219, 0.16);
+      --bg: #F7FAFD;
+      --surface: #FFFFFF;
+      --surface-2: #EEF4FA;
+      --line: #E2E9F1;
+      --ink: #0B2440;
+      --muted: #5B6B80;
+      --brand: #2BA4DB;
+      --brand-dark: #1B7CAA;
+      --brand-deep: #0E3A57;
       --critico: #D62F2B;
-      --alerta: #C97A00;
+      --amber: #E8A100;
+      --amber-soft: #FFF3D6;
       --ok: #1E9E57;
+      --radius: 14px;
+      --radius-lg: 20px;
+      --pill: 999px;
+      --shadow-sm: 0 2px 8px rgba(11, 36, 64, 0.06);
+      --shadow: 0 12px 30px rgba(11, 36, 64, 0.10);
+      --display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Instrument Sans', -apple-system, sans-serif;
+      font-family: var(--body);
       background: var(--bg);
       color: var(--ink);
       min-height: 100vh;
-      padding: 20px 16px 60px;
+      padding: 24px 18px 64px;
+      -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 1100px; margin: 0 auto; }
+    .wrap { max-width: 1140px; margin: 0 auto; }
+    .eyebrow, .kicker {
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--brand-dark);
+    }
+    h1 { font-family: var(--display); font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+    h2 { font-family: var(--display); font-weight: 800; letter-spacing: -0.01em; }
+    h3 { font-family: var(--display); font-weight: 700; }
+    button, select, input { font-family: inherit; }
+
+    /* —— Top / hero —— */
     .top {
       display: flex;
       flex-wrap: wrap;
-      align-items: baseline;
-      gap: 8px 16px;
-      border-bottom: 2px solid var(--border-light);
-      padding-bottom: 14px;
+      align-items: center;
+      gap: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 18px 20px;
       margin-bottom: 18px;
     }
-    .kicker { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-    h1 { font-family: 'Libre Baskerville', Georgia, serif; font-size: 1.9rem; letter-spacing: -0.02em; }
-    .top-meta { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 0.78rem; color: var(--muted); }
-    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); display: inline-block; box-shadow: 0 0 8px var(--ok); }
-    .dot.off { background: var(--critico); box-shadow: 0 0 8px var(--critico); }
-    button, select, input {
-      font-family: inherit;
-    }
-    .btn {
-      border: 2px solid var(--muted);
-      background: var(--paper-up);
-      color: var(--ink);
-      font-weight: 800;
-      font-size: 0.68rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 10px 14px;
-      cursor: pointer;
-      box-shadow: var(--shadow);
-    }
-    .btn:hover { border-color: var(--blue); }
-    .btn-toggle.on { background: var(--muted); color: var(--bg); }
+    .top-brand { display: flex; align-items: center; gap: 14px; }
+    .top-logo { height: 46px; width: auto; }
+    @media (max-width: 520px) { .top-logo { height: 36px; } h1 { font-size: 1.6rem; } }
+    .top-meta { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.78rem; color: var(--muted); }
+    .conn { display: inline-flex; align-items: center; gap: 7px; background: var(--surface-2); border-radius: var(--pill); padding: 6px 12px; font-weight: 600; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); display: inline-block; box-shadow: 0 0 0 4px rgba(30,158,87,.15); }
+    .dot.off { background: var(--critico); box-shadow: 0 0 0 4px rgba(214,47,43,.15); }
 
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 18px; }
-    .stat {
-      background: var(--paper-up);
-      border: 2px solid var(--border-light);
-      padding: 14px 12px;
-      box-shadow: var(--shadow);
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 0.74rem;
+      letter-spacing: 0.02em;
+      padding: 10px 16px;
+      cursor: pointer;
+      border-radius: var(--pill);
+      box-shadow: var(--shadow-sm);
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
     }
-    .stat .n { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; }
-    .stat .l { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: var(--brand); }
+    .btn:active { transform: translateY(0); }
+    .btn-toggle.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+    /* —— KPIs —— */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 16px 14px;
+      box-shadow: var(--shadow-sm);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .stat:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat .n { font-family: var(--display); font-size: 1.85rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+    .stat .l { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
     .n-critico { color: var(--critico); }
     .n-ok { color: var(--ok); }
-    .n-alerta { color: var(--alerta); }
+    .n-alerta { color: var(--amber); }
 
-    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    /* —— Mapa —— */
+    .map-section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .map-head h2 { font-size: 1.3rem; margin-top: 4px; }
+    .map-desc { color: var(--muted); font-size: 0.85rem; margin-top: 6px; max-width: 60ch; }
+    .map-layout { display: grid; grid-template-columns: 250px 1fr; gap: 18px; margin-top: 16px; }
+    @media (max-width: 760px) { .map-layout { grid-template-columns: 1fr; } }
+    .map-cities { display: flex; flex-direction: column; gap: 8px; max-height: 440px; overflow: auto; padding-right: 2px; }
+    .city-item {
+      text-align: left;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 11px 13px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: border-color .12s ease, background .12s ease;
+    }
+    .city-item:hover { border-color: var(--brand); }
+    .city-item.active { border-color: var(--brand); background: var(--surface-2); }
+    .city-item strong { display: block; font-size: 0.92rem; color: var(--ink); font-weight: 700; }
+    .city-item span { font-size: 0.74rem; color: var(--muted); }
+    .map-stage { min-width: 0; }
+    .map-canvas {
+      position: relative;
+      width: 100%;
+      background: linear-gradient(180deg, #EAF3FB, #F7FAFD);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .map-svg { display: block; width: 100%; height: auto; }
+    .map-svg path { fill: #D6E6F4; stroke: #9DBFDD; stroke-width: 3; stroke-linejoin: round; }
+    .map-pins { position: absolute; inset: 0; }
+    .map-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      border: 2px solid #fff;
+      cursor: pointer;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(11, 36, 64, 0.28);
+      transition: transform .12s ease;
+    }
+    .map-pin:hover { transform: translate(-50%, -50%) scale(1.08); }
+    .map-pin.crit { background: var(--critico); }
+    .map-pin.active { outline: 4px solid rgba(43, 164, 219, 0.35); z-index: 5; }
+    .map-active {
+      margin-top: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 13px 15px;
+    }
+    .map-active h3 { font-size: 1.1rem; margin: 2px 0; }
+    .map-active p { color: var(--muted); font-size: 0.85rem; }
+
+    /* —— Filtros —— */
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 18px; }
     .filters input[type="search"], .filters select {
       width: 100%;
-      background: var(--paper);
-      border: 2px solid var(--border-light);
+      background: var(--surface);
+      border: 1px solid var(--line);
       color: var(--ink);
-      padding: 11px 12px;
+      padding: 12px 14px;
       font-size: 0.9rem;
       outline: none;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
     }
-    .filters input:focus, .filters select:focus { border-color: var(--blue); }
-    .check { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--ink); background: var(--paper); border: 2px solid var(--border-light); padding: 0 12px; }
-    .check input { width: 18px; height: 18px; accent-color: var(--muted); }
+    .filters input:focus, .filters select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(43,164,219,.15); }
+    .check {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 0.84rem; color: var(--ink);
+      background: var(--surface); border: 1px solid var(--line);
+      padding: 0 14px; border-radius: 12px; box-shadow: var(--shadow-sm); cursor: pointer;
+    }
+    .check input { width: 18px; height: 18px; accent-color: var(--brand); }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    /* —— Tarjetas —— */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
     .card {
-      background: var(--paper-up);
-      border: 2px solid var(--border-light);
-      border-left-width: 5px;
-      padding: 14px;
-      box-shadow: var(--shadow);
+      --accent: var(--brand);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm), inset 5px 0 0 var(--accent);
       display: flex;
-      gap: 12px;
+      gap: 14px;
+      transition: transform .12s ease, box-shadow .12s ease;
     }
-    .card.e-CRITICO { border-left-color: var(--critico); }
-    .card.e-POR.LOCALIZAR, .card.e-PORLOCALIZAR { border-left-color: var(--alerta); }
-    .card.e-LOCALIZADO { border-left-color: var(--ok); }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow), inset 5px 0 0 var(--accent); }
+    .card.e-CRITICO { --accent: var(--critico); }
+    .card.e-PORLOCALIZAR { --accent: var(--amber); }
+    .card.e-LOCALIZADO { --accent: var(--ok); }
     .card-foto {
-      width: 86px; height: 86px; flex-shrink: 0;
-      object-fit: cover; border: 2px solid var(--muted); cursor: pointer; background: var(--paper);
+      width: 92px; height: 92px; flex-shrink: 0;
+      object-fit: cover; border-radius: var(--radius); cursor: pointer; background: var(--surface-2);
     }
-    .card-foto.placeholder { display: flex; align-items: center; justify-content: center; color: var(--light); font-size: 0.6rem; text-align: center; cursor: default; }
+    .card-foto.placeholder { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.62rem; text-align: center; cursor: default; border: 1px dashed var(--line); }
     .card-body { flex: 1; min-width: 0; }
-    .card-estado { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-    .c-CRITICO { color: var(--critico); }
-    .c-ALERTA { color: var(--alerta); }
-    .c-OK { color: var(--ok); }
-    .card-nombre { font-size: 1.02rem; font-weight: 800; margin-top: 2px; }
-    .card-sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; line-height: 1.5; }
-    .card-gps { font-family: ui-monospace, monospace; font-size: 0.72rem; color: var(--blue); margin-top: 4px; }
-    .card-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag { font-size: 0.58rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 7px; border: 1px solid var(--border-light); color: var(--light); }
-    .tag.flag { color: var(--critico); border-color: var(--critico); }
-    .card-meta { font-size: 0.62rem; color: var(--light); margin-top: 10px; line-height: 1.5; }
-    .card-acts { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-    .card-acts a { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; text-decoration: none; padding: 7px 10px; border: 2px solid var(--border-light); color: var(--ink); }
-    .card-acts a:hover { border-color: var(--blue); }
+    .card-nombre { font-family: var(--display); font-size: 1.05rem; font-weight: 800; margin-top: 6px; }
+    .card-sub { font-size: 0.82rem; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    .card-gps { font-family: ui-monospace, monospace; font-size: 0.74rem; color: var(--brand-dark); margin-top: 4px; }
+    .card-tags { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge { display: inline-block; border-radius: var(--pill); padding: 4px 11px; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+    .badge.crit { background: #FBE3E2; color: var(--critico); }
+    .badge.warn { background: var(--amber-soft); color: #8A5A00; }
+    .badge.ok { background: #E3F5EC; color: var(--ok); }
+    .tag { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.02em; padding: 4px 10px; border-radius: var(--pill); background: var(--surface-2); color: var(--muted); }
+    .tag.flag { background: #FBE3E2; color: var(--critico); }
+    .card-meta { font-size: 0.66rem; color: var(--muted); margin-top: 11px; line-height: 1.5; }
+    .card-acts { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .card-acts a {
+      font-size: 0.66rem; font-weight: 700; letter-spacing: 0.02em; text-decoration: none;
+      padding: 8px 13px; border: 1px solid var(--line); color: var(--ink); border-radius: var(--pill); background: var(--surface);
+      transition: border-color .12s ease, background .12s ease;
+    }
+    .card-acts a:hover { border-color: var(--brand); background: var(--surface-2); }
 
-    .msg { padding: 40px 20px; text-align: center; color: var(--muted); border: 2px dashed var(--border-light); line-height: 1.6; }
-    .msg.error { color: var(--critico); border-color: var(--critico); }
+    .msg { padding: 44px 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); line-height: 1.6; background: var(--surface); }
+    .msg.error { color: var(--critico); border-color: rgba(214,47,43,.4); }
 
-    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.93); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 100; }
+    .lightbox { position: fixed; inset: 0; background: rgba(11,36,64,0.9); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 100; backdrop-filter: blur(2px); }
     .lightbox.show { display: flex; }
-    .lightbox img { max-width: 100%; max-height: 90vh; border: 2px solid var(--muted); }
-    .lightbox-close { position: fixed; top: 12px; right: 18px; font-size: 2.2rem; color: #fff; background: none; border: none; cursor: pointer; }
+    .lightbox img { max-width: 100%; max-height: 90vh; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .lightbox-close { position: fixed; top: 14px; right: 20px; font-size: 2.2rem; color: #fff; background: none; border: none; cursor: pointer; }
 
-    .gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 200; }
-    .gate-box { width: 100%; max-width: 360px; border: 2px solid var(--muted); background: var(--paper-up); padding: 28px 22px; box-shadow: var(--shadow); }
-    .gate-box h2 { font-family: 'Libre Baskerville', serif; font-size: 1.3rem; margin-bottom: 6px; }
-    .gate-box p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
-    .gate-box input { width: 100%; background: var(--bg); border: 2px solid var(--border-light); color: var(--ink); padding: 12px; font-size: 1rem; outline: none; margin-bottom: 12px; }
-    .gate-box input:focus { border-color: var(--blue); }
-    .gate-box .btn { width: 100%; background: var(--muted); color: var(--bg); border-color: var(--muted); }
-    .gate-err { color: var(--critico); font-size: 0.8rem; margin-top: 8px; min-height: 1.2em; }
-    .brand-logo { width: 100%; max-width: 240px; display: block; margin: 0 auto 16px; }
-    .top-brand { display: flex; align-items: center; gap: 14px; }
-    .top-logo { height: 48px; width: auto; }
-    @media (max-width: 520px) { .top-logo { height: 38px; } }
+    /* —— Gate —— */
+    .gate { position: fixed; inset: 0; background: linear-gradient(160deg, #EAF3FB, var(--bg)); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 200; }
+    .gate-box { width: 100%; max-width: 380px; border: 1px solid var(--line); background: var(--surface); padding: 32px 26px; box-shadow: var(--shadow); border-radius: var(--radius-lg); text-align: center; }
+    .brand-logo { width: 100%; max-width: 230px; display: block; margin: 0 auto 18px; }
+    .gate-box h2 { font-size: 1.35rem; margin-bottom: 6px; }
+    .gate-box p { font-size: 0.84rem; color: var(--muted); line-height: 1.5; margin-bottom: 18px; }
+    .gate-box input { width: 100%; background: var(--surface); border: 1px solid var(--line); color: var(--ink); padding: 13px 14px; font-size: 1rem; outline: none; margin-bottom: 12px; border-radius: 12px; text-align: center; }
+    .gate-box input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(43,164,219,.15); }
+    .gate-box .btn { width: 100%; background: var(--brand); color: #fff; border-color: var(--brand); padding: 13px; font-size: 0.82rem; }
+    .gate-err { color: var(--critico); font-size: 0.82rem; margin-top: 8px; min-height: 1.2em; }
   </style>
 </head>
 <body>
   <div class="gate" id="gate">
     <div class="gate-box">
       <img class="brand-logo" src="assets/logo.png" alt="Mesh Network Venezuela" />
-      <p class="kicker">Mesh Network · La Guaira</p>
+      <p class="eyebrow">Mesh Network · La Guaira</p>
       <h2>Panel administrativo</h2>
       <p>Acceso restringido a coordinación. Ingrese el código de acceso.</p>
       <input type="password" id="gate-pin" placeholder="Código de acceso" autocomplete="off" />
@@ -165,12 +279,12 @@
       <div class="top-brand">
         <img class="top-logo" src="assets/logo.png" alt="Mesh Network Venezuela" />
         <div>
-          <p class="kicker">Coordinación de rescate · La Guaira</p>
+          <p class="eyebrow">Coordinación de rescate · La Guaira</p>
           <h1>Panel de registros</h1>
         </div>
       </div>
       <div class="top-meta">
-        <span><span class="dot" id="conn-dot"></span> <span id="conn-text">conectando…</span></span>
+        <span class="conn"><span class="dot" id="conn-dot"></span> <span id="conn-text">conectando…</span></span>
         <span id="updated">—</span>
         <button type="button" class="btn btn-toggle on" id="auto-btn">Auto 20s</button>
         <button type="button" class="btn" id="refresh-btn">Actualizar</button>
@@ -178,6 +292,30 @@
     </div>
 
     <div class="stats" id="stats"></div>
+
+    <section class="map-section">
+      <div class="map-head">
+        <span class="eyebrow">Mapa de cobertura</span>
+        <h2>Dónde se está registrando</h2>
+        <p class="map-desc">Agrupado por ciudad sobre el mapa de Venezuela. Muestra ubicaciones aproximadas, no direcciones exactas. Funciona sin conexión.</p>
+      </div>
+      <div class="map-layout">
+        <div class="map-cities" id="map-cities"></div>
+        <div class="map-stage">
+          <div class="map-canvas" id="map-canvas">
+            <svg class="map-svg" viewBox="0 0 1360 1160" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <path d="M210,60 L150,60 L90,270 L140,370 L90,430 L240,520 L330,530 L400,610 L550,600 L600,620 L560,690 L580,840 L610,940 L650,1100 L710,1140 L790,1120 L890,1070 L940,970 L1000,830 L1140,810 L1200,770 L1270,700 L1240,620 L1190,520 L1340,420 L1350,360 L1240,240 L1140,160 L1020,160 L920,190 L820,200 L710,160 L590,170 L510,110 L350,70 L320,120 L240,120 Z" />
+            </svg>
+            <div class="map-pins" id="map-pins"></div>
+          </div>
+          <div class="map-active" id="map-active" hidden>
+            <span class="eyebrow">Ciudad activa</span>
+            <h3 id="map-active-city">—</h3>
+            <p id="map-active-count">—</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <div class="filters">
       <input type="search" id="f-q" placeholder="Buscar nombre, cédula, zona…" />
@@ -213,11 +351,13 @@
     const ADMIN_PIN = 'guaira2026';
     const HUB_URL = `${location.origin}/api/hub`;
     const REFRESH_MS = 20000;
+    const VE_BBOX = { lngMin: -73.4, lngMax: -59.8, latMin: 0.6, latMax: 12.2 };
 
     const $ = (id) => document.getElementById(id);
     let datos = [];
     let autoOn = true;
     let timer = null;
+    let ciudadActivaMapa = null;
 
     /* —— Gate —— */
     function desbloquear() {
@@ -329,10 +469,70 @@
       ).join('');
     }
 
-    function claseEstado(s) {
-      if (s === 'CRITICO') return 'c-CRITICO';
-      if (s === 'LOCALIZADO') return 'c-OK';
-      return 'c-ALERTA';
+    /* —— Mapa offline —— */
+    function coordValida(r) {
+      const la = Number(r.latitud), lo = Number(r.longitud);
+      return la && lo && la >= VE_BBOX.latMin && la <= VE_BBOX.latMax && lo >= VE_BBOX.lngMin && lo <= VE_BBOX.lngMax;
+    }
+    function proyectar(lat, lng) {
+      const x = (lng - VE_BBOX.lngMin) / (VE_BBOX.lngMax - VE_BBOX.lngMin) * 100;
+      const y = (VE_BBOX.latMax - lat) / (VE_BBOX.latMax - VE_BBOX.latMin) * 100;
+      return { x, y };
+    }
+    function setCiudadActiva(c) { ciudadActivaMapa = c; renderMapa(); }
+
+    function renderMapa() {
+      const grupos = new Map();
+      datos.forEach((r) => {
+        if (!coordValida(r)) return;
+        const key = r.ciudad || 'Sin ciudad';
+        const g = grupos.get(key) || { ciudad: key, total: 0, crit: 0, sumLat: 0, sumLng: 0 };
+        g.total += 1;
+        if (r.estado_actual === 'CRITICO') g.crit += 1;
+        g.sumLat += Number(r.latitud);
+        g.sumLng += Number(r.longitud);
+        grupos.set(key, g);
+      });
+      const lista = [...grupos.values()]
+        .map((g) => ({ ...g, lat: g.sumLat / g.total, lng: g.sumLng / g.total }))
+        .sort((a, b) => b.total - a.total);
+      const pins = $('map-pins'), cities = $('map-cities');
+      if (!lista.length) {
+        pins.innerHTML = '';
+        cities.innerHTML = '<div class="msg">Aún no hay registros con ubicación en el mapa.</div>';
+        $('map-active').hidden = true;
+        return;
+      }
+      if (!ciudadActivaMapa || !grupos.has(ciudadActivaMapa)) ciudadActivaMapa = lista[0].ciudad;
+      pins.innerHTML = lista.map((g) => {
+        const { x, y } = proyectar(g.lat, g.lng);
+        const size = Math.min(58, 28 + Math.sqrt(g.total) * 6);
+        const fs = size > 44 ? '0.8rem' : size > 34 ? '0.7rem' : '0.62rem';
+        const cls = `map-pin${g.crit ? ' crit' : ''}${g.ciudad === ciudadActivaMapa ? ' active' : ''}`;
+        return `<button type="button" class="${cls}" data-city="${encodeURIComponent(g.ciudad)}" title="${g.ciudad}: ${g.total} reporte(s)" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;font-size:${fs}">${g.total}</button>`;
+      }).join('');
+      cities.innerHTML = lista.map((g) =>
+        `<button type="button" class="city-item${g.ciudad === ciudadActivaMapa ? ' active' : ''}" data-city="${encodeURIComponent(g.ciudad)}"><strong>${g.ciudad}</strong><span>${g.total} reporte(s)${g.crit ? ` · ${g.crit} crítico(s)` : ''}</span></button>`
+      ).join('');
+      const act = grupos.get(ciudadActivaMapa);
+      $('map-active').hidden = false;
+      $('map-active-city').textContent = ciudadActivaMapa;
+      $('map-active-count').textContent = `${act.total} reporte(s)${act.crit ? ` · ${act.crit} crítico(s)` : ''}`;
+    }
+
+    $('map-pins').addEventListener('click', (e) => {
+      const b = e.target.closest('.map-pin');
+      if (b) setCiudadActiva(decodeURIComponent(b.dataset.city));
+    });
+    $('map-cities').addEventListener('click', (e) => {
+      const b = e.target.closest('.city-item');
+      if (b) setCiudadActiva(decodeURIComponent(b.dataset.city));
+    });
+
+    /* —— Tarjetas —— */
+    function badgeEstado(s) {
+      const cls = s === 'CRITICO' ? 'badge crit' : s === 'LOCALIZADO' ? 'badge ok' : 'badge warn';
+      return `<span class="${cls}">${s}</span>`;
     }
 
     function telInternacional(num) {
@@ -364,7 +564,7 @@
         <div class="card ${claseE}">
           ${foto}
           <div class="card-body">
-            <span class="card-estado ${claseEstado(r.estado_actual)}">${r.estado_actual}</span>
+            ${badgeEstado(r.estado_actual)}
             <div class="card-nombre">${r.nombre_completo || 'Anónimo'}${edad} · ${r.genero || ''}</div>
             <div class="card-sub">🏙️ ${r.ciudad || 'La Guaira'} · 📍 ${r.ubicacion_exacta || 's/d'}${r.zona_afectada_tag ? ' · ' + r.zona_afectada_tag : ''}</div>
             ${gps}
@@ -380,6 +580,7 @@
 
     function render() {
       renderStats();
+      renderMapa();
       const lista = filtrar();
       if (!lista.length) {
         $('result').innerHTML = '<div class="msg">No hay registros que coincidan con el filtro.</div>';

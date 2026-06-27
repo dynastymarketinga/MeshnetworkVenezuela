@@ -10,30 +10,43 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="apple-touch-icon" href="assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      /* Paleta de marca — blanco / negro / azul Mesh Network */
-      --bg: #FFFFFF;
-      --ink: #14181C;
-      --muted: #1E87BC;
+      /* Sistema moderno — Mesh Network (blanco / azul marca / navy) */
+      --bg: #F7FAFD;
+      --ink: #0B2440;
+      --muted: #4A6076;
       --light: #8A95A2;
       /* Superficies (paneles, tarjetas, SMS) */
-      --paper: #EEF5FA;
-      --paper-up: #F7FAFC;
+      --paper: #EEF4FA;
+      --paper-up: #FFFFFF;
+      --surface-2: #EEF4FA;
       --blue: #2BA4DB;
-      --blue-dark: #1773A3;
+      --brand: #2BA4DB;
+      --blue-dark: #1B7CAA;
+      --brand-deep: #0E3A57;
       /* Bloque inferior — navegación */
       --nav-bg: #FFFFFF;
-      --nav-ink: #14181C;
-      --nav-muted: #6B7682;
+      --nav-ink: #0B2440;
+      --nav-muted: #8A95A2;
       /* Bordes y efectos */
-      --border-light: #CBD8E2;
-      --shadow: 5px 5px 0 rgba(43, 164, 219, 0.16);
-      /* Estados semánticos (legibles sobre fondo blanco) */
+      --border-light: #E2E9F1;
+      --shadow: 0 12px 30px rgba(11, 36, 64, 0.10);
+      --shadow-sm: 0 2px 8px rgba(11, 36, 64, 0.06);
+      --radius: 14px;
+      --radius-lg: 20px;
+      --pill: 999px;
+      /* Estados semánticos */
       --critico: #D62F2B;
-      --alerta: #C97A00;
+      --alerta: #E8A100;
+      --amber: #E8A100;
+      --amber-soft: #FFF3D6;
       --ok: #1E9E57;
+      /* Tipografía */
+      --display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -851,6 +864,119 @@
       cursor: pointer;
       font-family: inherit;
     }
+
+    /* ============================================================
+       Capa de modernización (gana por orden) — sobrio y redondeado
+       ============================================================ */
+    body { font-family: var(--body); }
+    .titulo-editorial, .lista-titulo, .panel-title, .form-section-title,
+    .stat-num, .card-nombre { font-family: var(--display); }
+    .titulo-editorial { letter-spacing: -0.02em; }
+
+    /* Acentos de marca (eyebrows / detalles) */
+    .kicker, .badge, .form-section-kicker, .panel-kicker { color: var(--blue-dark); }
+    .divider { background: var(--brand); height: 4px; width: 56px; border-radius: var(--pill); }
+    .badge { background: var(--surface-2); border: 1px solid var(--border-light); border-radius: var(--pill); padding: 5px 12px; }
+
+    /* Logo más sutil */
+    .logo-frame { border: 1px solid var(--border-light); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+
+    /* Tarjetas / paneles redondeados con sombra suave */
+    .stat-card, .panel, .sidebar, .empty,
+    .sms-box, .sync-input, .hub-result-box, .aviso-apk, .pwa-banner {
+      border-radius: var(--radius);
+    }
+    .stat-card, .panel {
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+    /* Secciones del formulario como tarjetas con aire */
+    .form-section {
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .form-section-header { border-bottom: 1px solid var(--border-light); }
+    details.mas-datos, details.compartir-details {
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Inputs y áreas de texto */
+    input:not([type="checkbox"]):not([type="radio"]), textarea, select, .sync-input {
+      border-radius: 12px !important;
+    }
+    input:not([type="checkbox"]):not([type="radio"]):focus, textarea:focus, select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(43, 164, 219, 0.15);
+    }
+
+    /* Botones tipo pill con leve elevación */
+    .btn-primary, .btn-emergencia, .nav-btn, .chip, .estado-btn, .aliado {
+      border-radius: var(--pill);
+    }
+    .tipo-btn { border-radius: var(--radius); }
+    .btn-primary, .btn-emergencia {
+      box-shadow: var(--shadow-sm);
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .btn-primary:hover, .btn-emergencia:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+    /* Estados/tipos/género activos en azul de marca */
+    .tipo-btn.active, .chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+    /* Guardar: sticky, pill, alto contraste */
+    .form-actions {
+      position: sticky;
+      bottom: 72px;
+      z-index: 40;
+      padding-top: 6px;
+    }
+    .btn-emergencia { box-shadow: var(--shadow); }
+
+    /* Tarjetas de reporte: acento redondeado + hover lift */
+    .card {
+      border: 1px solid var(--border-light);
+      border-left-width: 1px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm), inset 5px 0 0 var(--card-accent, var(--brand));
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow), inset 5px 0 0 var(--card-accent, var(--brand)); }
+    .card.card-estado-critico { --card-accent: var(--critico); }
+    .card.card-estado-alerta { --card-accent: var(--amber); }
+    .card.card-estado-ok { --card-accent: var(--ok); }
+    .foto-thumb { border-radius: var(--radius); }
+
+    /* Estado como badge pill */
+    .card-estado {
+      display: inline-block;
+      border-radius: var(--pill);
+      padding: 4px 11px;
+      background: var(--surface-2);
+    }
+    .card-estado-label-critico { background: #FBE3E2; color: var(--critico); }
+    .card-estado-label-alerta { background: var(--amber-soft); color: #8A5A00; }
+    .card-estado-label-ok { background: #E3F5EC; color: var(--ok); }
+
+    /* Aliados como lista moderna */
+    .aliado { border-radius: var(--radius); border: 1px solid var(--border-light); transition: border-color .12s ease, transform .12s ease; }
+    .aliado:hover { border-color: var(--brand); transform: translateY(-1px); }
+
+    /* Nav inferior: indicador activo suave */
+    .bottom-nav { border-top: 1px solid var(--border-light); box-shadow: 0 -6px 20px rgba(11, 36, 64, 0.06); }
+    .nav-btn { border-radius: 0; }
+    .nav-btn.active { background: transparent; color: var(--brand); border-top: 3px solid var(--brand); font-weight: 800; }
+
+    /* Checkbox en marca */
+    .checkbox-field input[type="checkbox"] { accent-color: var(--brand); }
   </style>
 </head>
 <body>

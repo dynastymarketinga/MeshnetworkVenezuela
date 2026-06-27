@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION = 'mesh-v4';
+const CACHE_VERSION = 'mesh-v5';
 const CACHE_SHELL = CACHE_VERSION + '-shell';
 const CACHE_RUNTIME = CACHE_VERSION + '-runtime';
 
