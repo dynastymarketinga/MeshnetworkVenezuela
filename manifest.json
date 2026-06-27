@@ -1,0 +1,13 @@
+{
+  "name": "Meshnetwork Venezuela - Registro Táctico",
+  "short_name": "MeshNetwork",
+  "description": "Unidad de Registro Táctico y Rescate Offline-First para zonas de desastre",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00AEEF",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "assets/logo.jpg", "sizes": "512x512", "type": "image/jpeg" }
+  ]
+}

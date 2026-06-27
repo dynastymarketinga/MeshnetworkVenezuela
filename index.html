@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mesh Network Venezuela — Registro Táctico</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#00AEEF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="assets/logo.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700;800&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet" />
   <style>
@@ -472,9 +477,62 @@
     .gps-manual p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
     .gps-manual .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .hub-resultado { font-family: 'Instrument Sans', sans-serif; font-size: 0.85rem; line-height: 1.55; white-space: pre-wrap; }
+    .pwa-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      background: #1C1C1C;
+      color: #FAF7F2;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      border-bottom: 2px solid #00AEEF;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+    .pwa-banner[hidden] { display: none !important; }
+    .pwa-banner span { flex: 1; min-width: 180px; }
+    .pwa-banner button {
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.78rem;
+      cursor: pointer;
+      border: 2px solid #00AEEF;
+      background: #00AEEF;
+      color: #1C1C1C;
+      padding: 6px 12px;
+    }
+    #pwa-dismiss-btn {
+      background: transparent;
+      color: #FAF7F2;
+      border-color: #6B6560;
+      padding: 4px 10px;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    body.pwa-banner-visible { padding-top: 52px; }
+    .field-alert {
+      color: var(--critico);
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 6px;
+      display: none;
+    }
+    .field-alert.visible { display: block; }
+    .btn-emergencia:disabled { opacity: 0.45; pointer-events: none; }
   </style>
 </head>
 <body>
+  <div id="pwa-install-banner" class="pwa-banner" hidden>
+    <span id="pwa-banner-text">Instale esta herramienta en el teléfono para uso sin internet.</span>
+    <button type="button" id="pwa-install-btn">Instalar</button>
+    <button type="button" id="pwa-dismiss-btn" aria-label="Cerrar">×</button>
+  </div>
   <div id="aviso-apk" class="aviso-apk" role="alert">
     <strong>¿Estás en Chrome o Safari?</strong> El GPS en la página web muchas veces <strong>no funciona</strong>, aunque des permiso.
     Para rescatistas en campo: <strong>instale la app en el teléfono Android</strong> (no use esta página).
@@ -512,8 +570,9 @@
         </div>
 
       <div class="field-box">
-        <label for="telefono">Teléfono, WhatsApp o correo</label>
-        <input id="telefono" type="text" placeholder="+58 412 000 0000" />
+        <label for="telefono">Teléfono de contacto</label>
+        <input id="telefono" type="text" inputmode="numeric" maxlength="12" placeholder="04121234567" autocomplete="tel" />
+        <p id="alert-telefono" class="field-alert" role="alert">Teléfono inválido: use solo números de Venezuela (11-12 dígitos, ej. 04121234567).</p>
       </div>
 
       <div class="field-box">
@@ -529,7 +588,8 @@
       <div class="row">
         <div class="field-box">
           <label for="edad">Edad</label>
-          <input id="edad" type="number" placeholder="34" min="0" max="120" />
+          <input id="edad" type="text" maxlength="12" placeholder="34, RN, BEBE…" />
+          <p id="alert-edad" class="field-alert" role="alert">Edad inválida: use un número de 0 a 115 o una palabra operativa (RN, BEBE, NN, NA, ND, N/A, DESCON).</p>
         </div>
         <div class="field-box">
           <label>Género</label>
@@ -588,6 +648,7 @@
           <button type="button" class="btn-action btn-copy" id="btn-censo-add">Agregar</button>
         </div>
         <div class="chips" id="censo-chips" style="margin-top:10px"></div>
+        <p id="alert-censo" class="field-alert" role="alert">Entrada de censo inválida: use nombre (2-60 caracteres) o cédula venezolana (V/E/J + dígitos).</p>
       </div>
 
       <div class="field-box">
@@ -927,6 +988,57 @@
     let censoPersonas = [];
     let reportesCache = [];
 
+    const RE_TELEFONO_VE = /^(0\d{10}|58\d{10})$/;
+    const RE_EDAD_NUM = /^([0-9]|[1-9]\d|1[0-1]\d|115)$/;
+    const RE_EDAD_OPS = /^(RN|BEBE|NN|NA|ND|N\/A|DESCON)$/i;
+    const RE_CENSO = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s.'-]{2,60}$|^[VEJvej]-?\d{6,9}$/;
+
+    function telefonoTieneError(raw) {
+      const digits = String(raw || '').replace(/\D/g, '');
+      if (!digits) return false;
+      return digits.length > 12 || !RE_TELEFONO_VE.test(digits);
+    }
+
+    function validarEdad(raw) {
+      const v = String(raw || '').trim();
+      if (!v) return true;
+      if (RE_EDAD_NUM.test(v)) return Number(v) <= 115;
+      return RE_EDAD_OPS.test(v);
+    }
+
+    function validarCensoPersona(v) {
+      const t = String(v || '').trim();
+      if (!t) return false;
+      return t.length >= 2 && t.length <= 60 && RE_CENSO.test(t);
+    }
+
+    function actualizarEstadoBotonGuardar() {
+      const telErr = telefonoTieneError($('telefono').value);
+      const edadErr = !validarEdad($('edad').value);
+      const censoErr = censoPersonas.some((p) => !validarCensoPersona(p));
+      $('alert-telefono').classList.toggle('visible', telErr);
+      $('alert-edad').classList.toggle('visible', edadErr);
+      $('alert-censo').classList.toggle('visible', censoErr);
+      $('btn-guardar').disabled = telErr || edadErr || censoErr;
+    }
+
+    function validarFormulario() {
+      actualizarEstadoBotonGuardar();
+      if (telefonoTieneError($('telefono').value)) {
+        toast('⚠ Teléfono inválido: use formato venezolano (04121234567)');
+        return false;
+      }
+      if (!validarEdad($('edad').value)) {
+        toast('⚠ Edad inválida: use 0-115 o palabra operativa');
+        return false;
+      }
+      if (censoPersonas.some((p) => !validarCensoPersona(p))) {
+        toast('⚠ Corrija las entradas del censo familiar');
+        return false;
+      }
+      return true;
+    }
+
     const $ = (id) => document.getElementById(id);
     $('comando-num').textContent = CONFIG.COMANDO_CENTRAL_SMS;
     const cmdDisplay = $('comando-display');
@@ -1025,15 +1137,36 @@
           renderCensoChips();
         });
       });
+      actualizarEstadoBotonGuardar();
     }
 
     $('btn-censo-add').addEventListener('click', () => {
       const v = $('censo-input').value.trim();
       if (!v) return;
+      if (!validarCensoPersona(v)) {
+        $('alert-censo').classList.add('visible');
+        toast('⚠ Censo inválido: nombre o cédula venezolana');
+        return;
+      }
+      $('alert-censo').classList.remove('visible');
       if (!censoPersonas.includes(v)) censoPersonas.push(v);
       $('censo-input').value = '';
       renderCensoChips();
+      actualizarEstadoBotonGuardar();
     });
+
+    $('telefono').addEventListener('input', () => {
+      const el = $('telefono');
+      const digits = el.value.replace(/\D/g, '').slice(0, 12);
+      if (el.value !== digits) el.value = digits;
+      actualizarEstadoBotonGuardar();
+    });
+
+    $('edad').addEventListener('input', () => {
+      actualizarEstadoBotonGuardar();
+    });
+
+    actualizarEstadoBotonGuardar();
 
     function renderLista(reportes) {
       reportesCache = reportes;
@@ -1153,6 +1286,7 @@
     });
 
     $('btn-guardar').addEventListener('click', () => {
+      if (!validarFormulario()) return;
       const ubicacion = $('ubicacion').value.trim();
       if (!ubicacion) { toast('⚠ Escriba sector, calle o edificio'); return; }
       const coords = coordenadasListas();
@@ -1166,7 +1300,7 @@
         fuente_origen: CONFIG.FUENTE_ORIGEN,
         tipo_registro: 'PERSONA_ATRAPADA',
         nombre_completo: $('nombre').value.trim() || 'Anónimo',
-        telefono_contacto: $('telefono').value.trim(),
+        telefono_contacto: $('telefono').value.replace(/\D/g, ''),
         ciudad: ciudadSel,
         edad: $('edad').value.trim() || '0',
         genero: generoSel,
@@ -1192,6 +1326,7 @@
       $('sin-vivienda').checked = false;
       censoPersonas = [];
       renderCensoChips();
+      actualizarEstadoBotonGuardar();
       toast('✓ Punto guardado en disco local');
       irTab('reportes');
     });
@@ -1310,6 +1445,83 @@
       }
     });
 
+  </script>
+  <script>
+    'use strict';
+
+    (function initPwaInstall() {
+      const banner = document.getElementById('pwa-install-banner');
+      const installBtn = document.getElementById('pwa-install-btn');
+      const dismissBtn = document.getElementById('pwa-dismiss-btn');
+      const bannerText = document.getElementById('pwa-banner-text');
+      if (!banner || !installBtn || !dismissBtn) return;
+
+      let deferredPrompt = null;
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+
+      function showBanner() {
+        if (sessionStorage.getItem('pwaBannerDismissed') === '1' || isStandalone) return;
+        banner.hidden = false;
+        document.body.classList.add('pwa-banner-visible');
+      }
+
+      function hideBanner() {
+        banner.hidden = true;
+        document.body.classList.remove('pwa-banner-visible');
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showBanner();
+      });
+
+      if (isIos && !isStandalone && sessionStorage.getItem('pwaBannerDismissed') !== '1') {
+        if (bannerText) {
+          bannerText.textContent = 'En iPhone: toque Compartir → Añadir a pantalla de inicio para uso sin internet.';
+        }
+        installBtn.hidden = true;
+        showBanner();
+      }
+
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        hideBanner();
+      });
+
+      dismissBtn.addEventListener('click', () => {
+        sessionStorage.setItem('pwaBannerDismissed', '1');
+        hideBanner();
+      });
+    })();
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then((reg) => {
+            reg.addEventListener('updatefound', () => {
+              const nw = reg.installing;
+              if (!nw) return;
+              nw.addEventListener('statechange', () => {
+                if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                  const toastEl = document.getElementById('toast');
+                  if (toastEl) {
+                    toastEl.textContent = 'Nueva versión disponible — recargue la página';
+                    toastEl.classList.add('show');
+                    setTimeout(() => toastEl.classList.remove('show'), 5000);
+                  }
+                }
+              });
+            });
+          })
+          .catch((err) => console.warn('[SW]', err));
+      });
+    }
   </script>
 </body>
 </html>
