@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MESHNETWORK VENEZUELA — Simulador Web Táctico</title>
+  <title>MESHNETWORK VENEZUELA — Registro Táctico Operativo</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -12,10 +12,19 @@
       color: #fff;
       min-height: 100vh;
     }
+    .banner {
+      background: #1a0000;
+      border-bottom: 2px solid #FF0000;
+      color: #FF8888;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px 12px;
+    }
     .layout {
       display: grid;
-      grid-template-columns: 1fr 340px;
-      min-height: 100vh;
+      grid-template-columns: 1fr 360px;
+      min-height: calc(100vh - 36px);
     }
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
@@ -28,7 +37,7 @@
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
     .header {
       text-align: center;
@@ -49,17 +58,8 @@
       gap: 4px;
       margin-bottom: 12px;
     }
-    .titulo {
-      font-size: 1.25rem;
-      font-weight: 900;
-      letter-spacing: 0.5px;
-    }
-    .subtitulo {
-      color: #00FF00;
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-top: 6px;
-    }
+    .titulo { font-size: 1.25rem; font-weight: 900; letter-spacing: 0.5px; }
+    .subtitulo { color: #00FF00; font-size: 0.8rem; font-weight: 700; margin-top: 6px; }
     .badge {
       display: inline-block;
       background: #111;
@@ -95,7 +95,7 @@
       letter-spacing: 0.5px;
       margin-bottom: 8px;
     }
-    input, select, textarea {
+    input, textarea {
       width: 100%;
       background: #111;
       border: 1px solid #222;
@@ -105,7 +105,7 @@
       padding: 10px 12px;
       outline: none;
     }
-    input:focus, select:focus, textarea:focus { border-color: #00AEEF; }
+    input:focus, textarea:focus { border-color: #00AEEF; }
     textarea { min-height: 60px; resize: vertical; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -134,6 +134,13 @@
       text-align: center;
     }
     .estado-btn.active { color: #000; }
+    .gps-line {
+      color: #00FF00;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 8px;
+      font-family: 'Courier New', monospace;
+    }
     .btn-emergencia {
       width: 100%;
       background: #FF0000;
@@ -144,23 +151,20 @@
       font-weight: 900;
       padding: 18px;
       cursor: pointer;
-      margin: 8px 0 20px;
-      letter-spacing: 0.5px;
+      margin: 8px 0 10px;
     }
-    .btn-emergencia:hover { opacity: 0.9; }
-    .btn-ble {
+    .btn-gps {
       width: 100%;
       background: #111;
-      border: 2px solid #00AEEF;
+      border: 2px solid #00FF00;
       border-radius: 8px;
-      color: #00AEEF;
+      color: #00FF00;
       font-size: 0.85rem;
       font-weight: 800;
       padding: 14px;
       cursor: pointer;
       margin-bottom: 20px;
     }
-    .btn-ble:hover { background: #0a1a22; }
     .lista-header {
       display: flex;
       justify-content: space-between;
@@ -184,11 +188,26 @@
       margin-bottom: 6px;
     }
     .card-estado { font-size: 0.7rem; font-weight: 900; }
-    .card-origen { color: #00AEEF; font-size: 0.65rem; font-weight: 600; }
+    .card-id { color: #555; font-size: 0.65rem; font-family: monospace; }
     .card-nombre { font-size: 0.9rem; font-weight: 700; }
     .card-ubicacion { color: #ccc; font-size: 0.85rem; margin-top: 4px; }
+    .card-gps { color: #00AEEF; font-size: 0.75rem; margin-top: 4px; font-family: monospace; }
     .card-notas { color: #888; font-size: 0.75rem; margin-top: 6px; font-style: italic; }
     .card-time { color: #555; font-size: 0.65rem; margin-top: 8px; }
+    .btn-navegar {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      background: #003366;
+      border: 1px solid #00AEEF;
+      border-radius: 6px;
+      color: #00AEEF;
+      font-size: 0.8rem;
+      font-weight: 900;
+      padding: 10px;
+      text-align: center;
+      text-decoration: none;
+    }
     .empty { color: #555; text-align: center; padding: 30px; font-size: 0.85rem; }
     .sidebar h2 {
       color: #00AEEF;
@@ -197,34 +216,44 @@
       letter-spacing: 1px;
       text-transform: uppercase;
     }
+    .sms-meta { color: #555; font-size: 0.7rem; line-height: 1.4; }
     .sms-box {
-      flex: 1;
       background: #111;
       border: 1px solid #222;
-      border-radius: 6px;
+      border-radius: 6px 6px 0 0;
       color: #00FF00;
       font-family: 'Courier New', monospace;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       padding: 12px;
       overflow-y: auto;
       word-break: break-all;
-      min-height: 200px;
+      min-height: 100px;
+      max-height: 120px;
     }
-    .btn-copy {
-      width: 100%;
+    .sync-input {
       background: #111;
       border: 1px solid #222;
-      border-top: none;
-      border-radius: 0 0 6px 6px;
+      border-radius: 4px;
       color: #00FF00;
-      font-size: 0.8rem;
-      font-weight: 800;
-      padding: 14px;
-      cursor: pointer;
-      letter-spacing: 0.5px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.65rem;
+      padding: 10px;
+      min-height: 72px;
+      resize: vertical;
     }
-    .btn-copy:hover { background: #1a1a1a; }
-    .sms-meta { color: #555; font-size: 0.7rem; }
+    .btn-action {
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      padding: 12px;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+    }
+    .btn-comando { background: #8B0000; border: 2px solid #FF0000; color: #fff; }
+    .btn-copy { background: #111; border: 1px solid #222; color: #00FF00; border-radius: 0 0 6px 6px; }
+    .btn-fusionar { background: #003300; border: 1px solid #00FF00; color: #00FF00; }
     .toast {
       position: fixed;
       bottom: 20px;
@@ -244,13 +273,17 @@
   </style>
 </head>
 <body>
+  <div class="banner">
+    Demo web operativa · Persistencia localStorage · La app de campo real es el APK Android (SQLite + SMS nativo)
+  </div>
+
   <div class="layout">
     <div class="main">
       <header class="header">
         <div class="emblema"><span>🐾</span><span>🛰️</span></div>
-        <h1 class="titulo">🐕 MESHNETWORK VENEZUELA — Simulador Web de Datos Tácticos</h1>
-        <p class="subtitulo">Unidad de Registro Táctico y Rescate - La Guaira</p>
-        <span class="badge">PARIDAD DOMINIO · MemoryReporteRepository</span>
+        <h1 class="titulo">🐕 MESHNETWORK VENEZUELA</h1>
+        <p class="subtitulo">Unidad de Registro Táctico y Rescate — La Guaira</p>
+        <span class="badge">OPERATIVO · SQLITE · GPS · SMS · APK</span>
       </header>
 
       <p class="section-label">▸ INGRESO DE REPORTE (PARAMÉDICO)</p>
@@ -278,13 +311,15 @@
       <div class="field-box">
         <label for="ubicacion">📍 Ubicación exacta * (La Guaira)</label>
         <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
+        <button type="button" class="btn-gps" id="btn-gps" style="margin-top:10px;margin-bottom:0">🛰️ CAPTURAR COORDENADAS GPS</button>
+        <p class="gps-line" id="gps-display" hidden></p>
       </div>
 
       <div class="field-box">
-        <label>Estado actual</label>
+        <label>Estado actual (prioridad: CRÍTICO → POR LOCALIZAR → LOCALIZADO)</label>
         <div class="chips" id="estado-chips">
-          <button type="button" class="estado-btn active" data-s="POR LOCALIZAR" style="background:#FF8800;border-color:#FF8800;color:#000">POR LOCALIZAR</button>
           <button type="button" class="estado-btn" data-s="CRITICO">CRITICO</button>
+          <button type="button" class="estado-btn active" data-s="POR LOCALIZAR" style="background:#FF8800;border-color:#FF8800;color:#000">POR LOCALIZAR</button>
           <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
         </div>
       </div>
@@ -296,50 +331,66 @@
 
       <button type="button" class="btn-emergencia" id="btn-guardar">💾 REGISTRAR PUNTO DE RESCATE</button>
 
-      <button type="button" class="btn-ble" id="btn-ble">🛰️ SIMULAR RECEPCIÓN PULSO MALLA BLE</button>
-
       <div class="lista-header">
-        <span class="lista-titulo">▸ LISTA DE REPORTES EN LA MALLA</span>
+        <span class="lista-titulo">▸ LISTA DE REPORTES (DISCO LOCAL)</span>
         <span class="lista-count" id="count">0 activos</span>
       </div>
       <div class="lista" id="lista">
-        <p class="empty">Sin registros. Use el formulario o simule un pulso BLE.</p>
+        <p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>
       </div>
     </div>
 
     <aside class="sidebar">
-      <h2>📲 Cadena SMS Comprimida</h2>
-      <p class="sms-meta">Llaves: i id · n nombre · e edad · g género · u ubicación · s estado · o notas · t timestamp</p>
+      <h2>📲 Transmisión SMS (contingencia)</h2>
+      <p class="sms-meta">
+        Comando: <strong id="comando-num">04140000000</strong><br />
+        Llaves: i n e g u s o t la lo · Lotes MNv1|1/3|...
+      </p>
       <div class="sms-box" id="sms-output">[]</div>
-      <button type="button" class="btn-copy" id="btn-copy">📲 COPIAR CADENA DE SIMULACIÓN SMS</button>
+      <button type="button" class="btn-action btn-copy" id="btn-copy">📲 COPIAR CADENA COMPRIMIDA</button>
+      <button type="button" class="btn-action btn-comando" id="btn-comando">🚨 ENVIAR AL COMANDO CENTRAL</button>
+      <textarea class="sync-input" id="import-input" placeholder="Pegue cadena JSON o lotes MNv1|1/3|... (uno por línea)"></textarea>
+      <button type="button" class="btn-action btn-fusionar" id="btn-fusionar">📥 PEGAR Y FUSIONAR</button>
     </aside>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    /** Paridad con src/domain/entities/Reporte.ts + MemoryReporteRepository.ts */
+    /** Paridad web con app móvil — localStorage ≈ SQLite en navegador */
+    const CONFIG = {
+      STORAGE_KEY: '@meshnetwork_venezuela_sqlite_web_v2',
+      COMANDO_CENTRAL_SMS: '04140000000',
+      BRIGADA_ID: 'Brigada-Rescate-LG',
+      NOMBRE_COMANDO: 'Comando Central La Guaira',
+      SMS_PROTOCOLO: 'MNv1',
+      SMS_MAX: 140,
+    };
+
     const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LOCALIZADO: 2 };
     const BORDE = { CRITICO: '#FF0000', 'POR LOCALIZAR': '#FF8800', LOCALIZADO: '#00FF00' };
 
-    const NOMBRES_SIM = ['María González', 'Carlos Ruiz', 'Ana Pérez', 'Anónimo'];
-    const SECTORES_SIM = [
-      'Maiquetía - Edificio Los Corales',
-      'Catia La Mar - Av. Principal',
-      'La Guaira - Mercado central',
-      'Macuto - Escuela San José',
-    ];
-    const NOTAS_SIM = [
-      'Se escuchan golpes bajo losa oeste',
-      'Familia reporta personas atrapadas',
-      'Acceso bloqueado por escombros',
-      'Requiere cortadora y palanca',
-    ];
-
-    class MemoryReporteRepository {
+    class StorageReporteRepository {
       constructor() {
         this.reportes = new Map();
         this.listeners = new Set();
+        this.cargar();
+      }
+
+      cargar() {
+        try {
+          const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+          if (raw) {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              arr.forEach((r) => this.reportes.set(r.id, r));
+            }
+          }
+        } catch { /* disco corrupto — arrancar vacío */ }
+      }
+
+      persistir() {
+        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(Array.from(this.reportes.values())));
       }
 
       suscribir(cb) {
@@ -349,45 +400,59 @@
       }
 
       notificar() {
+        this.persistir();
         const lista = this.obtenerTodos();
         this.listeners.forEach((cb) => cb(lista));
       }
 
-      generarId(prefijo) {
+      generarId() {
         const sufijo = Math.random().toString(36).substring(2, 6).toUpperCase();
-        return `${prefijo}-${Date.now()}-${sufijo}`;
+        return `SOS-${Date.now()}-${sufijo}`;
       }
 
       comprimir(r) {
-        return { i: r.id, n: r.nombre_completo, e: r.edad, g: r.genero, u: r.ubicacion_exacta, s: r.estado_actual, o: r.notas_paramedicos, t: r.timestamp };
+        const base = {
+          i: r.id, n: r.nombre_completo, e: r.edad, g: r.genero,
+          u: r.ubicacion_exacta, s: r.estado_actual, o: r.notas_paramedicos, t: r.timestamp,
+        };
+        if (r.latitud != null) base.la = r.latitud;
+        if (r.longitud != null) base.lo = r.longitud;
+        return base;
+      }
+
+      expandir(c) {
+        return {
+          id: c.i,
+          nombre_completo: c.n || 'Anónimo',
+          edad: String(c.e ?? '0'),
+          genero: c.g || 'M',
+          ubicacion_exacta: c.u || '',
+          latitud: c.la != null ? Number(c.la) : undefined,
+          longitud: c.lo != null ? Number(c.lo) : undefined,
+          estado_actual: c.s || 'POR LOCALIZAR',
+          notas_paramedicos: c.o || '',
+          timestamp: Number(c.t) || Date.now(),
+        };
       }
 
       guardar(entrada) {
-        const nuevo = { ...entrada, id: this.generarId('SOS'), timestamp: Date.now() };
+        const nuevo = { ...entrada, id: this.generarId(), timestamp: Date.now() };
         this.reportes.set(nuevo.id, nuevo);
         this.notificar();
         return nuevo;
       }
 
-      fusionar(reporte) {
-        const existente = this.reportes.get(reporte.id);
-        if (!existente) {
-          this.reportes.set(reporte.id, reporte);
-          this.notificar();
-          return true;
-        }
-        if (reporte.timestamp >= existente.timestamp) {
-          this.reportes.set(reporte.id, { ...existente, ...reporte });
-          this.notificar();
-          return true;
-        }
-        return false;
+      insertOrIgnore(reporte) {
+        if (this.reportes.has(reporte.id)) return false;
+        this.reportes.set(reporte.id, reporte);
+        this.notificar();
+        return true;
       }
 
       obtenerTodos() {
         return Array.from(this.reportes.values()).sort((a, b) => {
-          const pa = PRIORIDAD[a.estado_actual];
-          const pb = PRIORIDAD[b.estado_actual];
+          const pa = PRIORIDAD[a.estado_actual] ?? 9;
+          const pb = PRIORIDAD[b.estado_actual] ?? 9;
           if (pa !== pb) return pa - pb;
           return b.timestamp - a.timestamp;
         });
@@ -397,16 +462,77 @@
         return JSON.stringify(this.obtenerTodos().map((r) => this.comprimir(r)));
       }
 
-      crearIdMalla() {
-        return this.generarId('BLE');
+      importarYFusionar(texto) {
+        const items = parsearEntradaSms(texto);
+        let nuevos = 0;
+        for (const raw of items) {
+          const exp = this.expandir(raw);
+          if (this.insertOrIgnore(exp)) nuevos++;
+        }
+        return { total: items.length, nuevos };
       }
     }
 
-    const repo = new MemoryReporteRepository();
+    function partirCadenaEnLotes(cadenaJson) {
+      const items = JSON.parse(cadenaJson);
+      if (!Array.isArray(items) || items.length === 0) return [cadenaJson];
+      const lotes = [];
+      let lote = [];
+      const cab = `${CONFIG.SMS_PROTOCOLO}|99/99|`;
+      for (const item of items) {
+        const prueba = [...lote, item];
+        if (lote.length > 0 && cab.length + JSON.stringify(prueba).length > CONFIG.SMS_MAX) {
+          lotes.push(lote);
+          lote = [item];
+        } else {
+          lote = prueba;
+        }
+      }
+      if (lote.length) lotes.push(lote);
+      const total = lotes.length;
+      return lotes.map((l, i) => `${CONFIG.SMS_PROTOCOLO}|${i + 1}/${total}|${JSON.stringify(l)}`);
+    }
+
+    function parsearEntradaSms(texto) {
+      const lineas = texto.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      if (!lineas.length) throw new Error('Cadena vacía');
+      const acum = [];
+      let multi = false;
+      for (const linea of lineas) {
+        if (linea.startsWith(`${CONFIG.SMS_PROTOCOLO}|`)) {
+          multi = true;
+          const m = linea.match(/^MNv1\|\d+\/\d+\|(.+)$/);
+          if (!m) throw new Error('Formato de lote inválido');
+          const frag = JSON.parse(m[1]);
+          if (!Array.isArray(frag)) throw new Error('Lote debe ser arreglo JSON');
+          acum.push(...frag);
+        }
+      }
+      if (multi) return acum;
+      const parsed = JSON.parse(texto.trim());
+      if (!Array.isArray(parsed)) throw new Error('Se esperaba arreglo JSON');
+      return parsed;
+    }
+
+    function formatearCoordenadas(lat, lon) {
+      return `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    }
+
+    function smsNumeroInternacional(num) {
+      const limpio = num.replace(/\D/g, '');
+      if (limpio.startsWith('58')) return '+' + limpio;
+      if (limpio.startsWith('0')) return '+58' + limpio.slice(1);
+      return '+58' + limpio;
+    }
+
+    const repo = new StorageReporteRepository();
     let generoSel = 'M';
     let estadoSel = 'POR LOCALIZAR';
+    let latitud = undefined;
+    let longitud = undefined;
 
     const $ = (id) => document.getElementById(id);
+    $('comando-num').textContent = CONFIG.COMANDO_CENTRAL_SMS;
 
     document.querySelectorAll('#genero-chips .chip').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -429,7 +555,7 @@
         const c = BORDE[estadoSel];
         btn.style.background = c;
         btn.style.borderColor = c;
-        btn.style.color = estadoSel === 'POR LOCALIZAR' ? '#000' : '#000';
+        btn.style.color = '#000';
       });
     });
 
@@ -437,87 +563,91 @@
       const t = $('toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2500);
+      setTimeout(() => t.classList.remove('show'), 2800);
     }
 
     function renderLista(reportes) {
       $('count').textContent = `${reportes.length} activos`;
       $('sms-output').textContent = repo.comprimirParaSMS();
-
       const lista = $('lista');
-      if (reportes.length === 0) {
-        lista.innerHTML = '<p class="empty">Sin registros. Use el formulario o simule un pulso BLE.</p>';
+      if (!reportes.length) {
+        lista.innerHTML = '<p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>';
         return;
       }
-
       lista.innerHTML = reportes.map((item) => {
-        const borde = BORDE[item.estado_actual];
-        const esMalla = item.id.startsWith('BLE-');
-        const hora = new Date(item.timestamp).toLocaleTimeString('es-VE');
+        const borde = BORDE[item.estado_actual] || '#888';
+        const nav = item.latitud != null && item.longitud != null
+          ? `<a class="btn-navegar" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${item.latitud},${item.longitud}&travelmode=walking">🗺️ NAVEGAR AL PUNTO</a>`
+          : '';
+        const gps = item.latitud != null
+          ? `<div class="card-gps">🛰️ ${formatearCoordenadas(item.latitud, item.longitud)}</div>`
+          : '';
         return `
           <div class="card" style="border-left-color:${borde}">
             <div class="card-top">
               <span class="card-estado" style="color:${borde}">${item.estado_actual}</span>
-              <span class="card-origen">${esMalla ? '🛰️ Malla' : '📱 Local'}</span>
+              <span class="card-id">${item.id}</span>
             </div>
             <div class="card-nombre">${item.nombre_completo}${item.edad !== '0' ? ' · ' + item.edad + ' años' : ''} · ${item.genero}</div>
             <div class="card-ubicacion">📍 ${item.ubicacion_exacta}</div>
+            ${gps}
             ${item.notas_paramedicos ? `<div class="card-notas">${item.notas_paramedicos}</div>` : ''}
-            <div class="card-time">${hora}</div>
+            ${nav}
+            <div class="card-time">${new Date(item.timestamp).toLocaleString('es-VE')}</div>
           </div>`;
       }).join('');
     }
 
     repo.suscribir(renderLista);
 
-    $('btn-guardar').addEventListener('click', () => {
-      const ubicacion = $('ubicacion').value.trim();
-      if (!ubicacion) {
-        toast('⚠ Ubicación exacta requerida');
+    $('btn-gps').addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        toast('⚠ GPS no disponible en este navegador');
         return;
       }
-      const nombre = $('nombre').value.trim() || 'Anónimo';
-      const edad = $('edad').value.trim() || '0';
-      const notas = $('notas').value.trim();
+      $('btn-gps').textContent = 'OBTENIENDO GPS...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          latitud = pos.coords.latitude;
+          longitud = pos.coords.longitude;
+          $('gps-display').hidden = false;
+          $('gps-display').textContent = 'GPS activo: ' + formatearCoordenadas(latitud, longitud);
+          $('btn-gps').textContent = '🛰️ CAPTURAR COORDENADAS GPS';
+          toast('🛰️ GPS capturado');
+        },
+        (err) => {
+          $('btn-gps').textContent = '🛰️ CAPTURAR COORDENADAS GPS';
+          toast('⚠ ' + (err.message || 'No se pudo obtener GPS'));
+        },
+        { enableHighAccuracy: true, timeout: 30000 }
+      );
+    });
 
+    $('btn-guardar').addEventListener('click', () => {
+      const ubicacion = $('ubicacion').value.trim();
+      if (!ubicacion) { toast('⚠ Ubicación exacta requerida'); return; }
+      if (latitud == null || longitud == null) { toast('⚠ Capture coordenadas GPS antes de registrar'); return; }
       repo.guardar({
-        nombre_completo: nombre,
-        edad,
+        nombre_completo: $('nombre').value.trim() || 'Anónimo',
+        edad: $('edad').value.trim() || '0',
         genero: generoSel,
         ubicacion_exacta: ubicacion,
+        latitud,
+        longitud,
         estado_actual: estadoSel,
-        notas_paramedicos: notas,
+        notas_paramedicos: $('notas').value.trim(),
       });
-
       $('nombre').value = '';
       $('edad').value = '';
       $('ubicacion').value = '';
       $('notas').value = '';
-      toast('✓ Punto de rescate registrado');
-    });
-
-    $('btn-ble').addEventListener('click', () => {
-      const estados = ['CRITICO', 'POR LOCALIZAR', 'LOCALIZADO'];
-      const reporte = {
-        id: repo.crearIdMalla(),
-        nombre_completo: NOMBRES_SIM[Math.floor(Math.random() * NOMBRES_SIM.length)],
-        edad: String(Math.floor(Math.random() * 70) + 5),
-        genero: Math.random() > 0.5 ? 'M' : 'F',
-        ubicacion_exacta: SECTORES_SIM[Math.floor(Math.random() * SECTORES_SIM.length)],
-        estado_actual: estados[Math.floor(Math.random() * estados.length)],
-        notas_paramedicos: NOTAS_SIM[Math.floor(Math.random() * NOTAS_SIM.length)],
-        timestamp: Date.now(),
-      };
-      if (repo.fusionar(reporte)) {
-        toast('🛰️ Pulso BLE recibido en la malla');
-      }
+      toast('✓ Punto guardado en disco local');
     });
 
     $('btn-copy').addEventListener('click', async () => {
       const cadena = repo.comprimirParaSMS();
       try {
         await navigator.clipboard.writeText(cadena);
-        toast(`📲 ${cadena.length} caracteres copiados al portapapeles`);
       } catch {
         const ta = document.createElement('textarea');
         ta.value = cadena;
@@ -525,9 +655,43 @@
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        toast('📲 Cadena copiada');
+      }
+      toast(`📲 ${cadena.length} caracteres copiados`);
+    });
+
+    $('btn-comando').addEventListener('click', () => {
+      const lotes = partirCadenaEnLotes(repo.comprimirParaSMS());
+      const encabezado = `[${CONFIG.BRIGADA_ID}] ${CONFIG.NOMBRE_COMANDO}\n`;
+      const cuerpo = encabezado + lotes[0];
+      const href = `sms:${smsNumeroInternacional(CONFIG.COMANDO_CENTRAL_SMS)}?body=${encodeURIComponent(cuerpo)}`;
+      window.location.href = href;
+      toast(`🚨 SMS lote 1/${lotes.length} — envíe cada lote cuando haya señal`);
+    });
+
+    $('btn-fusionar').addEventListener('click', () => {
+      const texto = $('import-input').value;
+      if (!texto.trim()) { toast('⚠ Pegue una cadena SMS primero'); return; }
+      try {
+        const r = repo.importarYFusionar(texto);
+        toast(`✓ Fusionados: ${r.nuevos} nuevos de ${r.total} items`);
+        $('import-input').value = '';
+      } catch (e) {
+        toast('⚠ ' + (e.message || 'Error al parsear SMS'));
       }
     });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          latitud = pos.coords.latitude;
+          longitud = pos.coords.longitude;
+          $('gps-display').hidden = false;
+          $('gps-display').textContent = 'GPS activo: ' + formatearCoordenadas(latitud, longitud);
+        },
+        () => { /* captura manual */ },
+        { enableHighAccuracy: true, timeout: 15000 }
+      );
+    }
   </script>
 </body>
 </html>
