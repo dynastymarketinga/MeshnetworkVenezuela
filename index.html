@@ -699,17 +699,17 @@
     .estado-btn.active.estado-critico {
       background: var(--critico);
       border-color: var(--critico);
-      color: var(--paper-up);
+      color: var(--ink);
     }
     .estado-btn.active.estado-por-localizar {
       background: var(--alerta);
       border-color: var(--alerta);
-      color: var(--paper-up);
+      color: var(--bg);
     }
     .estado-btn.active.estado-localizado {
       background: var(--ok);
       border-color: var(--ok);
-      color: var(--paper-up);
+      color: var(--bg);
     }
 
     .hub-result-box {
@@ -1048,6 +1048,11 @@
 
     const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LOCALIZADO: 2 };
     const BORDE = { CRITICO: '#FF4444', 'POR LOCALIZAR': '#FFB020', LOCALIZADO: '#4ADE80' };
+    const CARD_ESTADO = {
+      CRITICO: { card: 'card-estado-critico', label: 'card-estado-label-critico' },
+      'POR LOCALIZAR': { card: 'card-estado-alerta', label: 'card-estado-label-alerta' },
+      LOCALIZADO: { card: 'card-estado-ok', label: 'card-estado-label-ok' },
+    };
 
     class StorageReporteRepository {
       constructor() {
