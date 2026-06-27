@@ -54,8 +54,6 @@
       z-index: 9999;
     }
     .layout {
-      display: grid;
-      grid-template-columns: 1fr 360px;
       min-height: calc(100vh - 46px);
     }
     @media (max-width: 900px) {
@@ -733,6 +731,86 @@
       gap: 10px;
     }
     .sidebar-form-block .field-box { margin-bottom: 0; }
+
+    /* —— Flujo rápido (rediseño 3 pestañas) —— */
+    .stats-compact { margin-top: 18px; grid-template-columns: repeat(4, 1fr); }
+    .stats-compact .stat-card { padding: 12px 8px; }
+    .stats-compact .stat-num { font-size: 1.35rem; }
+    @media (max-width: 520px) { .stats-compact { grid-template-columns: repeat(2, 1fr); } }
+    .reg-hero { margin: 12px 0 4px; }
+
+    .tipo-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .tipo-btn {
+      width: 100%;
+      text-align: left;
+      padding: 18px 16px;
+      border: 2px solid var(--border-light);
+      background: var(--bg);
+      color: var(--light);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .tipo-btn:hover { border-color: var(--muted); color: var(--muted); }
+    .tipo-btn.active { background: var(--muted); border-color: var(--muted); color: var(--bg); }
+
+    .estado-grande .estado-btn { padding: 18px 8px; font-size: 0.72rem; }
+
+    details.gps-details, details.mas-datos, details.compartir-details { margin-top: 12px; }
+    details.mas-datos {
+      margin-top: 16px;
+      border: 2px dashed var(--border-light);
+      background: var(--paper-up);
+      box-shadow: var(--shadow);
+    }
+    details.compartir-details {
+      border: 2px solid var(--border-light);
+      background: var(--paper-up);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+    details > summary {
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--blue);
+      padding: 14px;
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: '+ '; font-weight: 900; }
+    details[open] > summary::before { content: '– '; }
+    details.mas-datos > summary { color: var(--muted); }
+    .mas-datos-body, .compartir-body { padding: 0 14px 14px; }
+    details.gps-details { margin-top: 4px; }
+    details.gps-details > summary { padding: 10px 0; color: var(--muted); }
+
+    .aliado {
+      display: block;
+      padding: 12px 14px;
+      border: 2px solid var(--border-light);
+      border-left: 3px solid var(--blue);
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 0.9rem;
+      background: var(--paper-up);
+    }
+    .aliado:hover { border-color: var(--muted); }
+    .aliado span {
+      display: block;
+      margin-top: 3px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: none;
+      letter-spacing: normal;
+    }
   </style>
 </head>
 <body>
@@ -748,168 +826,144 @@
   </div>
   <div class="layout">
     <div class="main">
-      <div id="tab-inicio" class="tab-panel active">
-        <div class="logo-frame"><img class="logo-img" src="assets/logo.jpg" alt="Mesh Network Venezuela" /></div>
-        <p class="kicker">Unidad de registro táctico · La Guaira</p>
-        <h1 class="titulo-editorial">Mesh<br />Network</h1>
+      <div id="tab-registro" class="tab-panel active">
+        <p class="kicker">Brigada de rescate · La Guaira · funciona sin internet</p>
+        <h1 class="titulo-editorial">Registrar</h1>
         <div class="divider"></div>
-        <span class="badge">Rescate en La Guaira · GPS · SMS</span>
-        <div class="panel panel-mt">
-          <p class="panel-kicker">01 — Operación activa</p>
-          <h2 class="panel-title">Red de rescate local</h2>
-          <p class="panel-desc" id="hero-desc">Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.</p>
-          <div class="stats-row">
-            <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Reportes</div></div>
-            <div class="stat-card"><div class="stat-num stat-critico" id="stat-criticos">0</div><div class="stat-lbl">Críticos</div></div>
-          </div>
-          <div class="stats-row">
-            <div class="stat-card"><div class="stat-num stat-ok" id="stat-localizados">0</div><div class="stat-lbl">Localizados</div></div>
-            <div class="stat-card"><div class="stat-num" id="stat-zonas">6</div><div class="stat-lbl">Zonas</div></div>
-          </div>
-        </div>
-        <button type="button" class="btn-primary" onclick="irTab('registro')">Registrar punto de rescate</button>
-      </div>
+        <span class="badge">Offline · GPS · SMS entre brigadas</span>
 
-      <div id="tab-registro" class="tab-panel">
-        <div class="panel">
-          <p class="panel-kicker">02 — Personas afectadas</p>
-          <h2 class="panel-title">Registro en campo</h2>
-          <p class="panel-desc">Complete los datos clave. No comparta información sensible de terceros sin permiso.</p>
+        <div class="stats-row stats-compact">
+          <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Reportes</div></div>
+          <div class="stat-card"><div class="stat-num stat-critico" id="stat-criticos">0</div><div class="stat-lbl">Críticos</div></div>
+          <div class="stat-card"><div class="stat-num stat-ok" id="stat-localizados">0</div><div class="stat-lbl">Localizados</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-zonas">6</div><div class="stat-lbl">Zonas</div></div>
         </div>
+        <p class="panel-desc reg-hero" id="hero-desc">Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.</p>
 
-        <div class="form-body">
-          <section class="form-section" aria-labelledby="sec-contacto-title">
-            <header class="form-section-header">
-              <p class="form-section-kicker">A — Contacto</p>
-              <h3 class="form-section-title" id="sec-contacto-title">Datos de contacto</h3>
-            </header>
-            <div class="form-section-body">
-              <div class="field-box">
-                <label for="telefono">Teléfono de contacto</label>
-                <input id="telefono" type="text" inputmode="numeric" maxlength="12" placeholder="04121234567" autocomplete="tel" />
-                <p id="alert-telefono" class="field-alert" role="alert">Teléfono inválido: use solo números de Venezuela (11-12 dígitos, ej. 04121234567).</p>
-              </div>
-              <div class="field-box">
-                <label for="nombre">Nombre completo</label>
-                <input id="nombre" type="text" placeholder="Ej: Juan Pérez (opcional)" />
-              </div>
+        <section class="form-section">
+          <header class="form-section-header">
+            <p class="form-section-kicker">1 — Tipo</p>
+            <h3 class="form-section-title">¿Qué está registrando?</h3>
+          </header>
+          <div class="form-section-body">
+            <div class="tipo-grid" id="tipo-chips">
+              <button type="button" class="tipo-btn active" data-t="PERSONA_ATRAPADA">Persona atrapada</button>
+              <button type="button" class="tipo-btn" data-t="INFRAESTRUCTURA">Infraestructura dañada</button>
+              <button type="button" class="tipo-btn" data-t="SIN_VIVIENDA">Familia sin vivienda</button>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section class="form-section" aria-labelledby="sec-ubicacion-title">
-            <header class="form-section-header">
-              <p class="form-section-kicker">B — Ubicación</p>
-              <h3 class="form-section-title" id="sec-ubicacion-title">Dónde se encuentra</h3>
-            </header>
-            <div class="form-section-body">
-              <div class="field-box">
-                <label>Ciudad</label>
-                <div class="chips" id="ciudad-chips"></div>
-              </div>
-              <div class="field-box">
-                <label for="ubicacion" class="label-required">Ubicación exacta</label>
-                <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
-                <button type="button" class="btn-gps" id="btn-gps">Capturar coordenadas GPS</button>
-                <p class="gps-line" id="gps-display" hidden></p>
-                <div class="gps-manual" id="gps-manual">
-                  <p>Si el botón de arriba no funciona en su navegador, escriba las coordenadas a mano (cópielas desde Google Maps: toque el punto → compartir → copiar coordenadas).</p>
-                  <div class="form-grid">
-                    <div>
-                      <label for="lat-manual">Latitud</label>
-                      <input id="lat-manual" type="text" inputmode="decimal" placeholder="10.601234" />
-                    </div>
-                    <div>
-                      <label for="lng-manual">Longitud</label>
-                      <input id="lng-manual" type="text" inputmode="decimal" placeholder="-66.934567" />
-                    </div>
+        <section class="form-section">
+          <header class="form-section-header">
+            <p class="form-section-kicker">2 — Ubicación</p>
+            <h3 class="form-section-title">Dónde es</h3>
+          </header>
+          <div class="form-section-body">
+            <p class="gps-line" id="gps-display">Buscando ubicación GPS…</p>
+            <button type="button" class="btn-gps" id="btn-gps">Capturar coordenadas GPS</button>
+            <div class="field-box field-box--flat">
+              <label for="ubicacion" class="label-required">Ubicación exacta</label>
+              <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
+            </div>
+            <details class="gps-details">
+              <summary>¿El GPS no funciona? Escribir coordenadas a mano</summary>
+              <div class="gps-manual" id="gps-manual">
+                <p>Cópielas desde Google Maps: toque el punto → compartir → copiar coordenadas.</p>
+                <div class="form-grid">
+                  <div>
+                    <label for="lat-manual">Latitud</label>
+                    <input id="lat-manual" type="text" inputmode="decimal" placeholder="10.601234" />
                   </div>
-                  <button type="button" class="btn-action btn-copy btn-spaced" id="btn-usar-manual">Usar estas coordenadas</button>
-                </div>
-              </div>
-              <div class="field-box">
-                <label for="zona-tag">Zona afectada (sector)</label>
-                <input id="zona-tag" type="text" placeholder="Ej: Macuto-El Cojo" />
-              </div>
-              <div class="field-box">
-                <label for="direccion-origen">Dirección de origen</label>
-                <input id="direccion-origen" type="text" placeholder="De dónde es la familia" />
-              </div>
-            </div>
-          </section>
-
-          <section class="form-section" aria-labelledby="sec-triaje-title">
-            <header class="form-section-header">
-              <p class="form-section-kicker">C — Triaje</p>
-              <h3 class="form-section-title" id="sec-triaje-title">Estado de la persona</h3>
-            </header>
-            <div class="form-section-body">
-              <div class="form-grid">
-                <div class="field-box">
-                  <label for="edad">Edad</label>
-                  <input id="edad" type="text" maxlength="12" placeholder="34, RN, BEBE…" />
-                  <p id="alert-edad" class="field-alert" role="alert">Edad inválida: use un número de 0 a 115 o una palabra operativa (RN, BEBE, NN, NA, ND, N/A, DESCON).</p>
-                </div>
-                <div class="field-box">
-                  <label>Género</label>
-                  <div class="chips" id="genero-chips">
-                    <button type="button" class="chip active" data-g="M">M</button>
-                    <button type="button" class="chip" data-g="F">F</button>
-                    <button type="button" class="chip" data-g="Otro">Otro</button>
+                  <div>
+                    <label for="lng-manual">Longitud</label>
+                    <input id="lng-manual" type="text" inputmode="decimal" placeholder="-66.934567" />
                   </div>
                 </div>
+                <button type="button" class="btn-action btn-copy btn-spaced" id="btn-usar-manual">Usar estas coordenadas</button>
               </div>
-              <div class="field-box">
-                <label>Estado actual (prioridad: CRÍTICO → POR LOCALIZAR → LOCALIZADO)</label>
-                <div class="estado-chips" id="estado-chips">
-                  <button type="button" class="estado-btn" data-s="CRITICO">CRITICO</button>
-                  <button type="button" class="estado-btn active estado-por-localizar" data-s="POR LOCALIZAR">POR LOCALIZAR</button>
-                  <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
-                </div>
-              </div>
-            </div>
-          </section>
+            </details>
+          </div>
+        </section>
 
-          <section class="form-section" aria-labelledby="sec-censo-title">
-            <header class="form-section-header">
-              <p class="form-section-kicker">D — Censo</p>
-              <h3 class="form-section-title" id="sec-censo-title">Grupo y vivienda</h3>
-            </header>
-            <div class="form-section-body">
-              <div class="field-box">
-                <label for="censo-input">Censo del grupo (nombre o cédula)</label>
-                <div class="input-row">
-                  <input id="censo-input" type="text" placeholder="Agregar persona" />
-                  <button type="button" class="btn-action btn-copy" id="btn-censo-add">Agregar</button>
-                </div>
-                <div class="chips chips-spaced" id="censo-chips"></div>
-                <p id="alert-censo" class="field-alert" role="alert">Entrada de censo inválida: use nombre (2-60 caracteres) o cédula venezolana (V/E/J + dígitos).</p>
-              </div>
-              <div class="field-box field-box--flat">
-                <label class="checkbox-field" for="sin-vivienda">
-                  <input type="checkbox" id="sin-vivienda" />
-                  <span>Requiere vivienda de emergencia</span>
-                </label>
-              </div>
+        <section class="form-section">
+          <header class="form-section-header">
+            <p class="form-section-kicker">3 — Triaje</p>
+            <h3 class="form-section-title">Estado</h3>
+          </header>
+          <div class="form-section-body">
+            <div class="estado-chips estado-grande" id="estado-chips">
+              <button type="button" class="estado-btn" data-s="CRITICO">CRÍTICO</button>
+              <button type="button" class="estado-btn active estado-por-localizar" data-s="POR LOCALIZAR">POR LOCALIZAR</button>
+              <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
             </div>
-          </section>
-
-          <section class="form-section" aria-labelledby="sec-notas-title">
-            <header class="form-section-header">
-              <p class="form-section-kicker">E — Notas</p>
-              <h3 class="form-section-title" id="sec-notas-title">Observaciones del paramédico</h3>
-            </header>
-            <div class="form-section-body">
-              <div class="field-box field-box--flat">
-                <label for="notas">Notas del paramédico</label>
-                <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
-              </div>
-            </div>
-          </section>
-        </div>
+          </div>
+        </section>
 
         <div class="form-actions">
-          <button type="button" class="btn-emergencia" id="btn-guardar">Registrar punto de rescate</button>
+          <button type="button" class="btn-emergencia" id="btn-guardar">Guardar punto de rescate</button>
         </div>
+
+        <details class="mas-datos">
+          <summary>Más datos (opcional): contacto, edad, censo, notas…</summary>
+          <div class="form-body mas-datos-body">
+            <div class="field-box">
+              <label for="telefono">Teléfono de contacto</label>
+              <input id="telefono" type="text" inputmode="numeric" maxlength="12" placeholder="04121234567" autocomplete="tel" />
+              <p id="alert-telefono" class="field-alert" role="alert">Teléfono inválido: use solo números de Venezuela (11-12 dígitos, ej. 04121234567).</p>
+            </div>
+            <div class="field-box">
+              <label for="nombre">Nombre completo</label>
+              <input id="nombre" type="text" placeholder="Ej: Juan Pérez (opcional)" />
+            </div>
+            <div class="field-box">
+              <label>Ciudad</label>
+              <div class="chips" id="ciudad-chips"></div>
+            </div>
+            <div class="form-grid">
+              <div class="field-box">
+                <label for="edad">Edad</label>
+                <input id="edad" type="text" maxlength="12" placeholder="34, RN, BEBE…" />
+                <p id="alert-edad" class="field-alert" role="alert">Edad inválida: use un número de 0 a 115 o una palabra operativa (RN, BEBE, NN, NA, ND, N/A, DESCON).</p>
+              </div>
+              <div class="field-box">
+                <label>Género</label>
+                <div class="chips" id="genero-chips">
+                  <button type="button" class="chip active" data-g="M">M</button>
+                  <button type="button" class="chip" data-g="F">F</button>
+                  <button type="button" class="chip" data-g="Otro">Otro</button>
+                </div>
+              </div>
+            </div>
+            <div class="field-box">
+              <label for="zona-tag">Zona afectada (sector)</label>
+              <input id="zona-tag" type="text" placeholder="Ej: Macuto-El Cojo" />
+            </div>
+            <div class="field-box">
+              <label for="direccion-origen">Dirección de origen</label>
+              <input id="direccion-origen" type="text" placeholder="De dónde es la familia" />
+            </div>
+            <div class="field-box">
+              <label for="censo-input">Censo del grupo (nombre o cédula)</label>
+              <div class="input-row">
+                <input id="censo-input" type="text" placeholder="Agregar persona" />
+                <button type="button" class="btn-action btn-copy" id="btn-censo-add">Agregar</button>
+              </div>
+              <div class="chips chips-spaced" id="censo-chips"></div>
+              <p id="alert-censo" class="field-alert" role="alert">Entrada de censo inválida: use nombre (2-60 caracteres) o cédula venezolana (V/E/J + dígitos).</p>
+            </div>
+            <div class="field-box field-box--flat">
+              <label class="checkbox-field" for="sin-vivienda">
+                <input type="checkbox" id="sin-vivienda" />
+                <span>Requiere vivienda de emergencia</span>
+              </label>
+            </div>
+            <div class="field-box field-box--flat">
+              <label for="notas">Notas del paramédico</label>
+              <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
+            </div>
+          </div>
+        </details>
       </div>
 
       <div id="tab-reportes" class="tab-panel">
@@ -921,31 +975,37 @@
           <label for="busqueda-tactica">Buscar persona o zona</label>
           <input id="busqueda-tactica" type="search" placeholder="Buscar por nombre, cédula o sector…" />
         </div>
+
+        <details class="compartir-details">
+          <summary>Compartir / recibir reportes por mensaje (entre brigadas)</summary>
+          <div class="sidebar-form-block compartir-body">
+            <div class="field-box">
+              <label for="sms-output">Reportes para compartir</label>
+              <div class="sms-box" id="sms-output" role="status">Sin reportes todavía</div>
+              <button type="button" class="btn-action btn-copy btn-spaced-sm" id="btn-copy">Copiar reportes para compartir</button>
+            </div>
+            <div class="field-box">
+              <label for="import-input">Importar de otra brigada</label>
+              <textarea class="sync-input" id="import-input" placeholder="Pegue aquí el mensaje que recibió de otra brigada…"></textarea>
+              <button type="button" class="btn-action btn-fusionar btn-spaced-sm" id="btn-fusionar">Agregar reportes recibidos</button>
+            </div>
+          </div>
+        </details>
+
         <div class="lista" id="lista">
           <p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>
         </div>
       </div>
 
-      <div id="tab-comando" class="tab-panel">
-        <div class="logo-frame"><img class="logo-img" src="assets/logo.jpg" alt="Mesh Network" /></div>
+      <div id="tab-red" class="tab-panel">
         <div class="panel">
-          <p class="panel-kicker">04 — Comando central</p>
-          <h2 class="panel-title">Comando Central La Guaira</h2>
-          <p class="panel-desc">Mesh Network Venezuela opera de forma autónoma. Los reportes se transmiten por SMS al comando cuando hay señal.</p>
-          <p class="panel-desc mt-md"><strong>Brigada:</strong> Brigada-Rescate-LG</p>
-          <p class="panel-desc"><strong>SMS:</strong> <span id="comando-display">04140000000</span></p>
-        </div>
-        <button type="button" class="btn-primary" onclick="irTab('registro')">Ir a registro en campo</button>
-      </div>
-
-      <div id="tab-hub" class="tab-panel">
-        <div class="panel">
-          <p class="panel-kicker">05 — Red compartida</p>
-          <h2 class="panel-title">¿Alguien ya fue registrado?</h2>
+          <p class="panel-kicker">Red compartida</p>
+          <h2 class="panel-title">Red de brigadas y plataformas</h2>
           <p class="panel-desc">
-            Otras páginas de ayuda (desaparecidos, refugios) pueden consultar aquí si una brigada en campo ya anotó a esa persona.
-            <strong> Los rescatistas en la calle deben usar la app instalada en el teléfono.</strong>
+            Esta app captura datos <strong>en campo y sin internet</strong>. Cuando hay señal, los reportes se comparten por SMS
+            entre brigadas y se publican a la red para que otras plataformas (desaparecidos, refugios, daños) los consulten sin duplicar.
           </p>
+          <p class="panel-desc mt-md"><strong>Brigada:</strong> Brigada-Rescate-LG · <strong>SMS comando:</strong> <span id="comando-display">04140000000</span></p>
         </div>
 
         <section class="form-section" aria-labelledby="hub-buscar-title">
@@ -991,41 +1051,32 @@
           </div>
         </section>
 
+        <section class="form-section">
+          <header class="form-section-header">
+            <p class="form-section-kicker">Aliados</p>
+            <h3 class="form-section-title">Plataformas aliadas</h3>
+          </header>
+          <div class="form-section-body">
+            <p class="field-hint">Esta app cubre el <strong>campo offline</strong>; estas webs cubren la parte online. Si un caso ya está aquí, no hace falta duplicarlo.</p>
+            <a class="aliado" href="https://busca.nexosignal.co" target="_blank" rel="noopener">Búsqueda de niños (prioritario)<span>busca.nexosignal.co</span></a>
+            <a class="aliado" href="https://desaparecidosterremotovenezuela.com" target="_blank" rel="noopener">Personas desaparecidas<span>desaparecidosterremotovenezuela.com</span></a>
+            <a class="aliado" href="https://sosvenezuela2026.com" target="_blank" rel="noopener">Reportes y refugios<span>sosvenezuela2026.com</span></a>
+            <a class="aliado" href="https://venezuelareporta.org" target="_blank" rel="noopener">Red de apoyo ciudadana<span>venezuelareporta.org</span></a>
+          </div>
+        </section>
+
         <p class="text-muted-sm">
-          Si administra otra página de ayuda y necesita conectarla, escríbanos — esta sección es para coordinación entre equipos, no para registrar en campo.
+          ¿Administra otra plataforma de ayuda y quiere conectarla a la red? Puede consultar y publicar vía el Hub
+          (<code>/api/hub</code>). Esta sección es para coordinación entre equipos, no para registrar en campo.
         </p>
       </div>
     </div>
-
-    <aside class="sidebar tab-panel" id="tab-sms">
-      <h2>Compartir con otra brigada</h2>
-      <p class="sms-meta">
-        Copie sus reportes y péguelos en un mensaje a otra brigada. Si son muchos, el texto puede salir en varias partes — envíe todas.
-      </p>
-
-      <div class="sidebar-form-block">
-        <div class="field-box">
-          <label for="sms-output">Reportes para compartir</label>
-          <div class="sms-box" id="sms-output" role="status">Sin reportes todavía</div>
-          <button type="button" class="btn-action btn-copy btn-spaced-sm" id="btn-copy">Copiar reportes para compartir</button>
-        </div>
-
-        <div class="field-box">
-          <label for="import-input">Importar de otra brigada</label>
-          <textarea class="sync-input" id="import-input" placeholder="Pegue aquí el mensaje que recibió de otra brigada…"></textarea>
-          <button type="button" class="btn-action btn-fusionar btn-spaced-sm" id="btn-fusionar">Agregar reportes recibidos</button>
-        </div>
-      </div>
-    </aside>
   </div>
 
   <nav class="bottom-nav">
-    <button type="button" class="nav-btn active" data-tab="inicio">Inicio</button>
-    <button type="button" class="nav-btn" data-tab="registro">Registro</button>
+    <button type="button" class="nav-btn active" data-tab="registro">Registrar</button>
     <button type="button" class="nav-btn" data-tab="reportes">Reportes</button>
-    <button type="button" class="nav-btn" data-tab="sms">Mensajes</button>
-    <button type="button" class="nav-btn" data-tab="comando">Comando</button>
-    <button type="button" class="nav-btn" data-tab="hub">Red compartida</button>
+    <button type="button" class="nav-btn" data-tab="red">Red</button>
   </nav>
 
   <div class="toast" id="toast"></div>
@@ -1296,6 +1347,7 @@
     const repo = new StorageReporteRepository();
     let generoSel = 'M';
     let estadoSel = 'POR LOCALIZAR';
+    let tipoSel = 'PERSONA_ATRAPADA';
     let ciudadSel = 'La Guaira';
     let latitud = undefined;
     let longitud = undefined;
@@ -1391,6 +1443,16 @@
         btn.classList.add('active');
         generoSel = btn.dataset.g;
       });
+    });
+
+    function aplicarTipoActivo(valor) {
+      tipoSel = valor;
+      document.querySelectorAll('#tipo-chips .tipo-btn').forEach((b) => {
+        b.classList.toggle('active', b.dataset.t === valor);
+      });
+    }
+    document.querySelectorAll('#tipo-chips .tipo-btn').forEach((btn) => {
+      btn.addEventListener('click', () => aplicarTipoActivo(btn.dataset.t));
     });
 
     function aplicarEstadoActivo(btn) {
@@ -1590,25 +1652,34 @@
       toast('✓ Coordenadas listas para guardar');
     });
 
-    $('btn-gps').addEventListener('click', () => {
+    function capturarGps(auto) {
       if (!navigator.geolocation) {
-        toast('⚠ En este navegador el GPS no sirve. Escriba las coordenadas abajo o instale la app.');
+        $('gps-display').hidden = false;
+        $('gps-display').textContent = '⚠ GPS no disponible en este navegador. Escriba las coordenadas a mano.';
+        if (!auto) toast('⚠ En este navegador el GPS no sirve. Escriba las coordenadas abajo o instale la app.');
         return;
       }
       $('btn-gps').textContent = 'Buscando ubicación…';
+      $('gps-display').hidden = false;
+      $('gps-display').textContent = 'Buscando ubicación GPS…';
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           mostrarGpsActivo(pos.coords.latitude, pos.coords.longitude);
-          $('btn-gps').textContent = 'Capturar coordenadas GPS';
-          toast('✓ Ubicación capturada');
+          $('btn-gps').textContent = 'Actualizar ubicación GPS';
+          if (!auto) toast('✓ Ubicación capturada');
         },
         (err) => {
           $('btn-gps').textContent = 'Capturar coordenadas GPS';
-          toast('⚠ ' + mensajeErrorGps(err));
+          $('gps-display').hidden = false;
+          $('gps-display').textContent = '⚠ ' + mensajeErrorGps(err);
+          if (!auto) toast('⚠ ' + mensajeErrorGps(err));
         },
         { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
       );
-    });
+    }
+
+    $('btn-gps').addEventListener('click', () => capturarGps(false));
+    capturarGps(true);
 
     $('btn-guardar').addEventListener('click', () => {
       if (!validarFormulario()) return;
@@ -1623,7 +1694,7 @@
       longitud = coords.lng;
       repo.guardar({
         fuente_origen: CONFIG.FUENTE_ORIGEN,
-        tipo_registro: 'PERSONA_ATRAPADA',
+        tipo_registro: tipoSel,
         nombre_completo: $('nombre').value.trim() || 'Anónimo',
         telefono_contacto: $('telefono').value.replace(/\D/g, ''),
         ciudad: ciudadSel,
@@ -1636,7 +1707,7 @@
         estado_estructura: 'SEGURO',
         notas_paramedicos: $('notas').value.trim(),
         censo_personas: [...censoPersonas],
-        tiene_hogar_actual: !$('sin-vivienda').checked,
+        tiene_hogar_actual: tipoSel === 'SIN_VIVIENDA' ? false : !$('sin-vivienda').checked,
         direccion_origen: $('direccion-origen').value.trim(),
         zona_afectada_tag: $('zona-tag').value.trim() || ciudadSel,
         foto_estructura_b64: '',
@@ -1651,6 +1722,7 @@
       $('sin-vivienda').checked = false;
       censoPersonas = [];
       renderCensoChips();
+      aplicarTipoActivo('PERSONA_ATRAPADA');
       actualizarEstadoBotonGuardar();
       toast('✓ Punto guardado en disco local');
       irTab('reportes');
