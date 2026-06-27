@@ -25,8 +25,8 @@ https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/3fba0ec
 
 | Causa | Solución |
 |-------|----------|
-| Abrió la web en Chrome, no la APK | Reinstalar desde el enlace de arriba |
-| Negó ubicación | Ajustes → Apps → Mesh Network → Permisos → Ubicación → Permitir |
+| Abrió la web en Chrome, no la app | Reinstalar desde el enlace de arriba |
+| GPS no funciona en la página | Normal en navegador — instale la **app** o en la web escriba latitud/longitud a mano (desde Google Maps) |
 | No capturó GPS | Debe tocar el botón azul antes de registrar |
 | No registró | Sin GPS + ubicación escrita no guarda nada |
 

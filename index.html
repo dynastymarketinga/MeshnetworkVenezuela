@@ -468,12 +468,16 @@
       padding: 12px 16px;
       text-align: center;
     }
+    .gps-manual { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--muted); }
+    .gps-manual p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+    .gps-manual .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   </style>
 </head>
 <body>
   <div id="aviso-apk" class="aviso-apk" role="alert">
-    <strong>Uso en campo:</strong> instale la <strong>APK Android</strong> (no use el enlace web en el navegador).
-    El GPS en navegador suele bloquearse y no guarda datos como la app instalada.
+    <strong>¿Estás en Chrome o Safari?</strong> El GPS en la página web muchas veces <strong>no funciona</strong>, aunque des permiso.
+    Para rescatistas en campo: <strong>instale la app en el teléfono Android</strong> (no use esta página).
+    <a href="https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/b20f525e-b22e-48d8-a669-e2bf15ec1877" style="display:block;margin-top:8px;font-weight:800;color:var(--ink)">→ Toca aquí para instalar la app</a>
   </div>
   <div class="layout">
     <div class="main">
@@ -541,6 +545,20 @@
         <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
         <button type="button" class="btn-gps" id="btn-gps">Capturar coordenadas GPS</button>
         <p class="gps-line" id="gps-display" hidden></p>
+        <div class="gps-manual" id="gps-manual">
+          <p>Si el botón de arriba no funciona en su navegador, escriba las coordenadas a mano (cópielas desde Google Maps: toque el punto → compartir → copiar coordenadas).</p>
+          <div class="row">
+            <div>
+              <label for="lat-manual">Latitud</label>
+              <input id="lat-manual" type="text" inputmode="decimal" placeholder="10.601234" />
+            </div>
+            <div>
+              <label for="lng-manual">Longitud</label>
+              <input id="lng-manual" type="text" inputmode="decimal" placeholder="-66.934567" />
+            </div>
+          </div>
+          <button type="button" class="btn-action btn-copy" id="btn-usar-manual" style="margin-top:10px">Usar estas coordenadas</button>
+        </div>
       </div>
 
       <div class="field-box">
@@ -965,42 +983,77 @@
     repo.suscribir(renderLista);
 
     function mensajeErrorGps(err) {
-      if (!err) return 'No se pudo obtener GPS.';
+      if (!err) return 'No se pudo obtener la ubicación.';
       if (err.code === 1) {
-        return 'Ubicación bloqueada. Toque el candado en la barra del navegador → Ubicación → Permitir. Para rescate en campo use la APK Android instalada.';
+        return 'El navegador bloqueó la ubicación. Toque el candado junto a la dirección web → Ubicación → Permitir. O escriba las coordenadas abajo a mano.';
       }
-      if (err.code === 2) return 'Señal GPS no disponible. Salga al aire libre e intente de nuevo.';
-      if (err.code === 3) return 'El GPS tardó demasiado. Reintente.';
-      return err.message || 'No se pudo obtener GPS.';
+      if (err.code === 2) return 'Sin señal. Salga al aire libre o escriba las coordenadas abajo.';
+      if (err.code === 3) return 'Tardó demasiado. Intente de nuevo o escriba las coordenadas abajo.';
+      return 'No se pudo obtener la ubicación. Use las casillas de abajo.';
     }
+
+    function mostrarGpsActivo(lat, lng) {
+      latitud = lat;
+      longitud = lng;
+      $('gps-display').hidden = false;
+      $('gps-display').textContent = 'Ubicación lista: ' + formatearCoordenadas(lat, lng);
+      $('lat-manual').value = String(lat);
+      $('lng-manual').value = String(lng);
+    }
+
+    function leerCoordenadasManual() {
+      const lat = parseFloat(String($('lat-manual').value).replace(',', '.'));
+      const lng = parseFloat(String($('lng-manual').value).replace(',', '.'));
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+      return { lat, lng };
+    }
+
+    function coordenadasListas() {
+      if (latitud != null && longitud != null) return { lat: latitud, lng: longitud };
+      return leerCoordenadasManual();
+    }
+
+    $('btn-usar-manual').addEventListener('click', () => {
+      const coords = leerCoordenadasManual();
+      if (!coords) {
+        toast('⚠ Escriba latitud y longitud válidas (ej: 10.60 y -66.93)');
+        return;
+      }
+      mostrarGpsActivo(coords.lat, coords.lng);
+      toast('✓ Coordenadas listas para guardar');
+    });
 
     $('btn-gps').addEventListener('click', () => {
       if (!navigator.geolocation) {
-        toast('⚠ GPS no disponible. Instale la APK Android para uso en campo.');
+        toast('⚠ En este navegador el GPS no sirve. Escriba las coordenadas abajo o instale la app.');
         return;
       }
-      $('btn-gps').textContent = 'Obteniendo GPS…';
+      $('btn-gps').textContent = 'Buscando ubicación…';
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          latitud = pos.coords.latitude;
-          longitud = pos.coords.longitude;
-          $('gps-display').hidden = false;
-          $('gps-display').textContent = 'GPS activo: ' + formatearCoordenadas(latitud, longitud);
+          mostrarGpsActivo(pos.coords.latitude, pos.coords.longitude);
           $('btn-gps').textContent = 'Capturar coordenadas GPS';
-          toast('GPS capturado');
+          toast('✓ Ubicación capturada');
         },
         (err) => {
           $('btn-gps').textContent = 'Capturar coordenadas GPS';
           toast('⚠ ' + mensajeErrorGps(err));
         },
-        { enableHighAccuracy: true, timeout: 30000 }
+        { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
       );
     });
 
     $('btn-guardar').addEventListener('click', () => {
       const ubicacion = $('ubicacion').value.trim();
-      if (!ubicacion) { toast('⚠ Ubicación exacta requerida'); return; }
-      if (latitud == null || longitud == null) { toast('⚠ Capture coordenadas GPS antes de registrar'); return; }
+      if (!ubicacion) { toast('⚠ Escriba sector, calle o edificio'); return; }
+      const coords = coordenadasListas();
+      if (!coords) {
+        toast('⚠ Falta la ubicación en mapa: use el botón azul o escriba latitud y longitud abajo');
+        return;
+      }
+      latitud = coords.lat;
+      longitud = coords.lng;
       repo.guardar({
         fuente_origen: CONFIG.FUENTE_ORIGEN,
         tipo_registro: 'PERSONA_ATRAPADA',
