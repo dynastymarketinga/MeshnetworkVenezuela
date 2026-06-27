@@ -25,6 +25,8 @@ interface ReporteRow {
   nombre: string;
   edad: string;
   genero: string;
+  telefono: string;
+  ciudad: string;
   ubicacion: string;
   latitud: number | null;
   longitud: number | null;
@@ -62,6 +64,8 @@ export class SQLiteReporteRepository implements IReporteRepository {
       nombre_completo: row.nombre,
       edad: row.edad,
       genero: row.genero,
+      telefono_contacto: row.telefono ?? '',
+      ciudad: row.ciudad ?? 'La Guaira',
       ubicacion_exacta: row.ubicacion,
       estado_actual: row.estado as EstadoReporte,
       notas_paramedicos: row.notas,
@@ -83,6 +87,8 @@ export class SQLiteReporteRepository implements IReporteRepository {
       o: reporte.notas_paramedicos,
       t: reporte.timestamp,
     };
+    if (reporte.telefono_contacto.trim()) base.p = reporte.telefono_contacto.trim();
+    if (reporte.ciudad.trim()) base.c = reporte.ciudad.trim();
     if (reporte.latitud !== undefined) {
       base.la = Math.round(reporte.latitud * 100000) / 100000;
     }
@@ -98,6 +104,8 @@ export class SQLiteReporteRepository implements IReporteRepository {
       nombre_completo: item.n ?? 'Anónimo',
       edad: String(item.e ?? '0'),
       genero: item.g ?? 'M',
+      telefono_contacto: item.p ?? '',
+      ciudad: item.c ?? 'La Guaira',
       ubicacion_exacta: item.u ?? '',
       estado_actual: item.s,
       notas_paramedicos: item.o ?? '',
@@ -126,7 +134,7 @@ export class SQLiteReporteRepository implements IReporteRepository {
   private async recargarCache(): Promise<void> {
     if (!this.db) return;
     const filas = await this.db.getAllAsync<ReporteRow>(`
-      SELECT id, nombre, edad, genero, ubicacion, latitud, longitud, estado, notas, timestamp
+      SELECT id, nombre, edad, genero, telefono, ciudad, ubicacion, latitud, longitud, estado, notas, timestamp
       FROM reportes
       ORDER BY
         CASE estado
@@ -143,12 +151,14 @@ export class SQLiteReporteRepository implements IReporteRepository {
   private async insertarReporte(reporte: ReporteEmergencia): Promise<void> {
     if (!this.db) throw new Error('Base de datos no inicializada.');
     await this.db.runAsync(
-      `INSERT INTO reportes (id, nombre, edad, genero, ubicacion, latitud, longitud, estado, notas, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO reportes (id, nombre, edad, genero, telefono, ciudad, ubicacion, latitud, longitud, estado, notas, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       reporte.id,
       reporte.nombre_completo,
       reporte.edad,
       reporte.genero,
+      reporte.telefono_contacto,
+      reporte.ciudad,
       reporte.ubicacion_exacta,
       reporte.latitud ?? null,
       reporte.longitud ?? null,
@@ -161,12 +171,14 @@ export class SQLiteReporteRepository implements IReporteRepository {
   private async insertarIgnorandoDuplicados(reporte: ReporteEmergencia): Promise<boolean> {
     if (!this.db) throw new Error('Base de datos no inicializada.');
     const resultado = await this.db.runAsync(
-      `INSERT OR IGNORE INTO reportes (id, nombre, edad, genero, ubicacion, latitud, longitud, estado, notas, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR IGNORE INTO reportes (id, nombre, edad, genero, telefono, ciudad, ubicacion, latitud, longitud, estado, notas, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       reporte.id,
       reporte.nombre_completo,
       reporte.edad,
       reporte.genero,
+      reporte.telefono_contacto,
+      reporte.ciudad,
       reporte.ubicacion_exacta,
       reporte.latitud ?? null,
       reporte.longitud ?? null,
@@ -193,7 +205,11 @@ export class SQLiteReporteRepository implements IReporteRepository {
       for (const item of parsed) {
         const r = item as ReporteEmergencia;
         if (r?.id && r.estado_actual && typeof r.timestamp === 'number') {
-          await this.insertarIgnorandoDuplicados(r);
+          await this.insertarIgnorandoDuplicados({
+            ...r,
+            telefono_contacto: r.telefono_contacto ?? '',
+            ciudad: r.ciudad ?? 'La Guaira',
+          });
         }
       }
       await AsyncStorage.removeItem(LEGACY_STORAGE_KEY);

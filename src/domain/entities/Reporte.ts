@@ -5,6 +5,8 @@ export interface ReporteEmergencia {
   nombre_completo: string;
   edad: string;
   genero: string;
+  telefono_contacto: string;
+  ciudad: string;
   ubicacion_exacta: string;
   latitud?: number;
   longitud?: number;
@@ -20,6 +22,8 @@ export interface ReporteComprimido {
   n: string;
   e: string;
   g: string;
+  p?: string;
+  c?: string;
   u: string;
   s: EstadoReporte;
   o: string;

@@ -18,6 +18,8 @@ export async function obtenerBaseDeDatos(): Promise<SQLite.SQLiteDatabase> {
       nombre TEXT NOT NULL,
       edad TEXT NOT NULL,
       genero TEXT NOT NULL,
+      telefono TEXT NOT NULL DEFAULT '',
+      ciudad TEXT NOT NULL DEFAULT 'La Guaira',
       ubicacion TEXT NOT NULL,
       latitud REAL,
       longitud REAL,
@@ -28,9 +30,23 @@ export async function obtenerBaseDeDatos(): Promise<SQLite.SQLiteDatabase> {
 
     CREATE INDEX IF NOT EXISTS idx_reportes_estado ON reportes(estado);
     CREATE INDEX IF NOT EXISTS idx_reportes_timestamp ON reportes(timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_reportes_ciudad ON reportes(ciudad);
   `);
 
+  await migrarColumnasReportes(instancia);
+
   return instancia;
+}
+
+async function migrarColumnasReportes(db: SQLite.SQLiteDatabase): Promise<void> {
+  const columnas = await db.getAllAsync<{ name: string }>('PRAGMA table_info(reportes)');
+  const nombres = new Set(columnas.map((c) => c.name));
+  if (!nombres.has('telefono')) {
+    await db.execAsync(`ALTER TABLE reportes ADD COLUMN telefono TEXT NOT NULL DEFAULT ''`);
+  }
+  if (!nombres.has('ciudad')) {
+    await db.execAsync(`ALTER TABLE reportes ADD COLUMN ciudad TEXT NOT NULL DEFAULT 'La Guaira'`);
+  }
 }
 
 export async function cerrarBaseDeDatos(): Promise<void> {

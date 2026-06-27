@@ -12,19 +12,73 @@
       color: #fff;
       min-height: 100vh;
     }
-    .banner {
-      background: #1a0000;
-      border-bottom: 2px solid #FF0000;
-      color: #FF8888;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-align: center;
-      padding: 8px 12px;
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #001A4D;
+      border-bottom: 2px solid #FFCC00;
+      padding: 10px;
+      font-weight: 800;
     }
+    .hero-section {
+      background: #0A1428;
+      border: 1px solid #003893;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      display: inline-block;
+      background: #fff;
+      color: #003893;
+      font-size: 0.7rem;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .hero-desc { color: #ccc; font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .stat-card {
+      background: #fff;
+      border: 2px solid #003893;
+      border-radius: 8px;
+      padding: 14px 8px;
+      text-align: center;
+    }
+    .stat-num { color: #003893; font-size: 1.5rem; font-weight: 900; }
+    .stat-lbl { color: #003893; font-size: 0.6rem; font-weight: 800; margin-top: 4px; }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      z-index: 100;
+    }
+    .nav-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 4px 10px;
+      cursor: pointer;
+      color: #666;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+    .nav-btn.active { background: #E8F0FE; color: #003893; border-top: 3px solid #FFCC00; }
+    .tab-panel { display: none; padding-bottom: 70px; }
+    .tab-panel.active { display: block; }
+    #tab-sms { display: none; }
+    #tab-sms.active { display: flex; flex-direction: column; }
     .layout {
       display: grid;
       grid-template-columns: 1fr 360px;
-      min-height: calc(100vh - 36px);
+      min-height: calc(100vh - 46px);
     }
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
@@ -273,20 +327,47 @@
   </style>
 </head>
 <body>
-  <div class="banner">
-    Demo web operativa · Persistencia localStorage · La app de campo real es el APK Android (SQLite + SMS nativo)
-  </div>
+  <div class="hero-top"><span>💛</span><span>La Guaira nos necesita</span></div>
 
   <div class="layout">
     <div class="main">
-      <header class="header">
-        <div class="emblema"><span>🐾</span><span>🛰️</span></div>
-        <h1 class="titulo">🐕 MESHNETWORK VENEZUELA</h1>
-        <p class="subtitulo">Unidad de Registro Táctico y Rescate — La Guaira</p>
-        <span class="badge">OPERATIVO · SQLITE · GPS · SMS · APK</span>
-      </header>
+      <div id="tab-inicio" class="tab-panel active">
+        <header class="header">
+          <h1 class="titulo">🐕 MESHNETWORK VENEZUELA</h1>
+          <p class="subtitulo">Unidad de Registro Táctico y Rescate</p>
+          <span class="badge">OPERATIVO · SQLITE · GPS · APK</span>
+        </header>
+        <div class="hero-section">
+          <span class="hero-title">RED DE RESCATE ACTIVA</span>
+          <p class="hero-desc" id="hero-desc">Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.</p>
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">REPORTES ACTIVOS</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-criticos" style="color:#CF142B">0</div><div class="stat-lbl">CRÍTICOS</div></div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-num" id="stat-localizados" style="color:#00843D">0</div><div class="stat-lbl">LOCALIZADOS</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-zonas">6</div><div class="stat-lbl">ZONAS</div></div>
+          </div>
+        </div>
+        <button type="button" class="btn-emergencia" onclick="irTab('registro')">🆘 REGISTRAR PERSONA AFECTADA</button>
+        <a class="btn-gps" href="https://herovenezuela.com" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px">🌐 VER RED CIUDADANA (HEROVENEZUELA)</a>
+      </div>
 
-      <p class="section-label">▸ INGRESO DE REPORTE (PARAMÉDICO)</p>
+      <div id="tab-registro" class="tab-panel">
+        <div class="hero-section">
+          <span class="hero-title">PERSONAS AFECTADAS</span>
+          <p class="hero-desc">Cuéntanos qué ayuda necesitas. Completa los datos clave del punto de rescate.</p>
+        </div>
+
+      <div class="field-box">
+        <label for="telefono">Teléfono, WhatsApp o correo</label>
+        <input id="telefono" type="text" placeholder="+58 412 000 0000" />
+      </div>
+
+      <div class="field-box">
+        <label>Ciudad</label>
+        <div class="chips" id="ciudad-chips"></div>
+      </div>
 
       <div class="field-box">
         <label for="nombre">Nombre completo</label>
@@ -330,7 +411,9 @@
       </div>
 
       <button type="button" class="btn-emergencia" id="btn-guardar">💾 REGISTRAR PUNTO DE RESCATE</button>
+      </div>
 
+      <div id="tab-reportes" class="tab-panel">
       <div class="lista-header">
         <span class="lista-titulo">▸ LISTA DE REPORTES (DISCO LOCAL)</span>
         <span class="lista-count" id="count">0 activos</span>
@@ -338,9 +421,10 @@
       <div class="lista" id="lista">
         <p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>
       </div>
+      </div>
     </div>
 
-    <aside class="sidebar">
+    <aside class="sidebar tab-panel" id="tab-sms">
       <h2>📲 Transmisión SMS (contingencia)</h2>
       <p class="sms-meta">
         Comando: <strong id="comando-num">04140000000</strong><br />
@@ -354,6 +438,14 @@
     </aside>
   </div>
 
+  <nav class="bottom-nav">
+    <button type="button" class="nav-btn active" data-tab="inicio">🏠<br>Inicio</button>
+    <button type="button" class="nav-btn" data-tab="registro">🆘<br>Ayuda</button>
+    <button type="button" class="nav-btn" data-tab="reportes">📋<br>Reportes</button>
+    <button type="button" class="nav-btn" data-tab="sms">📲<br>SMS</button>
+    <button type="button" class="nav-btn" onclick="window.open('https://herovenezuela.com','_blank')">🌐<br>Red</button>
+  </nav>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -365,6 +457,7 @@
       NOMBRE_COMANDO: 'Comando Central La Guaira',
       SMS_PROTOCOLO: 'MNv1',
       SMS_MAX: 140,
+      CIUDADES: ['La Guaira', 'Maiquetía', 'Macuto', 'Catia La Mar', 'Caraballeda', 'Naiguatá'],
     };
 
     const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LOCALIZADO: 2 };
@@ -417,6 +510,8 @@
         };
         if (r.latitud != null) base.la = r.latitud;
         if (r.longitud != null) base.lo = r.longitud;
+        if (r.telefono_contacto) base.p = r.telefono_contacto;
+        if (r.ciudad) base.c = r.ciudad;
         return base;
       }
 
@@ -426,6 +521,8 @@
           nombre_completo: c.n || 'Anónimo',
           edad: String(c.e ?? '0'),
           genero: c.g || 'M',
+          telefono_contacto: c.p || '',
+          ciudad: c.c || 'La Guaira',
           ubicacion_exacta: c.u || '',
           latitud: c.la != null ? Number(c.la) : undefined,
           longitud: c.lo != null ? Number(c.lo) : undefined,
@@ -528,11 +625,42 @@
     const repo = new StorageReporteRepository();
     let generoSel = 'M';
     let estadoSel = 'POR LOCALIZAR';
+    let ciudadSel = 'La Guaira';
     let latitud = undefined;
     let longitud = undefined;
 
     const $ = (id) => document.getElementById(id);
     $('comando-num').textContent = CONFIG.COMANDO_CENTRAL_SMS;
+
+    const ciudadChips = $('ciudad-chips');
+    CONFIG.CIUDADES.forEach((c) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chip' + (c === ciudadSel ? ' active' : '');
+      btn.dataset.c = c;
+      btn.textContent = c;
+      btn.addEventListener('click', () => {
+        ciudadChips.querySelectorAll('.chip').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        ciudadSel = c;
+      });
+      ciudadChips.appendChild(btn);
+    });
+
+    function irTab(id) {
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn[data-tab]').forEach((b) => b.classList.remove('active'));
+      const panel = $('tab-' + id);
+      if (panel) panel.classList.add('active');
+      const nav = document.querySelector(`.nav-btn[data-tab="${id}"]`);
+      if (nav) nav.classList.add('active');
+      if (id === 'sms') $('tab-sms').classList.add('active');
+      else $('tab-sms').classList.remove('active');
+    }
+
+    document.querySelectorAll('.nav-btn[data-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => irTab(btn.dataset.tab));
+    });
 
     document.querySelectorAll('#genero-chips .chip').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -569,6 +697,16 @@
     function renderLista(reportes) {
       $('count').textContent = `${reportes.length} activos`;
       $('sms-output').textContent = repo.comprimirParaSMS();
+      const criticos = reportes.filter((r) => r.estado_actual === 'CRITICO').length;
+      const localizados = reportes.filter((r) => r.estado_actual === 'LOCALIZADO').length;
+      const zonas = new Set(reportes.map((r) => r.ciudad)).size;
+      $('stat-total').textContent = reportes.length;
+      $('stat-criticos').textContent = criticos;
+      $('stat-localizados').textContent = localizados;
+      $('stat-zonas').textContent = zonas || CONFIG.CIUDADES.length;
+      $('hero-desc').textContent = reportes.length
+        ? `Hay ${reportes.length} reporte(s) en ${zonas || CONFIG.CIUDADES.length} zona(s). Los datos se cruzan con la red de brigadas por ubicación y triaje.`
+        : 'Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.';
       const lista = $('lista');
       if (!reportes.length) {
         lista.innerHTML = '<p class="empty">Sin registros. Registre un punto con ubicación y GPS.</p>';
@@ -589,7 +727,8 @@
               <span class="card-id">${item.id}</span>
             </div>
             <div class="card-nombre">${item.nombre_completo}${item.edad !== '0' ? ' · ' + item.edad + ' años' : ''} · ${item.genero}</div>
-            <div class="card-ubicacion">📍 ${item.ubicacion_exacta}</div>
+            ${item.telefono_contacto ? `<div class="card-notas">📞 ${item.telefono_contacto}</div>` : ''}
+            <div class="card-ubicacion">🏙️ ${item.ciudad || 'La Guaira'} · 📍 ${item.ubicacion_exacta}</div>
             ${gps}
             ${item.notas_paramedicos ? `<div class="card-notas">${item.notas_paramedicos}</div>` : ''}
             ${nav}
@@ -629,6 +768,8 @@
       if (latitud == null || longitud == null) { toast('⚠ Capture coordenadas GPS antes de registrar'); return; }
       repo.guardar({
         nombre_completo: $('nombre').value.trim() || 'Anónimo',
+        telefono_contacto: $('telefono').value.trim(),
+        ciudad: ciudadSel,
         edad: $('edad').value.trim() || '0',
         genero: generoSel,
         ubicacion_exacta: ubicacion,
@@ -638,10 +779,12 @@
         notas_paramedicos: $('notas').value.trim(),
       });
       $('nombre').value = '';
+      $('telefono').value = '';
       $('edad').value = '';
       $('ubicacion').value = '';
       $('notas').value = '';
       toast('✓ Punto guardado en disco local');
+      irTab('reportes');
     });
 
     $('btn-copy').addEventListener('click', async () => {

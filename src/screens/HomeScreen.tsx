@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StatusBar,
@@ -21,8 +22,18 @@ import { LocationService } from '../infrastructure/services/LocationService';
 import { NavigationService } from '../infrastructure/services/NavigationService';
 import { SmsDirectService } from '../infrastructure/services/SmsDirectService';
 
-const ESTADOS: EstadoReporte[] = ['POR LOCALIZAR', 'CRITICO', 'LOCALIZADO'];
+const ESTADOS: EstadoReporte[] = ['CRITICO', 'POR LOCALIZAR', 'LOCALIZADO'];
 const GENEROS = ['M', 'F', 'Otro'];
+
+type TabId = 'inicio' | 'registro' | 'reportes' | 'sms' | 'red';
+
+const TABS: { id: TabId; label: string; icon: string }[] = [
+  { id: 'inicio', label: 'Inicio', icon: '🏠' },
+  { id: 'registro', label: 'Ayuda', icon: '🆘' },
+  { id: 'reportes', label: 'Reportes', icon: '📋' },
+  { id: 'sms', label: 'SMS', icon: '📲' },
+  { id: 'red', label: 'Red', icon: '🌐' },
+];
 
 const BORDE_ESTADO: Record<EstadoReporte, string> = {
   CRITICO: '#FF0000',
@@ -37,6 +48,8 @@ interface HomeScreenProps {
 export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.Element {
   const [reportes, setReportes] = useState<ReporteEmergencia[]>([]);
   const [nombreCompleto, setNombreCompleto] = useState('');
+  const [telefonoContacto, setTelefonoContacto] = useState('');
+  const [ciudad, setCiudad] = useState('La Guaira');
   const [edad, setEdad] = useState('');
   const [genero, setGenero] = useState('M');
   const [ubicacion, setUbicacion] = useState('');
@@ -51,6 +64,19 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   const [enviandoSms, setEnviandoSms] = useState(false);
   const [lotesPendientes, setLotesPendientes] = useState<string[]>([]);
   const [indiceLote, setIndiceLote] = useState(0);
+  const [tabActiva, setTabActiva] = useState<TabId>('inicio');
+
+  const stats = useMemo(() => {
+    const criticos = reportes.filter((r) => r.estado_actual === 'CRITICO').length;
+    const localizados = reportes.filter((r) => r.estado_actual === 'LOCALIZADO').length;
+    const ciudadesActivas = new Set(reportes.map((r) => r.ciudad)).size;
+    return {
+      total: reportes.length,
+      criticos,
+      localizados,
+      ciudades: ciudadesActivas || OperacionConfig.CIUDADES_LA_GUAIRA.length,
+    };
+  }, [reportes]);
 
   useEffect(() => {
     return repository.suscribir(setReportes);
@@ -70,6 +96,8 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 
   const limpiarFormulario = useCallback(() => {
     setNombreCompleto('');
+    setTelefonoContacto('');
+    setCiudad('La Guaira');
     setEdad('');
     setGenero('M');
     setUbicacion('');
@@ -112,6 +140,8 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     try {
       await repository.guardar({
         nombre_completo: nombreCompleto.trim() || 'Anónimo',
+        telefono_contacto: telefonoContacto.trim(),
+        ciudad: ciudad.trim() || 'La Guaira',
         edad: edad.trim() || '0',
         genero,
         ubicacion_exacta: ubicacion.trim(),
@@ -121,6 +151,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         notas_paramedicos: notas.trim(),
       });
       limpiarFormulario();
+      setTabActiva('reportes');
       try {
         const coords = await LocationService.obtenerCoordenadasActuales();
         setLatitud(coords.latitud);
@@ -137,6 +168,8 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   }, [
     repository,
     nombreCompleto,
+    telefonoContacto,
+    ciudad,
     edad,
     genero,
     ubicacion,
@@ -307,6 +340,14 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     }
   }, [repository, cadenaImport]);
 
+  const abrirRedCiudadana = useCallback(async () => {
+    try {
+      await Linking.openURL(OperacionConfig.RED_CIUDADANA_URL);
+    } catch {
+      Alert.alert('Red ciudadana', 'No se pudo abrir herovenezuela.com');
+    }
+  }, []);
+
   const renderItem = useCallback(({ item }: { item: ReporteEmergencia }) => {
     const borde = BORDE_ESTADO[item.estado_actual];
 
@@ -320,6 +361,10 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           {item.nombre_completo}
           {item.edad !== '0' ? ` · ${item.edad} años` : ''} · {item.genero}
         </Text>
+        {item.telefono_contacto ? (
+          <Text style={styles.cardContacto}>📞 {item.telefono_contacto}</Text>
+        ) : null}
+        <Text style={styles.cardCiudad}>🏙️ {item.ciudad}</Text>
         <Text style={styles.cardUbicacion}>📍 {item.ubicacion_exacta}</Text>
         {item.latitud !== undefined && item.longitud !== undefined ? (
           <Text style={styles.cardGps}>
@@ -349,224 +394,348 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
+      <View style={styles.heroTopBar}>
+        <Text style={styles.heroHeart}>💛</Text>
+        <Text style={styles.heroSlogan}>La Guaira nos necesita</Text>
+      </View>
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Image source={require('../../assets/logo.jpg')} style={styles.logo} />
-            <View style={styles.emblema}>
-              <Text style={styles.emblemaIcon}>🐾</Text>
-              <Text style={styles.emblemaSignal}>📡</Text>
+        {tabActiva === 'inicio' ? (
+          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.header}>
+              <Image source={require('../../assets/logo.jpg')} style={styles.logo} />
+              <Text style={styles.titulo}>🐕 MESHNETWORK VENEZUELA</Text>
+              <Text style={styles.subtitulo}>Unidad de Registro Táctico y Rescate</Text>
+              <Text style={styles.badge}>OPERATIVO · SQLITE · GPS · APK</Text>
             </View>
-            <Text style={styles.titulo}>🐕 MESHNETWORK VENEZUELA</Text>
-            <Text style={styles.subtitulo}>
-              Unidad de Registro Táctico y Rescate - La Guaira
-            </Text>
-            <Text style={styles.badge}>OPERATIVO · SQLITE · GPS · APK</Text>
-          </View>
 
-          <View style={styles.fieldBox}>
-            <Text style={styles.label}>Nombre completo</Text>
-            <TextInput
-              style={styles.input}
-              value={nombreCompleto}
-              onChangeText={setNombreCompleto}
-              placeholder="Ej: Juan Pérez (opcional)"
-              placeholderTextColor="#555555"
-              autoCapitalize="words"
-            />
-          </View>
+            <View style={styles.heroSection}>
+              <Text style={styles.heroSectionTitle}>RED DE RESCATE ACTIVA</Text>
+              <Text style={styles.heroSectionDesc}>
+                {stats.total > 0
+                  ? `Hay ${stats.total} reporte(s) registrados en ${stats.ciudades} zona(s) de La Guaira. Los datos se cruzan con la red de brigadas por ubicación y triaje.`
+                  : 'Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS cuando hay señal.'}
+              </Text>
+              <View style={styles.statsRow}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>{stats.total}</Text>
+                  <Text style={styles.statLabel}>REPORTES ACTIVOS</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statNumber, styles.statCritico]}>{stats.criticos}</Text>
+                  <Text style={styles.statLabel}>CRÍTICOS</Text>
+                </View>
+              </View>
+              <View style={styles.statsRow}>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statNumber, styles.statVerde]}>{stats.localizados}</Text>
+                  <Text style={styles.statLabel}>LOCALIZADOS</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>{stats.ciudades}</Text>
+                  <Text style={styles.statLabel}>ZONAS</Text>
+                </View>
+              </View>
+            </View>
 
-          <View style={styles.row}>
-            <View style={[styles.fieldBox, styles.half]}>
-              <Text style={styles.label}>Edad</Text>
+            <TouchableOpacity style={styles.btnHeroPrimary} onPress={() => setTabActiva('registro')}>
+              <Text style={styles.btnHeroPrimaryText}>🆘 REGISTRAR PERSONA AFECTADA</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.btnHeroSecondary} onPress={abrirRedCiudadana}>
+              <Text style={styles.btnHeroSecondaryText}>🌐 VER RED CIUDADANA (HEROVENEZUELA)</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        ) : null}
+
+        {tabActiva === 'registro' ? (
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.heroSection}>
+              <Text style={styles.heroSectionTitle}>PERSONAS AFECTADAS</Text>
+              <Text style={styles.heroSectionDesc}>
+                Cuéntanos qué ayuda necesitas. Completa los datos clave del punto de rescate.
+              </Text>
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Nombre completo</Text>
               <TextInput
                 style={styles.input}
-                value={edad}
-                onChangeText={setEdad}
-                placeholder="34"
+                value={nombreCompleto}
+                onChangeText={setNombreCompleto}
+                placeholder="Ej: Juan Pérez (opcional)"
                 placeholderTextColor="#555555"
-                keyboardType="number-pad"
-                maxLength={3}
+                autoCapitalize="words"
               />
             </View>
-            <View style={[styles.fieldBox, styles.half]}>
-              <Text style={styles.label}>Género</Text>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Teléfono, WhatsApp o correo</Text>
+              <TextInput
+                style={styles.input}
+                value={telefonoContacto}
+                onChangeText={setTelefonoContacto}
+                placeholder="+58 412 000 0000"
+                placeholderTextColor="#555555"
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Ciudad</Text>
               <View style={styles.chips}>
-                {GENEROS.map((g) => (
+                {OperacionConfig.CIUDADES_LA_GUAIRA.map((c) => (
                   <TouchableOpacity
-                    key={g}
-                    style={[styles.chip, genero === g && styles.chipActivo]}
-                    onPress={() => setGenero(g)}
+                    key={c}
+                    style={[styles.chip, ciudad === c && styles.chipActivoHero]}
+                    onPress={() => setCiudad(c)}
                   >
-                    <Text style={[styles.chipText, genero === g && styles.chipTextActivo]}>
-                      {g}
+                    <Text style={[styles.chipText, ciudad === c && styles.chipTextActivoHero]}>
+                      {c}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
-          </View>
 
-          <View style={styles.fieldBox}>
-            <Text style={styles.label}>📍 Ubicación exacta *</Text>
-            <TextInput
-              style={[styles.input, styles.inputGrande]}
-              value={ubicacion}
-              onChangeText={setUbicacion}
-              placeholder="Sector / calle / edificio — La Guaira"
-              placeholderTextColor="#555555"
-            />
+            <View style={styles.row}>
+              <View style={[styles.fieldBox, styles.half]}>
+                <Text style={styles.label}>Edad</Text>
+                <TextInput
+                  style={styles.input}
+                  value={edad}
+                  onChangeText={setEdad}
+                  placeholder="34"
+                  placeholderTextColor="#555555"
+                  keyboardType="number-pad"
+                  maxLength={3}
+                />
+              </View>
+              <View style={[styles.fieldBox, styles.half]}>
+                <Text style={styles.label}>Género</Text>
+                <View style={styles.chips}>
+                  {GENEROS.map((g) => (
+                    <TouchableOpacity
+                      key={g}
+                      style={[styles.chip, genero === g && styles.chipActivoHero]}
+                      onPress={() => setGenero(g)}
+                    >
+                      <Text style={[styles.chipText, genero === g && styles.chipTextActivoHero]}>
+                        {g}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>📍 Ubicación exacta *</Text>
+              <TextInput
+                style={[styles.input, styles.inputGrande]}
+                value={ubicacion}
+                onChangeText={setUbicacion}
+                placeholder="Sector / calle / edificio"
+                placeholderTextColor="#555555"
+              />
+              <TouchableOpacity
+                style={[styles.btnGps, obteniendoGps && styles.btnDisabled]}
+                onPress={capturarGps}
+                disabled={obteniendoGps}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.btnGpsText}>
+                  {obteniendoGps ? 'OBTENIENDO GPS...' : '🛰️ CAPTURAR COORDENADAS GPS'}
+                </Text>
+              </TouchableOpacity>
+              {latitud !== undefined && longitud !== undefined ? (
+                <Text style={styles.gpsActivo}>
+                  GPS activo: {LocationService.formatearCoordenadas(latitud, longitud)}
+                </Text>
+              ) : null}
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Estado (CRÍTICO → POR LOCALIZAR → LOCALIZADO)</Text>
+              <View style={styles.chips}>
+                {ESTADOS.map((e) => (
+                  <TouchableOpacity
+                    key={e}
+                    style={[
+                      styles.estadoBtn,
+                      estado === e && {
+                        backgroundColor: BORDE_ESTADO[e],
+                        borderColor: BORDE_ESTADO[e],
+                      },
+                    ]}
+                    onPress={() => setEstado(e)}
+                  >
+                    <Text style={[styles.estadoText, estado === e && styles.estadoTextActivo]}>
+                      {e}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Notas del paramédico</Text>
+              <TextInput
+                style={[styles.input, styles.inputMultiline]}
+                value={notas}
+                onChangeText={setNotas}
+                placeholder="Ej: Se escuchan ruidos bajo la losa oeste"
+                placeholderTextColor="#555555"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+
             <TouchableOpacity
-              style={[styles.btnGps, obteniendoGps && styles.btnDisabled]}
-              onPress={capturarGps}
-              disabled={obteniendoGps}
+              style={[styles.btnEmergencia, guardando && styles.btnDisabled]}
+              onPress={registrarPunto}
               activeOpacity={0.8}
+              disabled={guardando}
             >
-              <Text style={styles.btnGpsText}>
-                {obteniendoGps ? 'OBTENIENDO GPS...' : '🛰️ CAPTURAR COORDENADAS GPS'}
+              <Text style={styles.btnEmergenciaText}>
+                {guardando ? 'GUARDANDO EN DISCO...' : '💾 REGISTRAR PUNTO DE RESCATE'}
               </Text>
             </TouchableOpacity>
-            {latitud !== undefined && longitud !== undefined ? (
-              <Text style={styles.gpsActivo}>
-                GPS activo: {LocationService.formatearCoordenadas(latitud, longitud)}
-              </Text>
-            ) : null}
-          </View>
+          </ScrollView>
+        ) : null}
 
-          <View style={styles.fieldBox}>
-            <Text style={styles.label}>Estado actual</Text>
-            <View style={styles.chips}>
-              {ESTADOS.map((e) => (
+        {tabActiva === 'reportes' ? (
+          <FlatList
+            data={reportes}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            style={styles.lista}
+            contentContainerStyle={styles.listaContent}
+            ListHeaderComponent={
+              <Text style={styles.listaTitulo}>▸ Reportes en dispositivo ({reportes.length})</Text>
+            }
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                Sin registros. Use la pestaña Ayuda para registrar un punto.
+              </Text>
+            }
+          />
+        ) : null}
+
+        {tabActiva === 'sms' ? (
+          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.syncPanelInline}>
+              <Text style={styles.syncLabel}>▸ TRANSMISIÓN MANUAL POR SMS</Text>
+              <Text style={styles.syncHint}>
+                Comando: {OperacionConfig.COMANDO_CENTRAL_SMS} · Lotes MNv1|1/3|...
+              </Text>
+              <TextInput
+                style={styles.syncInput}
+                value={cadenaImport}
+                onChangeText={setCadenaImport}
+                placeholder="Pegue cadena JSON o lotes MNv1|1/3|..."
+                placeholderTextColor="#555555"
+                multiline
+                numberOfLines={4}
+              />
+              <TouchableOpacity
+                style={[styles.btnComando, enviandoSms && styles.btnDisabled]}
+                onPress={enviarAlComandoCentral}
+                disabled={enviandoSms}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.btnComandoText}>
+                  {enviandoSms ? 'ABRIENDO SMS...' : '🚨 ENVIAR AL COMANDO CENTRAL'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btnSmsDirecto, enviandoSms && styles.btnDisabled]}
+                onPress={enviarSmsDirecto}
+                disabled={enviandoSms}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.btnSmsDirectoText}>
+                  {enviandoSms ? 'ABRIENDO SMS...' : '📨 ENVIAR SMS DIRECTO (LOTE 1)'}
+                </Text>
+              </TouchableOpacity>
+              {lotesPendientes.length > 1 && indiceLote < lotesPendientes.length - 1 ? (
                 <TouchableOpacity
-                  key={e}
-                  style={[
-                    styles.estadoBtn,
-                    estado === e && {
-                      backgroundColor: BORDE_ESTADO[e],
-                      borderColor: BORDE_ESTADO[e],
-                    },
-                  ]}
-                  onPress={() => setEstado(e)}
+                  style={styles.btnSiguienteLote}
+                  onPress={enviarSiguienteLote}
+                  activeOpacity={0.8}
                 >
-                  <Text style={[styles.estadoText, estado === e && styles.estadoTextActivo]}>
-                    {e}
+                  <Text style={styles.btnSiguienteLoteText}>
+                    📨 ENVIAR LOTE {indiceLote + 2}/{lotesPendientes.length}
                   </Text>
                 </TouchableOpacity>
-              ))}
+              ) : null}
+              <View style={styles.syncButtons}>
+                <TouchableOpacity style={styles.btnSMSHalf} onPress={comprimirParaSMS} activeOpacity={0.8}>
+                  <Text style={styles.btnSMSText}>📲 COMPRIMIR</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.btnImportHalf, importando && styles.btnDisabled]}
+                  onPress={pegarYFusionar}
+                  activeOpacity={0.8}
+                  disabled={importando}
+                >
+                  <Text style={styles.btnImportText}>
+                    {importando ? 'FUSIONANDO...' : '📥 PEGAR Y FUSIONAR'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </ScrollView>
+        ) : null}
 
-          <View style={styles.fieldBox}>
-            <Text style={styles.label}>Notas del paramédico</Text>
-            <TextInput
-              style={[styles.input, styles.inputMultiline]}
-              value={notas}
-              onChangeText={setNotas}
-              placeholder="Ej: Se escuchan ruidos bajo la losa oeste"
-              placeholderTextColor="#555555"
-              multiline
-              numberOfLines={3}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.btnEmergencia, guardando && styles.btnDisabled]}
-            onPress={registrarPunto}
-            activeOpacity={0.8}
-            disabled={guardando}
-          >
-            <Text style={styles.btnEmergenciaText}>
-              {guardando ? 'GUARDANDO EN DISCO...' : '💾 REGISTRAR PUNTO DE RESCATE'}
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={styles.listaTitulo}>Registros en dispositivo ({reportes.length})</Text>
-        </ScrollView>
-
-        <FlatList
-          data={reportes}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          style={styles.lista}
-          contentContainerStyle={styles.listaContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>
-              Sin registros. Los datos se guardan en el teléfono al registrar.
-            </Text>
-          }
-        />
-
-        <View style={styles.syncPanel}>
-          <Text style={styles.syncLabel}>▸ TRANSMISIÓN MANUAL POR SMS (CONTINGENCIA)</Text>
-          <Text style={styles.syncHint}>
-            Comando: {OperacionConfig.COMANDO_CENTRAL_SMS} · Lotes MNv1|1/3|...
-          </Text>
-          <TextInput
-            style={styles.syncInput}
-            value={cadenaImport}
-            onChangeText={setCadenaImport}
-            placeholder="Pegue cadena JSON o lotes MNv1|1/3|..."
-            placeholderTextColor="#555555"
-            multiline
-            numberOfLines={4}
-          />
-          <TouchableOpacity
-            style={[styles.btnComando, enviandoSms && styles.btnDisabled]}
-            onPress={enviarAlComandoCentral}
-            disabled={enviandoSms}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.btnComandoText}>
-              {enviandoSms ? 'ABRIENDO SMS...' : '🚨 ENVIAR AL COMANDO CENTRAL'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.btnSmsDirecto, enviandoSms && styles.btnDisabled]}
-            onPress={enviarSmsDirecto}
-            disabled={enviandoSms}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.btnSmsDirectoText}>
-              {enviandoSms ? 'ABRIENDO SMS...' : '📨 ENVIAR SMS DIRECTO (LOTE 1)'}
-            </Text>
-          </TouchableOpacity>
-          {lotesPendientes.length > 1 && indiceLote < lotesPendientes.length - 1 ? (
-            <TouchableOpacity
-              style={styles.btnSiguienteLote}
-              onPress={enviarSiguienteLote}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.btnSiguienteLoteText}>
-                📨 ENVIAR LOTE {indiceLote + 2}/{lotesPendientes.length}
+        {tabActiva === 'red' ? (
+          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.heroSection}>
+              <Text style={styles.heroSectionTitle}>RED CIUDADANA ACTIVA</Text>
+              <Text style={styles.heroSectionDesc}>
+                MeshnetworkVenezuela complementa la red de voluntarios y acopios. Los reportes tácticos
+                de rescate se transmiten por SMS al comando central cuando la señal lo permite.
               </Text>
+              <View style={styles.statsRow}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>{OperacionConfig.BRIGADA_ID}</Text>
+                  <Text style={styles.statLabel}>BRIGADA LOCAL</Text>
+                </View>
+              </View>
+              <Text style={styles.redInfo}>Comando: {OperacionConfig.NOMBRE_COMANDO}</Text>
+              <Text style={styles.redInfo}>SMS: {OperacionConfig.COMANDO_CENTRAL_SMS}</Text>
+            </View>
+            <TouchableOpacity style={styles.btnHeroPrimary} onPress={abrirRedCiudadana}>
+              <Text style={styles.btnHeroPrimaryText}>🌐 ABRIR HEROVENEZUELA.COM</Text>
             </TouchableOpacity>
-          ) : null}
-          <View style={styles.syncButtons}>
-            <TouchableOpacity
-              style={styles.btnSMSHalf}
-              onPress={comprimirParaSMS}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.btnSMSText}>📲 COMPRIMIR</Text>
+            <TouchableOpacity style={styles.btnHeroSecondary} onPress={() => setTabActiva('registro')}>
+              <Text style={styles.btnHeroSecondaryText}>🆘 REGISTRAR AYUDA EN CAMPO</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btnImportHalf, importando && styles.btnDisabled]}
-              onPress={pegarYFusionar}
-              activeOpacity={0.8}
-              disabled={importando}
-            >
-              <Text style={styles.btnImportText}>
-                {importando ? 'FUSIONANDO...' : '📥 PEGAR Y FUSIONAR'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          </ScrollView>
+        ) : null}
+
+        <View style={styles.bottomNav}>
+          {TABS.map((tab) => {
+            const activa = tabActiva === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                style={[styles.navItem, activa && styles.navItemActiva]}
+                onPress={() => setTabActiva(tab.id)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.navIcon}>{tab.icon}</Text>
+                <Text style={[styles.navLabel, activa && styles.navLabelActiva]}>{tab.label}</Text>
+                {activa ? <View style={styles.navIndicator} /> : null}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -576,7 +745,109 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#000000' },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 8 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 16 },
+  heroTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    backgroundColor: '#001A4D',
+    borderBottomWidth: 2,
+    borderBottomColor: '#FFCC00',
+  },
+  heroHeart: { fontSize: 18 },
+  heroSlogan: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  heroSection: {
+    backgroundColor: '#0A1428',
+    borderWidth: 1,
+    borderColor: '#003893',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 16,
+  },
+  heroSectionTitle: {
+    color: '#003893',
+    backgroundColor: '#FFFFFF',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  heroSectionDesc: { color: '#CCCCCC', fontSize: 13, lineHeight: 20, marginBottom: 14 },
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#003893',
+    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+  },
+  statNumber: { color: '#003893', fontSize: 22, fontWeight: '900' },
+  statCritico: { color: '#CF142B' },
+  statVerde: { color: '#00843D' },
+  statLabel: {
+    color: '#003893',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  btnHeroPrimary: {
+    backgroundColor: '#003893',
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  btnHeroPrimaryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  btnHeroSecondary: {
+    backgroundColor: '#111111',
+    borderWidth: 2,
+    borderColor: '#FFCC00',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  btnHeroSecondaryText: { color: '#FFCC00', fontSize: 12, fontWeight: '800' },
+  redInfo: { color: '#888888', fontSize: 12, marginTop: 6 },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#DDDDDD',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingTop: 6,
+  },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 4, position: 'relative' },
+  navItemActiva: { backgroundColor: '#E8F0FE' },
+  navIcon: { fontSize: 18 },
+  navLabel: { color: '#666666', fontSize: 9, fontWeight: '700', marginTop: 2 },
+  navLabelActiva: { color: '#003893' },
+  navIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: '20%',
+    right: '20%',
+    height: 3,
+    backgroundColor: '#FFCC00',
+    borderRadius: 2,
+  },
+  syncPanelInline: { paddingBottom: 8 },
+  chipActivoHero: { backgroundColor: '#003893', borderColor: '#003893' },
+  chipTextActivoHero: { color: '#FFFFFF' },
+  cardContacto: { color: '#FFCC00', fontSize: 13, marginTop: 4, fontWeight: '600' },
+  cardCiudad: { color: '#888888', fontSize: 12, marginTop: 2 },
   header: {
     alignItems: 'center',
     paddingTop: 12,
