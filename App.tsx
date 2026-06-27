@@ -4,9 +4,9 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 import HomeScreen from './src/screens/HomeScreen';
 import { SQLiteReporteRepository } from './src/infrastructure/repositories/SQLiteReporteRepository';
 
-import { BrutalistTheme } from './src/theme/BrutalistTheme';
+import { TacticalTheme } from './src/theme/TacticalTheme';
 
-const T = BrutalistTheme;
+const T = TacticalTheme;
 
 export default function App(): React.JSX.Element {
   const repository = useMemo(() => new SQLiteReporteRepository(), []);

@@ -215,6 +215,7 @@
     .card:hover { transform: translateY(-2px); box-shadow: var(--shadow), inset 5px 0 0 var(--accent); }
     .card.e-CRITICO { --accent: var(--critico); }
     .card.e-PORLOCALIZAR { --accent: var(--amber); }
+    .card.e-LEVE { --accent: var(--ok); }
     .card.e-LOCALIZADO { --accent: var(--ok); }
     .card-foto {
       width: 92px; height: 92px; flex-shrink: 0;
@@ -323,6 +324,7 @@
         <option value="">Todos los estados</option>
         <option value="CRITICO">Crítico</option>
         <option value="POR LOCALIZAR">Por localizar</option>
+        <option value="LEVE">Leve</option>
         <option value="LOCALIZADO">Localizado</option>
       </select>
       <select id="f-tipo">
@@ -531,7 +533,7 @@
 
     /* —— Tarjetas —— */
     function badgeEstado(s) {
-      const cls = s === 'CRITICO' ? 'badge crit' : s === 'LOCALIZADO' ? 'badge ok' : 'badge warn';
+      const cls = s === 'CRITICO' ? 'badge crit' : (s === 'LOCALIZADO' || s === 'LEVE') ? 'badge ok' : 'badge warn';
       return `<span class="${cls}">${s}</span>`;
     }
 

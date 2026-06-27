@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/logo.jpg",
       "resizeMode": "contain",
-      "backgroundColor": "#F5F0E8"
+      "backgroundColor": "#F7FAFD"
     },
     "ios": {
       "supportsTablet": true,
@@ -29,7 +29,7 @@
       "package": "com.vic_arx.meshnetworkvenezuela",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.jpg",
-        "backgroundColor": "#F5F0E8"
+        "backgroundColor": "#F7FAFD"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",

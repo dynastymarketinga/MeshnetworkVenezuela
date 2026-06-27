@@ -23,7 +23,7 @@ export function TacticalSearchBar({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#555555"
+        placeholderTextColor={T.placeholder}
         autoCapitalize="words"
         autoCorrect={false}
         clearButtonMode="while-editing"

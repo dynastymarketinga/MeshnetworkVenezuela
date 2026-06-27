@@ -26,7 +26,7 @@ export function FotoEviccionCapture({
         activeOpacity={0.85}
       >
         {capturando ? (
-          <ActivityIndicator color={T.bg} />
+          <ActivityIndicator color={T.accent} />
         ) : (
           <Text style={styles.btnText}>CAPTURAR FOTO DE EVICCIÓN</Text>
         )}

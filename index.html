@@ -1014,9 +1014,81 @@
           </header>
           <div class="form-section-body">
             <div class="tipo-grid" id="tipo-chips">
-              <button type="button" class="tipo-btn active" data-t="PERSONA_ATRAPADA">Persona atrapada</button>
+              <button type="button" class="tipo-btn active" data-t="PERSONA_ATRAPADA">Personas atrapadas</button>
+              <button type="button" class="tipo-btn" data-t="PERSONA_DESAPARECIDA">Personas desaparecidas</button>
               <button type="button" class="tipo-btn" data-t="INFRAESTRUCTURA_DANADA">Infraestructura dañada</button>
               <button type="button" class="tipo-btn" data-t="SIN_VIVIENDA">Familia sin vivienda</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" id="seccion-atrapada">
+          <header class="form-section-header">
+            <p class="form-section-kicker">Señales en el sitio</p>
+            <h3 class="form-section-title">¿Qué se percibe en la ubicación?</h3>
+          </header>
+          <div class="form-section-body">
+            <div class="field-box field-box--flat">
+              <label>¿Se escuchan personas?</label>
+              <div class="chips" id="escucha-chips">
+                <button type="button" class="chip" data-v="SI">Sí, se escuchan</button>
+                <button type="button" class="chip" data-v="NO">No se escuchan</button>
+                <button type="button" class="chip active" data-v="NO_SE">No se sabe</button>
+              </div>
+            </div>
+            <div class="field-box field-box--flat">
+              <label>¿Hay personas fallecidas en esta ubicación?</label>
+              <div class="chips" id="fallecidos-chips">
+                <button type="button" class="chip" data-v="SI">Sí, confirmadas</button>
+                <button type="button" class="chip" data-v="NO">No</button>
+                <button type="button" class="chip active" data-v="NO_SE">No se sabe</button>
+              </div>
+              <p class="field-hint">Indique solo lo confirmado en el sitio. Esta información se comparte con las brigadas.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" id="seccion-desaparecida" hidden>
+          <header class="form-section-header">
+            <p class="form-section-kicker">Datos de la persona</p>
+            <h3 class="form-section-title">Reportar persona desaparecida</h3>
+          </header>
+          <div class="form-section-body">
+            <div class="field-box">
+              <label for="desap-nombre" class="label-required">Nombre completo</label>
+              <input id="desap-nombre" type="text" placeholder="Ej: María Rodríguez" />
+            </div>
+            <div class="form-grid">
+              <div class="field-box">
+                <label for="desap-edad">Edad</label>
+                <input id="desap-edad" type="text" maxlength="12" placeholder="34, RN, BEBE…" />
+                <p id="alert-desap-edad" class="field-alert" role="alert">Edad inválida: use un número de 0 a 115 o una palabra operativa (RN, BEBE, NN, NA, ND, N/A, DESCON).</p>
+              </div>
+              <div class="field-box">
+                <label>Género</label>
+                <div class="chips" id="desap-genero-chips">
+                  <button type="button" class="chip active" data-g="M">M</button>
+                  <button type="button" class="chip" data-g="F">F</button>
+                  <button type="button" class="chip" data-g="Otro">Otro</button>
+                </div>
+              </div>
+            </div>
+            <div class="field-box">
+              <label for="desap-visto">¿Dónde y cuándo se le vio por última vez?</label>
+              <input id="desap-visto" type="text" placeholder="Ej: Macuto, el 26/06 por la tarde" />
+            </div>
+            <div class="field-box field-box--flat">
+              <label for="desap-rasgos">Rasgos físicos y vestimenta</label>
+              <textarea id="desap-rasgos" placeholder="Estatura, contextura, ropa que llevaba, señas particulares…"></textarea>
+            </div>
+            <div class="field-box">
+              <label for="desap-contacto">Teléfono de quien reporta</label>
+              <input id="desap-contacto" type="text" inputmode="numeric" maxlength="12" placeholder="04121234567" autocomplete="tel" />
+              <p id="alert-desap-contacto" class="field-alert" role="alert">Teléfono inválido: use solo números de Venezuela (11-12 dígitos, ej. 04121234567).</p>
+            </div>
+            <div class="field-box">
+              <label for="desap-relacion">Relación con la persona</label>
+              <input id="desap-relacion" type="text" placeholder="Ej: madre, hermano, vecino" />
             </div>
           </div>
         </section>
@@ -1053,17 +1125,13 @@
           </div>
         </section>
 
-        <section class="form-section">
+        <section class="form-section" id="estado-section">
           <header class="form-section-header">
             <p class="form-section-kicker">3 — Triaje</p>
             <h3 class="form-section-title">Estado</h3>
           </header>
           <div class="form-section-body">
-            <div class="estado-chips estado-grande" id="estado-chips">
-              <button type="button" class="estado-btn" data-s="CRITICO">CRÍTICO</button>
-              <button type="button" class="estado-btn active estado-por-localizar" data-s="POR LOCALIZAR">POR LOCALIZAR</button>
-              <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
-            </div>
+            <div class="estado-chips estado-grande" id="estado-chips"></div>
           </div>
         </section>
 
@@ -1290,12 +1358,31 @@
       CIUDADES: ['La Guaira', 'Maiquetía', 'Macuto', 'Catia La Mar', 'Caraballeda', 'Naiguatá'],
     };
 
-    const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LOCALIZADO: 2 };
-    const BORDE = { CRITICO: '#FF4444', 'POR LOCALIZAR': '#FFB020', LOCALIZADO: '#4ADE80' };
+    const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LEVE: 2, LOCALIZADO: 3 };
+    const BORDE = { CRITICO: '#FF4444', 'POR LOCALIZAR': '#FFB020', LEVE: '#4ADE80', LOCALIZADO: '#4ADE80' };
     const CARD_ESTADO = {
       CRITICO: { card: 'card-estado-critico', label: 'card-estado-label-critico' },
       'POR LOCALIZAR': { card: 'card-estado-alerta', label: 'card-estado-label-alerta' },
+      LEVE: { card: 'card-estado-ok', label: 'card-estado-label-ok' },
       LOCALIZADO: { card: 'card-estado-ok', label: 'card-estado-label-ok' },
+    };
+
+    const ESTADO_OPCIONES = {
+      PERSONA_ATRAPADA: [
+        { v: 'CRITICO', label: 'CRÍTICO' },
+        { v: 'POR LOCALIZAR', label: 'POR LOCALIZAR' },
+        { v: 'LOCALIZADO', label: 'LOCALIZADO' },
+      ],
+      INFRAESTRUCTURA_DANADA: [
+        { v: 'CRITICO', label: 'CRÍTICO' },
+        { v: 'LEVE', label: 'LEVE' },
+      ],
+      SIN_VIVIENDA: [],
+    };
+    const ESTADO_DEFAULT = {
+      PERSONA_ATRAPADA: 'POR LOCALIZAR',
+      INFRAESTRUCTURA_DANADA: 'CRITICO',
+      SIN_VIVIENDA: 'LOCALIZADO',
     };
 
     class StorageReporteRepository {
@@ -1541,6 +1628,9 @@
     let generoSel = 'M';
     let estadoSel = 'POR LOCALIZAR';
     let tipoSel = 'PERSONA_ATRAPADA';
+    let escuchaSel = 'NO_SE';
+    let fallecidosSel = 'NO_SE';
+    let desapGeneroSel = 'M';
     let ciudadSel = 'La Guaira';
     let latitud = undefined;
     let longitud = undefined;
@@ -1644,6 +1734,7 @@
       document.querySelectorAll('#tipo-chips .tipo-btn').forEach((b) => {
         b.classList.toggle('active', b.dataset.t === valor);
       });
+      renderEstadoChips(valor);
     }
     document.querySelectorAll('#tipo-chips .tipo-btn').forEach((btn) => {
       btn.addEventListener('click', () => aplicarTipoActivo(btn.dataset.t));
@@ -1664,10 +1755,38 @@
       btn.style.color = '#FFFFFF';
     }
 
-    document.querySelectorAll('#estado-chips .estado-btn').forEach((btn) => {
-      btn.addEventListener('click', () => aplicarEstadoActivo(btn));
-    });
-    aplicarEstadoActivo(document.querySelector('#estado-chips .estado-btn.active'));
+    function renderEstadoChips(tipo) {
+      const wrap = $('estado-chips');
+      const seccion = $('estado-section');
+      const opciones = ESTADO_OPCIONES[tipo] || [];
+
+      if (!opciones.length) {
+        wrap.innerHTML = '';
+        if (seccion) seccion.hidden = true;
+        estadoSel = ESTADO_DEFAULT[tipo] || 'POR LOCALIZAR';
+        return;
+      }
+
+      if (seccion) seccion.hidden = false;
+      const previo = opciones.some((o) => o.v === estadoSel)
+        ? estadoSel
+        : (ESTADO_DEFAULT[tipo] && opciones.some((o) => o.v === ESTADO_DEFAULT[tipo])
+            ? ESTADO_DEFAULT[tipo]
+            : opciones[0].v);
+
+      wrap.innerHTML = opciones.map((o) =>
+        `<button type="button" class="estado-btn" data-s="${o.v}">${o.label}</button>`
+      ).join('');
+
+      wrap.querySelectorAll('.estado-btn').forEach((btn) => {
+        btn.addEventListener('click', () => aplicarEstadoActivo(btn));
+      });
+
+      const activo = wrap.querySelector(`.estado-btn[data-s="${previo}"]`) || wrap.querySelector('.estado-btn');
+      aplicarEstadoActivo(activo);
+    }
+
+    renderEstadoChips(tipoSel);
 
     function toast(msg) {
       const t = $('toast');

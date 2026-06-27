@@ -38,7 +38,7 @@ export function CensoPersonasInput({
           value={texto}
           onChangeText={setTexto}
           placeholder="Nombre o cédula del grupo"
-          placeholderTextColor="#555555"
+          placeholderTextColor={T.placeholder}
           onSubmitEditing={agregar}
           returnKeyType="done"
         />
