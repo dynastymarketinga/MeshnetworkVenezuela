@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MESHNETWORK VENEZUELA — Simulador Web Táctico</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      min-height: 100vh;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-left: none; border-top: 1px solid #222; }
+    }
+    .main { padding: 20px; overflow-y: auto; }
+    .sidebar {
+      background: #0a0a0a;
+      border-left: 1px solid #222;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .header {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #222;
+      margin-bottom: 20px;
+    }
+    .emblema {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid #00AEEF;
+      background: #0a0a0a;
+      font-size: 22px;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .titulo {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+    .subtitulo {
+      color: #00FF00;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+    .badge {
+      display: inline-block;
+      background: #111;
+      border: 1px solid #1a3a4a;
+      color: #00AEEF;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .section-label {
+      color: #00AEEF;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+    .field-box {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .field-box label {
+      display: block;
+      color: #888;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.95rem;
+      padding: 10px 12px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #00AEEF; }
+    textarea { min-height: 60px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 8px 14px;
+      border-radius: 4px;
+      border: 1px solid #222;
+      background: #111;
+      color: #888;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .chip.active { background: #00AEEF; border-color: #00AEEF; color: #000; }
+    .estado-btn {
+      flex: 1;
+      min-width: 30%;
+      padding: 10px 6px;
+      border-radius: 4px;
+      border: 1px solid #222;
+      background: #111;
+      color: #888;
+      font-size: 0.65rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
+    .estado-btn.active { color: #000; }
+    .btn-emergencia {
+      width: 100%;
+      background: #FF0000;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 900;
+      padding: 18px;
+      cursor: pointer;
+      margin: 8px 0 20px;
+      letter-spacing: 0.5px;
+    }
+    .btn-emergencia:hover { opacity: 0.9; }
+    .btn-ble {
+      width: 100%;
+      background: #111;
+      border: 2px solid #00AEEF;
+      border-radius: 8px;
+      color: #00AEEF;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 14px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .btn-ble:hover { background: #0a1a22; }
+    .lista-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .lista-titulo { font-size: 0.9rem; font-weight: 800; }
+    .lista-count { color: #00AEEF; font-size: 0.8rem; font-weight: 700; }
+    .lista { display: flex; flex-direction: column; gap: 10px; }
+    .card {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-left-width: 4px;
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .card-estado { font-size: 0.7rem; font-weight: 900; }
+    .card-origen { color: #00AEEF; font-size: 0.65rem; font-weight: 600; }
+    .card-nombre { font-size: 0.9rem; font-weight: 700; }
+    .card-ubicacion { color: #ccc; font-size: 0.85rem; margin-top: 4px; }
+    .card-notas { color: #888; font-size: 0.75rem; margin-top: 6px; font-style: italic; }
+    .card-time { color: #555; font-size: 0.65rem; margin-top: 8px; }
+    .empty { color: #555; text-align: center; padding: 30px; font-size: 0.85rem; }
+    .sidebar h2 {
+      color: #00AEEF;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sms-box {
+      flex: 1;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      color: #00FF00;
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      padding: 12px;
+      overflow-y: auto;
+      word-break: break-all;
+      min-height: 200px;
+    }
+    .btn-copy {
+      width: 100%;
+      background: #111;
+      border: 1px solid #222;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      color: #00FF00;
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 14px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .btn-copy:hover { background: #1a1a1a; }
+    .sms-meta { color: #555; font-size: 0.7rem; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #00AEEF;
+      color: #000;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="main">
+      <header class="header">
+        <div class="emblema"><span>🐾</span><span>🛰️</span></div>
+        <h1 class="titulo">🐕 MESHNETWORK VENEZUELA — Simulador Web de Datos Tácticos</h1>
+        <p class="subtitulo">Unidad de Registro Táctico y Rescate - La Guaira</p>
+        <span class="badge">PARIDAD DOMINIO · MemoryReporteRepository</span>
+      </header>
+
+      <p class="section-label">▸ INGRESO DE REPORTE (PARAMÉDICO)</p>
+
+      <div class="field-box">
+        <label for="nombre">Nombre completo</label>
+        <input id="nombre" type="text" placeholder="Ej: Juan Pérez (opcional)" />
+      </div>
+
+      <div class="row">
+        <div class="field-box">
+          <label for="edad">Edad</label>
+          <input id="edad" type="number" placeholder="34" min="0" max="120" />
+        </div>
+        <div class="field-box">
+          <label>Género</label>
+          <div class="chips" id="genero-chips">
+            <button type="button" class="chip active" data-g="M">M</button>
+            <button type="button" class="chip" data-g="F">F</button>
+            <button type="button" class="chip" data-g="Otro">Otro</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-box">
+        <label for="ubicacion">📍 Ubicación exacta * (La Guaira)</label>
+        <input id="ubicacion" type="text" placeholder="Sector / calle / edificio" />
+      </div>
+
+      <div class="field-box">
+        <label>Estado actual</label>
+        <div class="chips" id="estado-chips">
+          <button type="button" class="estado-btn active" data-s="POR LOCALIZAR" style="background:#FF8800;border-color:#FF8800;color:#000">POR LOCALIZAR</button>
+          <button type="button" class="estado-btn" data-s="CRITICO">CRITICO</button>
+          <button type="button" class="estado-btn" data-s="LOCALIZADO">LOCALIZADO</button>
+        </div>
+      </div>
+
+      <div class="field-box">
+        <label for="notas">Notas del paramédico</label>
+        <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
+      </div>
+
+      <button type="button" class="btn-emergencia" id="btn-guardar">💾 REGISTRAR PUNTO DE RESCATE</button>
+
+      <button type="button" class="btn-ble" id="btn-ble">🛰️ SIMULAR RECEPCIÓN PULSO MALLA BLE</button>
+
+      <div class="lista-header">
+        <span class="lista-titulo">▸ LISTA DE REPORTES EN LA MALLA</span>
+        <span class="lista-count" id="count">0 activos</span>
+      </div>
+      <div class="lista" id="lista">
+        <p class="empty">Sin registros. Use el formulario o simule un pulso BLE.</p>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <h2>📲 Cadena SMS Comprimida</h2>
+      <p class="sms-meta">Llaves: i id · n nombre · e edad · g género · u ubicación · s estado · o notas · t timestamp</p>
+      <div class="sms-box" id="sms-output">[]</div>
+      <button type="button" class="btn-copy" id="btn-copy">📲 COPIAR CADENA DE SIMULACIÓN SMS</button>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /** Paridad con src/domain/entities/Reporte.ts + MemoryReporteRepository.ts */
+    const PRIORIDAD = { CRITICO: 0, 'POR LOCALIZAR': 1, LOCALIZADO: 2 };
+    const BORDE = { CRITICO: '#FF0000', 'POR LOCALIZAR': '#FF8800', LOCALIZADO: '#00FF00' };
+
+    const NOMBRES_SIM = ['María González', 'Carlos Ruiz', 'Ana Pérez', 'Anónimo'];
+    const SECTORES_SIM = [
+      'Maiquetía - Edificio Los Corales',
+      'Catia La Mar - Av. Principal',
+      'La Guaira - Mercado central',
+      'Macuto - Escuela San José',
+    ];
+    const NOTAS_SIM = [
+      'Se escuchan golpes bajo losa oeste',
+      'Familia reporta personas atrapadas',
+      'Acceso bloqueado por escombros',
+      'Requiere cortadora y palanca',
+    ];
+
+    class MemoryReporteRepository {
+      constructor() {
+        this.reportes = new Map();
+        this.listeners = new Set();
+      }
+
+      suscribir(cb) {
+        this.listeners.add(cb);
+        cb(this.obtenerTodos());
+        return () => this.listeners.delete(cb);
+      }
+
+      notificar() {
+        const lista = this.obtenerTodos();
+        this.listeners.forEach((cb) => cb(lista));
+      }
+
+      generarId(prefijo) {
+        const sufijo = Math.random().toString(36).substring(2, 6).toUpperCase();
+        return `${prefijo}-${Date.now()}-${sufijo}`;
+      }
+
+      comprimir(r) {
+        return { i: r.id, n: r.nombre_completo, e: r.edad, g: r.genero, u: r.ubicacion_exacta, s: r.estado_actual, o: r.notas_paramedicos, t: r.timestamp };
+      }
+
+      guardar(entrada) {
+        const nuevo = { ...entrada, id: this.generarId('SOS'), timestamp: Date.now() };
+        this.reportes.set(nuevo.id, nuevo);
+        this.notificar();
+        return nuevo;
+      }
+
+      fusionar(reporte) {
+        const existente = this.reportes.get(reporte.id);
+        if (!existente) {
+          this.reportes.set(reporte.id, reporte);
+          this.notificar();
+          return true;
+        }
+        if (reporte.timestamp >= existente.timestamp) {
+          this.reportes.set(reporte.id, { ...existente, ...reporte });
+          this.notificar();
+          return true;
+        }
+        return false;
+      }
+
+      obtenerTodos() {
+        return Array.from(this.reportes.values()).sort((a, b) => {
+          const pa = PRIORIDAD[a.estado_actual];
+          const pb = PRIORIDAD[b.estado_actual];
+          if (pa !== pb) return pa - pb;
+          return b.timestamp - a.timestamp;
+        });
+      }
+
+      comprimirParaSMS() {
+        return JSON.stringify(this.obtenerTodos().map((r) => this.comprimir(r)));
+      }
+
+      crearIdMalla() {
+        return this.generarId('BLE');
+      }
+    }
+
+    const repo = new MemoryReporteRepository();
+    let generoSel = 'M';
+    let estadoSel = 'POR LOCALIZAR';
+
+    const $ = (id) => document.getElementById(id);
+
+    document.querySelectorAll('#genero-chips .chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#genero-chips .chip').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        generoSel = btn.dataset.g;
+      });
+    });
+
+    document.querySelectorAll('#estado-chips .estado-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#estado-chips .estado-btn').forEach((b) => {
+          b.classList.remove('active');
+          b.style.background = '';
+          b.style.borderColor = '';
+          b.style.color = '';
+        });
+        btn.classList.add('active');
+        estadoSel = btn.dataset.s;
+        const c = BORDE[estadoSel];
+        btn.style.background = c;
+        btn.style.borderColor = c;
+        btn.style.color = estadoSel === 'POR LOCALIZAR' ? '#000' : '#000';
+      });
+    });
+
+    function toast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function renderLista(reportes) {
+      $('count').textContent = `${reportes.length} activos`;
+      $('sms-output').textContent = repo.comprimirParaSMS();
+
+      const lista = $('lista');
+      if (reportes.length === 0) {
+        lista.innerHTML = '<p class="empty">Sin registros. Use el formulario o simule un pulso BLE.</p>';
+        return;
+      }
+
+      lista.innerHTML = reportes.map((item) => {
+        const borde = BORDE[item.estado_actual];
+        const esMalla = item.id.startsWith('BLE-');
+        const hora = new Date(item.timestamp).toLocaleTimeString('es-VE');
+        return `
+          <div class="card" style="border-left-color:${borde}">
+            <div class="card-top">
+              <span class="card-estado" style="color:${borde}">${item.estado_actual}</span>
+              <span class="card-origen">${esMalla ? '🛰️ Malla' : '📱 Local'}</span>
+            </div>
+            <div class="card-nombre">${item.nombre_completo}${item.edad !== '0' ? ' · ' + item.edad + ' años' : ''} · ${item.genero}</div>
+            <div class="card-ubicacion">📍 ${item.ubicacion_exacta}</div>
+            ${item.notas_paramedicos ? `<div class="card-notas">${item.notas_paramedicos}</div>` : ''}
+            <div class="card-time">${hora}</div>
+          </div>`;
+      }).join('');
+    }
+
+    repo.suscribir(renderLista);
+
+    $('btn-guardar').addEventListener('click', () => {
+      const ubicacion = $('ubicacion').value.trim();
+      if (!ubicacion) {
+        toast('⚠ Ubicación exacta requerida');
+        return;
+      }
+      const nombre = $('nombre').value.trim() || 'Anónimo';
+      const edad = $('edad').value.trim() || '0';
+      const notas = $('notas').value.trim();
+
+      repo.guardar({
+        nombre_completo: nombre,
+        edad,
+        genero: generoSel,
+        ubicacion_exacta: ubicacion,
+        estado_actual: estadoSel,
+        notas_paramedicos: notas,
+      });
+
+      $('nombre').value = '';
+      $('edad').value = '';
+      $('ubicacion').value = '';
+      $('notas').value = '';
+      toast('✓ Punto de rescate registrado');
+    });
+
+    $('btn-ble').addEventListener('click', () => {
+      const estados = ['CRITICO', 'POR LOCALIZAR', 'LOCALIZADO'];
+      const reporte = {
+        id: repo.crearIdMalla(),
+        nombre_completo: NOMBRES_SIM[Math.floor(Math.random() * NOMBRES_SIM.length)],
+        edad: String(Math.floor(Math.random() * 70) + 5),
+        genero: Math.random() > 0.5 ? 'M' : 'F',
+        ubicacion_exacta: SECTORES_SIM[Math.floor(Math.random() * SECTORES_SIM.length)],
+        estado_actual: estados[Math.floor(Math.random() * estados.length)],
+        notas_paramedicos: NOTAS_SIM[Math.floor(Math.random() * NOTAS_SIM.length)],
+        timestamp: Date.now(),
+      };
+      if (repo.fusionar(reporte)) {
+        toast('🛰️ Pulso BLE recibido en la malla');
+      }
+    });
+
+    $('btn-copy').addEventListener('click', async () => {
+      const cadena = repo.comprimirParaSMS();
+      try {
+        await navigator.clipboard.writeText(cadena);
+        toast(`📲 ${cadena.length} caracteres copiados al portapapeles`);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = cadena;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast('📲 Cadena copiada');
+      }
+    });
+  </script>
+</body>
+</html>

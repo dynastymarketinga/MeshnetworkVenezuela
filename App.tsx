@@ -1,20 +1,23 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { View } from 'react-native';
+import HomeScreen from './src/screens/HomeScreen';
+import { MemoryReporteRepository } from './src/infrastructure/repositories/MemoryReporteRepository';
+import { MeshSimulationService } from './src/infrastructure/services/MeshSimulationService';
 
-export default function App() {
+export default function App(): React.JSX.Element {
+  const { repository, meshService } = useMemo(() => {
+    const repo = new MemoryReporteRepository();
+    const mesh = new MeshSimulationService(repo);
+    return { repository: repo, meshService: mesh };
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
+    <View style={{ flex: 1 }}>
+      <HomeScreen
+        repository={repository}
+        meshService={meshService}
+        memoryRepository={repository}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
