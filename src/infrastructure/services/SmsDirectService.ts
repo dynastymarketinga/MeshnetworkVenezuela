@@ -10,7 +10,7 @@ export class SmsDirectService {
   public static async enviarMensaje(
     mensaje: string,
     numeroDestino?: string
-  ): Promise<'enviado' | 'cancelado' | 'fallback'> {
+  ): Promise<'enviado' | 'cancelado' | 'enlace_externo'> {
     const numero = numeroDestino ?? OperacionConfig.COMANDO_CENTRAL_SMS;
     const disponible = await SMS.isAvailableAsync();
 
@@ -31,12 +31,12 @@ export class SmsDirectService {
     }
 
     await Linking.openURL(url);
-    return 'fallback';
+    return 'enlace_externo';
   }
 
   public static async enviarAlComandoCentral(
     mensaje: string
-  ): Promise<'enviado' | 'cancelado' | 'fallback'> {
+  ): Promise<'enviado' | 'cancelado' | 'enlace_externo'> {
     return this.enviarMensaje(mensaje, OperacionConfig.COMANDO_CENTRAL_SMS);
   }
 }

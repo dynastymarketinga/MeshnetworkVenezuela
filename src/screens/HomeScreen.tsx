@@ -14,9 +14,16 @@ import {
   View,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { EstadoReporte, ReporteEmergencia } from '../domain/entities/Reporte';
+import {
+  ESTADOS_ESTRUCTURA,
+  EstadoEstructura,
+  EstadoReporte,
+  ReporteEmergencia,
+  TIPOS_REGISTRO,
+  TipoRegistro,
+} from '../domain/entities/Reporte';
 import { OperacionConfig } from '../config/OperacionConfig';
-import { BrutalistTheme, paperShadow } from '../theme/BrutalistTheme';
+import { TacticalTheme, tacticalGlow } from '../theme/TacticalTheme';
 import { SQLiteReporteRepository } from '../infrastructure/repositories/SQLiteReporteRepository';
 import { LocationService } from '../infrastructure/services/LocationService';
 import { NavigationService } from '../infrastructure/services/NavigationService';
@@ -24,6 +31,14 @@ import { SmsDirectService } from '../infrastructure/services/SmsDirectService';
 
 const ESTADOS: EstadoReporte[] = ['CRITICO', 'POR LOCALIZAR', 'LOCALIZADO'];
 const GENEROS = ['M', 'F', 'Otro'];
+const TIPOS: TipoRegistro[] = [...TIPOS_REGISTRO];
+const ESTRUCTURAS: EstadoEstructura[] = [...ESTADOS_ESTRUCTURA];
+
+const ETIQUETA_TIPO: Record<TipoRegistro, string> = {
+  PERSONA_ATRAPADA: 'Persona atrapada',
+  INFRAESTRUCTURA_DANADA: 'Infraestructura',
+  SIN_VIVIENDA: 'Sin vivienda',
+};
 
 type TabId = 'inicio' | 'registro' | 'reportes' | 'sms' | 'comando';
 
@@ -36,9 +51,9 @@ const TABS: { id: TabId; label: string }[] = [
 ];
 
 const BORDE_ESTADO: Record<EstadoReporte, string> = {
-  CRITICO: BrutalistTheme.critico,
-  'POR LOCALIZAR': BrutalistTheme.alerta,
-  LOCALIZADO: BrutalistTheme.ok,
+  CRITICO: TacticalTheme.critico,
+  'POR LOCALIZAR': TacticalTheme.alerta,
+  LOCALIZADO: TacticalTheme.ok,
 };
 
 interface HomeScreenProps {
@@ -56,6 +71,8 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   const [latitud, setLatitud] = useState<number | undefined>();
   const [longitud, setLongitud] = useState<number | undefined>();
   const [estado, setEstado] = useState<EstadoReporte>('POR LOCALIZAR');
+  const [tipoRegistro, setTipoRegistro] = useState<TipoRegistro>('PERSONA_ATRAPADA');
+  const [estadoEstructura, setEstadoEstructura] = useState<EstadoEstructura>('SEGURO');
   const [notas, setNotas] = useState('');
   const [cadenaImport, setCadenaImport] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -78,20 +95,29 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     };
   }, [reportes]);
 
+  const cadenaComprimida = useMemo(() => {
+    if (reportes.length === 0) return '[]';
+    try {
+      return repository.comprimirParaSMS();
+    } catch {
+      return '[]';
+    }
+  }, [repository, reportes]);
+
   useEffect(() => {
     return repository.suscribir(setReportes);
   }, [repository]);
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        const coords = await LocationService.obtenerCoordenadasActuales();
-        setLatitud(coords.latitud);
-        setLongitud(coords.longitud);
-      } catch {
-        /* GPS manual si falla auto-captura */
-      }
-    })();
+  const alertarErrorGps = useCallback((error: unknown) => {
+    const mensaje = error instanceof Error ? error.message : 'No se pudo obtener GPS.';
+    if (mensaje === 'PERMISO_GPS_DENEGADO') {
+      Alert.alert('Ubicación necesaria', LocationService.mensajePermisoDenegado(), [
+        { text: 'Abrir ajustes', onPress: () => LocationService.abrirAjustesUbicacion() },
+        { text: 'Cancelar', style: 'cancel' },
+      ]);
+      return;
+    }
+    Alert.alert('GPS requerido', mensaje);
   }, []);
 
   const limpiarFormulario = useCallback(() => {
@@ -104,6 +130,8 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     setLatitud(undefined);
     setLongitud(undefined);
     setEstado('POR LOCALIZAR');
+    setTipoRegistro('PERSONA_ATRAPADA');
+    setEstadoEstructura('SEGURO');
     setNotas('');
   }, []);
 
@@ -119,49 +147,53 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         `${texto}${coords.precisionMetros ? `\nPrecisión: ±${Math.round(coords.precisionMetros)}m` : ''}`
       );
     } catch (error) {
-      const mensaje = error instanceof Error ? error.message : 'No se pudo obtener GPS.';
-      Alert.alert('⚠ GPS', mensaje);
+      alertarErrorGps(error);
     } finally {
       setObteniendoGps(false);
     }
-  }, []);
+  }, [alertarErrorGps]);
 
   const registrarPunto = useCallback(async () => {
     if (!ubicacion.trim()) {
-      Alert.alert('⚠ UBICACIÓN REQUERIDA', 'Describa sector, calle o edificio en La Guaira.');
-      return;
-    }
-    if (latitud === undefined || longitud === undefined) {
-      Alert.alert('⚠ GPS REQUERIDO', 'Capture coordenadas GPS antes de registrar.');
+      Alert.alert('Ubicación requerida', 'Describa sector, calle o edificio en La Guaira.');
       return;
     }
 
     setGuardando(true);
     try {
+      let lat = latitud;
+      let lon = longitud;
+      if (lat === undefined || lon === undefined) {
+        const coords = await LocationService.obtenerCoordenadasActuales();
+        lat = coords.latitud;
+        lon = coords.longitud;
+        setLatitud(lat);
+        setLongitud(lon);
+      }
+
       await repository.guardar({
+        fuente_origen: OperacionConfig.FUENTE_ORIGEN,
+        tipo_registro: tipoRegistro,
         nombre_completo: nombreCompleto.trim() || 'Anónimo',
         telefono_contacto: telefonoContacto.trim(),
         ciudad: ciudad.trim() || 'La Guaira',
         edad: edad.trim() || '0',
         genero,
         ubicacion_exacta: ubicacion.trim(),
-        latitud,
-        longitud,
+        latitud: lat,
+        longitud: lon,
         estado_actual: estado,
+        estado_estructura: estadoEstructura,
         notas_paramedicos: notas.trim(),
       });
       limpiarFormulario();
       setTabActiva('reportes');
-      try {
-        const coords = await LocationService.obtenerCoordenadasActuales();
-        setLatitud(coords.latitud);
-        setLongitud(coords.longitud);
-      } catch {
-        setLatitud(undefined);
-        setLongitud(undefined);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'PERMISO_GPS_DENEGADO') {
+        alertarErrorGps(error);
+      } else {
+        Alert.alert('Error SQLite', 'No se pudo escribir en la base de datos. Reintente.');
       }
-    } catch {
-      Alert.alert('⚠ ERROR SQLITE', 'No se pudo escribir en la base de datos. Reintente.');
     } finally {
       setGuardando(false);
     }
@@ -176,8 +208,11 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     latitud,
     longitud,
     estado,
+    tipoRegistro,
+    estadoEstructura,
     notas,
     limpiarFormulario,
+    alertarErrorGps,
   ]);
 
   const comprimirParaSMS = useCallback(async () => {
@@ -189,7 +224,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
     const textoCompleto = lotes.join('\n');
     await Clipboard.setStringAsync(textoCompleto);
     Alert.alert(
-      '📲 DATOS COMPRIMIDOS',
+      '📲 Cadena comprimida',
       `${reportes.length} reporte(s) · ${lotes.length} lote(s) SMS\nCopiado al portapapeles.`
     );
   }, [repository, reportes.length]);
@@ -265,7 +300,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   }, [repository, reportes.length]);
 
   const navegarAlPunto = useCallback(async (item: ReporteEmergencia) => {
-    if (item.latitud === undefined || item.longitud === undefined) {
+    if (item.latitud === 0 && item.longitud === 0) {
       Alert.alert('Sin GPS', 'Este reporte no tiene coordenadas para navegar.');
       return;
     }
@@ -280,27 +315,6 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
       Alert.alert('⚠ NAVEGACIÓN', mensaje);
     }
   }, []);
-
-  const enviarSmsDirecto = useCallback(async () => {
-    if (reportes.length === 0) {
-      Alert.alert('Sin datos', 'No hay reportes para transmitir.');
-      return;
-    }
-
-    setEnviandoSms(true);
-    try {
-      const lotes = repository.comprimirParaSMSEnLotes();
-      await Clipboard.setStringAsync(lotes.join('\n'));
-      setLotesPendientes(lotes);
-      setIndiceLote(0);
-      await enviarLoteSms(lotes, 0);
-    } catch (error) {
-      const mensaje = error instanceof Error ? error.message : 'Error al abrir SMS.';
-      Alert.alert('⚠ SMS', mensaje);
-    } finally {
-      setEnviandoSms(false);
-    }
-  }, [repository, reportes.length, enviarLoteSms]);
 
   const enviarSiguienteLote = useCallback(async () => {
     const siguiente = indiceLote + 1;
@@ -343,8 +357,13 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   const renderHeader = (): React.JSX.Element => (
     <View style={styles.header}>
       <View style={styles.logoFrame}>
-        <Image source={require('../../assets/logo.jpg')} style={styles.logo} />
+        <Image
+          source={require('../../assets/logo.jpg')}
+          style={styles.logo}
+          accessibilityLabel="Mesh Network Venezuela"
+        />
       </View>
+      <Text style={styles.appNombre}>Mesh Network Venezuela</Text>
       <Text style={styles.kicker}>Unidad de registro táctico · La Guaira</Text>
       <Text style={styles.tituloEditorial}>Mesh{'\n'}Network</Text>
       <View style={styles.divider} />
@@ -365,12 +384,16 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           {item.nombre_completo}
           {item.edad !== '0' ? ` · ${item.edad} años` : ''} · {item.genero}
         </Text>
+        <Text style={styles.cardMeta}>
+          {ETIQUETA_TIPO[item.tipo_registro]} · {item.fuente_origen}
+          {item.tipo_registro !== 'PERSONA_ATRAPADA' ? ` · ${item.estado_estructura}` : ''}
+        </Text>
         {item.telefono_contacto ? (
           <Text style={styles.cardContacto}>{item.telefono_contacto}</Text>
         ) : null}
         <Text style={styles.cardCiudad}>{item.ciudad}</Text>
         <Text style={styles.cardUbicacion}>{item.ubicacion_exacta}</Text>
-        {item.latitud !== undefined && item.longitud !== undefined ? (
+        {item.latitud !== 0 || item.longitud !== 0 ? (
           <Text style={styles.cardGps}>
             {LocationService.formatearCoordenadas(item.latitud, item.longitud)}
           </Text>
@@ -378,7 +401,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
         {item.notas_paramedicos ? (
           <Text style={styles.cardNotas}>{item.notas_paramedicos}</Text>
         ) : null}
-        {item.latitud !== undefined && item.longitud !== undefined ? (
+        {item.latitud !== 0 || item.longitud !== 0 ? (
           <TouchableOpacity
             style={styles.btnNavegar}
             onPress={() => navegarAlPunto(item)}
@@ -396,7 +419,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={BrutalistTheme.bg} />
+      <StatusBar barStyle="light-content" backgroundColor={TacticalTheme.bg} />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -410,30 +433,28 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
               <Text style={styles.panelKicker}>01 — Operación activa</Text>
               <Text style={styles.panelTitle}>Red de rescate local</Text>
               <Text style={styles.panelDesc}>
-                {stats.total > 0
-                  ? `${stats.total} reporte(s) en ${stats.ciudades} zona(s). Datos cruzados por ubicación y triaje entre brigadas.`
-                  : 'Registre puntos con GPS. Sincronización manual por SMS cuando hay señal GSM.'}
+                Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.
               </Text>
               <View style={styles.statsRow}>
-                <View style={[styles.statCard, paperShadow]}>
+                <View style={[styles.statCard, tacticalGlow]}>
                   <Text style={styles.statNumber}>{stats.total}</Text>
                   <Text style={styles.statLabel}>Reportes</Text>
                 </View>
-                <View style={[styles.statCard, paperShadow]}>
-                  <Text style={[styles.statNumber, { color: BrutalistTheme.critico }]}>
+                <View style={[styles.statCard, tacticalGlow]}>
+                  <Text style={[styles.statNumber, { color: TacticalTheme.critico }]}>
                     {stats.criticos}
                   </Text>
                   <Text style={styles.statLabel}>Críticos</Text>
                 </View>
               </View>
               <View style={styles.statsRow}>
-                <View style={[styles.statCard, paperShadow]}>
-                  <Text style={[styles.statNumber, { color: BrutalistTheme.ok }]}>
+                <View style={[styles.statCard, tacticalGlow]}>
+                  <Text style={[styles.statNumber, { color: TacticalTheme.ok }]}>
                     {stats.localizados}
                   </Text>
                   <Text style={styles.statLabel}>Localizados</Text>
                 </View>
-                <View style={[styles.statCard, paperShadow]}>
+                <View style={[styles.statCard, tacticalGlow]}>
                   <Text style={styles.statNumber}>{stats.ciudades}</Text>
                   <Text style={styles.statLabel}>Zonas</Text>
                 </View>
@@ -441,7 +462,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             </View>
 
             <TouchableOpacity
-              style={[styles.btnPrimary, paperShadow]}
+              style={[styles.btnPrimary, tacticalGlow]}
               onPress={() => setTabActiva('registro')}
               activeOpacity={0.85}
             >
@@ -460,20 +481,25 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
               <Text style={styles.panelKicker}>02 — Personas afectadas</Text>
               <Text style={styles.panelTitle}>Registro en campo</Text>
               <Text style={styles.panelDesc}>
-                Complete los datos clave del punto. No comparta información sensible de terceros sin permiso.
+                Complete los datos clave. No comparta información sensible de terceros sin permiso.
               </Text>
             </View>
 
             <View style={styles.fieldBox}>
-              <Text style={styles.label}>Nombre completo</Text>
-              <TextInput
-                style={styles.input}
-                value={nombreCompleto}
-                onChangeText={setNombreCompleto}
-                placeholder="Ej: Juan Pérez (opcional)"
-                placeholderTextColor="#555555"
-                autoCapitalize="words"
-              />
+              <Text style={styles.label}>Tipo de registro</Text>
+              <View style={styles.chips}>
+                {TIPOS.map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.chip, tipoRegistro === t && styles.chipActivo]}
+                    onPress={() => setTipoRegistro(t)}
+                  >
+                    <Text style={[styles.chipText, tipoRegistro === t && styles.chipTextActivo]}>
+                      {ETIQUETA_TIPO[t]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             <View style={styles.fieldBox}>
@@ -503,6 +529,18 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                   </TouchableOpacity>
                 ))}
               </View>
+            </View>
+
+            <View style={styles.fieldBox}>
+              <Text style={styles.label}>Nombre completo</Text>
+              <TextInput
+                style={styles.input}
+                value={nombreCompleto}
+                onChangeText={setNombreCompleto}
+                placeholder="Ej: Juan Pérez (opcional)"
+                placeholderTextColor="#555555"
+                autoCapitalize="words"
+              />
             </View>
 
             <View style={styles.row}>
@@ -538,6 +576,13 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 
             <View style={styles.fieldBox}>
               <Text style={styles.label}>Ubicación exacta *</Text>
+              {latitud === undefined || longitud === undefined ? (
+                <View style={styles.gpsAviso}>
+                  <Text style={styles.gpsAvisoText}>
+                    Sin GPS. Toque el botón azul y permita ubicación en su teléfono.
+                  </Text>
+                </View>
+              ) : null}
               <TextInput
                 style={[styles.input, styles.inputGrande]}
                 value={ubicacion}
@@ -563,7 +608,9 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             </View>
 
             <View style={styles.fieldBox}>
-              <Text style={styles.label}>Estado (CRÍTICO → POR LOCALIZAR → LOCALIZADO)</Text>
+              <Text style={styles.label}>
+                Estado actual (prioridad: CRÍTICO → POR LOCALIZAR → LOCALIZADO)
+              </Text>
               <View style={styles.chips}>
                 {ESTADOS.map((e) => (
                   <TouchableOpacity
@@ -584,6 +631,27 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 ))}
               </View>
             </View>
+
+            {tipoRegistro !== 'PERSONA_ATRAPADA' ? (
+              <View style={styles.fieldBox}>
+                <Text style={styles.label}>Estado de estructura / vivienda</Text>
+                <View style={styles.chips}>
+                  {ESTRUCTURAS.map((es) => (
+                    <TouchableOpacity
+                      key={es}
+                      style={[styles.chip, estadoEstructura === es && styles.chipActivo]}
+                      onPress={() => setEstadoEstructura(es)}
+                    >
+                      <Text
+                        style={[styles.chipText, estadoEstructura === es && styles.chipTextActivo]}
+                      >
+                        {es.replace('_', ' ')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ) : null}
 
             <View style={styles.fieldBox}>
               <Text style={styles.label}>Notas del paramédico</Text>
@@ -619,14 +687,14 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
             style={styles.lista}
             contentContainerStyle={styles.listaContent}
             ListHeaderComponent={
-              <>
-                {renderHeader()}
-                <Text style={styles.listaTitulo}>Reportes en dispositivo ({reportes.length})</Text>
-              </>
+              <View style={styles.listaHeader}>
+                <Text style={styles.listaTitulo}>Reportes en dispositivo</Text>
+                <Text style={styles.listaCount}>{reportes.length} activos</Text>
+              </View>
             }
             ListEmptyComponent={
               <Text style={styles.emptyText}>
-                Sin registros. Use Registro para añadir un punto.
+                Sin registros. Registre un punto con ubicación y GPS.
               </Text>
             }
           />
@@ -634,23 +702,25 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
 
         {tabActiva === 'sms' ? (
           <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
-            <View style={styles.panel}>
-              <Text style={styles.panelKicker}>03 — Enlace SMS</Text>
-              <Text style={styles.panelTitle}>Transmisión manual</Text>
-              <Text style={styles.syncHint}>
-                Comando {OperacionConfig.COMANDO_CENTRAL_SMS} · Lotes MNv1|1/3|…
+            <View style={[styles.panel, styles.smsPanel]}>
+              <Text style={styles.smsTitle}>Enlace SMS</Text>
+              <Text style={styles.smsMeta}>
+                Comando: <Text style={styles.smsMetaStrong}>{OperacionConfig.COMANDO_CENTRAL_SMS}</Text>
+                {'\n'}
+                Llaves: i o x n e g u lt lg s c r m t · Lotes MNv2|1/3|...
               </Text>
-            </View>
-            <View style={styles.syncPanelInline}>
-              <TextInput
-                style={styles.syncInput}
-                value={cadenaImport}
-                onChangeText={setCadenaImport}
-                placeholder="Pegue cadena JSON o lotes MNv1|1/3|..."
-                placeholderTextColor="#555555"
-                multiline
-                numberOfLines={4}
-              />
+              <ScrollView style={styles.smsBox} nestedScrollEnabled>
+                <Text style={styles.smsBoxText} selectable>
+                  {cadenaComprimida}
+                </Text>
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.btnCopiarCadena}
+                onPress={comprimirParaSMS}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.btnCopiarCadenaText}>Copiar cadena comprimida</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.btnComando, enviandoSms && styles.btnDisabled]}
                 onPress={enviarAlComandoCentral}
@@ -658,17 +728,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                 activeOpacity={0.8}
               >
                 <Text style={styles.btnComandoText}>
-                  {enviandoSms ? 'Abriendo SMS…' : 'Enviar al comando central'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.btnSmsDirecto, enviandoSms && styles.btnDisabled]}
-                onPress={enviarSmsDirecto}
-                disabled={enviandoSms}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.btnSmsDirectoText}>
-                  {enviandoSms ? 'Abriendo SMS…' : 'Enviar SMS directo (lote 1)'}
+                  {enviandoSms ? 'Abriendo SMS…' : '🚨 ENVIAR AL COMANDO'}
                 </Text>
               </TouchableOpacity>
               {lotesPendientes.length > 1 && indiceLote < lotesPendientes.length - 1 ? (
@@ -682,21 +742,25 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
                   </Text>
                 </TouchableOpacity>
               ) : null}
-              <View style={styles.syncButtons}>
-                <TouchableOpacity style={styles.btnSMSHalf} onPress={comprimirParaSMS} activeOpacity={0.8}>
-                  <Text style={styles.btnSMSText}>Comprimir</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.btnImportHalf, importando && styles.btnDisabled]}
-                  onPress={pegarYFusionar}
-                  activeOpacity={0.8}
-                  disabled={importando}
-                >
-                  <Text style={styles.btnImportText}>
-                    {importando ? 'Fusionando…' : 'Pegar y fusionar'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <TextInput
+                style={styles.syncInput}
+                value={cadenaImport}
+                onChangeText={setCadenaImport}
+                placeholder="Pegue cadena JSON o lotes MNv1|1/3|..."
+                placeholderTextColor="#555555"
+                multiline
+                numberOfLines={4}
+              />
+              <TouchableOpacity
+                style={[styles.btnFusionar, importando && styles.btnDisabled]}
+                onPress={pegarYFusionar}
+                activeOpacity={0.8}
+                disabled={importando}
+              >
+                <Text style={styles.btnFusionarText}>
+                  {importando ? 'Fusionando…' : '📥 PEGAR Y FUSIONAR SMS'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
         ) : null}
@@ -708,20 +772,18 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
               <Text style={styles.panelKicker}>04 — Comando central</Text>
               <Text style={styles.panelTitle}>{OperacionConfig.NOMBRE_COMANDO}</Text>
               <Text style={styles.panelDesc}>
-                Mesh Network Venezuela opera de forma autónoma. Los reportes tácticos se transmiten
-                por SMS al comando cuando la señal lo permite.
+                Mesh Network Venezuela opera de forma autónoma. Los reportes se transmiten por SMS al
+                comando cuando hay señal.
               </Text>
-              <View style={[styles.statCard, paperShadow, { marginTop: 12 }]}>
-                <Text style={styles.comandoLabel}>Brigada</Text>
-                <Text style={styles.comandoValor}>{OperacionConfig.BRIGADA_ID}</Text>
-                <Text style={styles.comandoLabel}>SMS comando</Text>
-                <Text style={styles.comandoValor}>{OperacionConfig.COMANDO_CENTRAL_SMS}</Text>
-                <Text style={styles.comandoLabel}>Protocolo</Text>
-                <Text style={styles.comandoValor}>{OperacionConfig.VERSION_DATOS}</Text>
-              </View>
+              <Text style={[styles.panelDesc, styles.comandoLinea]}>
+                <Text style={styles.comandoStrong}>Brigada:</Text> {OperacionConfig.BRIGADA_ID}
+              </Text>
+              <Text style={styles.panelDesc}>
+                <Text style={styles.comandoStrong}>SMS:</Text> {OperacionConfig.COMANDO_CENTRAL_SMS}
+              </Text>
             </View>
             <TouchableOpacity
-              style={[styles.btnPrimary, paperShadow]}
+              style={[styles.btnPrimary, tacticalGlow]}
               onPress={() => setTabActiva('registro')}
               activeOpacity={0.85}
             >
@@ -730,7 +792,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
           </ScrollView>
         ) : null}
 
-        <View style={[styles.bottomNav, paperShadow]}>
+        <View style={[styles.bottomNav, tacticalGlow]}>
           {TABS.map((tab) => {
             const activa = tabActiva === tab.id;
             return (
@@ -751,7 +813,7 @@ export default function HomeScreen({ repository }: HomeScreenProps): React.JSX.E
   );
 }
 
-const T = BrutalistTheme;
+const T = TacticalTheme;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
@@ -759,14 +821,21 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 24, paddingTop: 8 },
   header: { marginBottom: 24 },
   logoFrame: {
-    backgroundColor: T.paperElevated,
+    backgroundColor: T.surfaceElevated,
     borderWidth: 2,
     borderColor: T.border,
     padding: 12,
     marginBottom: 16,
-    ...paperShadow,
+    ...tacticalGlow,
   },
   logo: { width: '100%', height: 140, resizeMode: 'contain' },
+  appNombre: {
+    color: T.ink,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
   kicker: {
     color: T.inkMuted,
     fontSize: 11,
@@ -784,22 +853,22 @@ const styles = StyleSheet.create({
   },
   divider: { height: 3, backgroundColor: T.ink, width: 48, marginVertical: 14 },
   badge: {
-    color: T.meshBlueDark,
+    color: T.accentDark,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
   panel: {
-    backgroundColor: T.paperElevated,
+    backgroundColor: T.surfaceElevated,
     borderWidth: 2,
     borderColor: T.border,
     padding: 18,
     marginBottom: 16,
-    ...paperShadow,
+    ...tacticalGlow,
   },
   panelKicker: {
-    color: T.meshBlue,
+    color: T.accent,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.5,
@@ -817,7 +886,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 12, marginTop: 16 },
   statCard: {
     flex: 1,
-    backgroundColor: T.paperElevated,
+    backgroundColor: T.surfaceElevated,
     borderWidth: 2,
     borderColor: T.border,
     paddingVertical: 16,
@@ -834,15 +903,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   btnPrimary: {
-    backgroundColor: T.ink,
+    backgroundColor: T.accent,
     borderWidth: 2,
-    borderColor: T.border,
+    borderColor: T.accent,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 8,
   },
   btnPrimaryText: {
-    color: T.paperElevated,
+    color: T.bg,
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 1.5,
@@ -857,13 +926,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   comandoValor: { color: T.ink, fontSize: 15, fontWeight: '800', marginTop: 2 },
+  comandoLinea: { marginTop: 12 },
+  comandoStrong: { color: T.ink, fontWeight: '800' },
   fieldBox: {
-    backgroundColor: T.paperElevated,
+    backgroundColor: T.surfaceElevated,
     borderWidth: 2,
     borderColor: T.border,
     padding: 14,
     marginBottom: 12,
-    ...paperShadow,
+    ...tacticalGlow,
   },
   label: {
     color: T.ink,
@@ -876,7 +947,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: T.bg,
     borderWidth: 1,
-    borderColor: T.borderLight,
+    borderColor: T.border,
     borderBottomWidth: 2,
     borderBottomColor: T.border,
     color: T.ink,
@@ -888,20 +959,28 @@ const styles = StyleSheet.create({
   inputMultiline: { minHeight: 88, textAlignVertical: 'top' },
   btnGps: {
     marginTop: 12,
-    backgroundColor: T.meshBlueDark,
+    backgroundColor: T.accentDark,
     borderWidth: 2,
     borderColor: T.border,
     paddingVertical: 14,
     alignItems: 'center',
   },
   btnGpsText: {
-    color: T.paperElevated,
+    color: T.bg,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  gpsActivo: { color: T.meshBlueDark, fontSize: 12, fontWeight: '600', marginTop: 10 },
+  gpsActivo: { color: T.accentDark, fontSize: 12, fontWeight: '600', marginTop: 10 },
+  gpsAviso: {
+    backgroundColor: '#1A1A00',
+    borderWidth: 2,
+    borderColor: T.alerta,
+    padding: 10,
+    marginBottom: 10,
+  },
+  gpsAvisoText: { color: T.ink, fontSize: 12, lineHeight: 18, fontWeight: '600' },
   row: { flexDirection: 'row', gap: 12 },
   half: { flex: 1 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -909,18 +988,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 2,
-    borderColor: T.borderLight,
+    borderColor: T.border,
     backgroundColor: T.bg,
   },
-  chipActivo: { backgroundColor: T.ink, borderColor: T.border },
+  chipActivo: { backgroundColor: T.accent, borderColor: T.accent },
   chipText: { color: T.inkMuted, fontWeight: '700', fontSize: 12 },
-  chipTextActivo: { color: T.paperElevated },
+  chipTextActivo: { color: T.bg },
   estadoBtn: {
     flex: 1,
     minWidth: '30%',
     paddingVertical: 12,
     borderWidth: 2,
-    borderColor: T.borderLight,
+    borderColor: T.border,
     backgroundColor: T.bg,
     alignItems: 'center',
   },
@@ -931,7 +1010,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
   },
-  estadoTextActivo: { color: T.ink },
+  estadoTextActivo: { color: T.bg },
   btnEmergencia: {
     backgroundColor: T.critico,
     borderWidth: 2,
@@ -940,34 +1019,47 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
     alignItems: 'center',
-    ...paperShadow,
+    ...tacticalGlow,
   },
   btnEmergenciaText: {
-    color: T.paperElevated,
+    color: T.bg,
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   btnDisabled: { opacity: 0.5 },
+  listaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginTop: 16,
+    marginBottom: 16,
+  },
   listaTitulo: {
     color: T.ink,
     fontSize: 18,
     fontWeight: '900',
     letterSpacing: -0.3,
-    marginBottom: 16,
-    marginTop: 8,
+    flex: 1,
+  },
+  listaCount: {
+    color: T.inkMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   lista: { flex: 1, paddingHorizontal: 20 },
-  listaContent: { paddingBottom: 16 },
+  listaContent: { paddingBottom: 16, paddingTop: 8 },
   card: {
-    backgroundColor: T.paperElevated,
+    backgroundColor: T.surfaceElevated,
     borderWidth: 2,
     borderColor: T.border,
     borderLeftWidth: 5,
     padding: 16,
     marginBottom: 12,
-    ...paperShadow,
+    ...tacticalGlow,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -976,9 +1068,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardEstado: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
-  cardId: { color: T.inkLight, fontSize: 9, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
+  cardId: { color: T.inkDim, fontSize: 9, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
   cardNombre: { color: T.ink, fontSize: 17, fontWeight: '800', letterSpacing: -0.3 },
-  cardContacto: { color: T.meshBlueDark, fontSize: 13, marginTop: 6, fontWeight: '600' },
+  cardMeta: { color: T.accent, fontSize: 11, marginTop: 4, fontWeight: '700' },
+  cardContacto: { color: T.ok, fontSize: 13, marginTop: 6, fontWeight: '600' },
   cardCiudad: {
     color: T.inkMuted,
     fontSize: 11,
@@ -989,7 +1082,7 @@ const styles = StyleSheet.create({
   },
   cardUbicacion: { color: T.inkMuted, fontSize: 14, marginTop: 6, lineHeight: 20 },
   cardGps: {
-    color: T.meshBlueDark,
+    color: T.accentDark,
     fontSize: 12,
     marginTop: 6,
     fontWeight: '600',
@@ -1011,12 +1104,49 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
-  cardTime: { color: T.inkLight, fontSize: 10, marginTop: 10 },
+  cardTime: { color: T.inkDim, fontSize: 10, marginTop: 10 },
   emptyText: { color: T.inkMuted, textAlign: 'center', marginTop: 32, fontSize: 14, lineHeight: 22 },
-  syncPanelInline: { paddingBottom: 8 },
-  syncHint: { color: T.inkMuted, fontSize: 12, marginBottom: 12, lineHeight: 18 },
+  smsPanel: { gap: 12 },
+  smsTitle: {
+    color: T.ink,
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    marginBottom: 4,
+  },
+  smsMeta: { color: T.inkMuted, fontSize: 13, lineHeight: 22, marginBottom: 4 },
+  smsMetaStrong: { color: T.ink, fontWeight: '800' },
+  smsBox: {
+    backgroundColor: T.bg,
+    borderWidth: 2,
+    borderColor: T.border,
+    maxHeight: 120,
+    padding: 12,
+    marginBottom: 4,
+  },
+  smsBoxText: {
+    color: T.ink,
+    fontSize: 10,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    lineHeight: 16,
+  },
+  btnCopiarCadena: {
+    backgroundColor: T.surfaceElevated,
+    borderWidth: 2,
+    borderColor: T.border,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  btnCopiarCadenaText: {
+    color: T.ink,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   syncInput: {
-    backgroundColor: T.paperElevated,
+    backgroundColor: T.surfaceElevated,
     borderWidth: 2,
     borderColor: T.border,
     color: T.ink,
@@ -1035,25 +1165,25 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 10,
-    ...paperShadow,
+    ...tacticalGlow,
   },
   btnComandoText: {
-    color: T.paperElevated,
+    color: T.bg,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
-  btnSmsDirecto: {
-    backgroundColor: T.ink,
+  btnFusionar: {
+    backgroundColor: T.accentDark,
     borderWidth: 2,
     borderColor: T.border,
     paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  btnSmsDirectoText: {
-    color: T.paperElevated,
+  btnFusionarText: {
+    color: T.bg,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1,
@@ -1068,55 +1198,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   btnSiguienteLoteText: {
-    color: T.paperElevated,
+    color: T.bg,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  syncButtons: { flexDirection: 'row', gap: 10 },
-  btnSMSHalf: {
-    flex: 1,
-    backgroundColor: T.paperElevated,
-    borderWidth: 2,
-    borderColor: T.border,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  btnImportHalf: {
-    flex: 1,
-    backgroundColor: T.meshBlueDark,
-    borderWidth: 2,
-    borderColor: T.border,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  btnSMSText: {
-    color: T.ink,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  btnImportText: {
-    color: T.paperElevated,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: T.paperElevated,
+    backgroundColor: T.surfaceElevated,
     borderTopWidth: 2,
     borderTopColor: T.border,
     paddingBottom: Platform.OS === 'ios' ? 24 : 10,
     paddingTop: 10,
   },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
-  navItemActiva: { backgroundColor: T.bg },
+  navItemActiva: { backgroundColor: T.surface },
   navLabel: {
     color: T.inkMuted,
     fontSize: 9,
@@ -1131,6 +1228,6 @@ const styles = StyleSheet.create({
     left: '15%',
     right: '15%',
     height: 3,
-    backgroundColor: T.ink,
+    backgroundColor: T.accent,
   },
 });

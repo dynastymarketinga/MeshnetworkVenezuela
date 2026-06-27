@@ -1,3 +1,4 @@
+import { Linking, Platform } from 'react-native';
 import * as Location from 'expo-location';
 
 export interface CoordenadasGps {
@@ -8,15 +9,20 @@ export interface CoordenadasGps {
 
 export class LocationService {
   public static async obtenerCoordenadasActuales(): Promise<CoordenadasGps> {
-    const permiso = await Location.requestForegroundPermissionsAsync();
-    if (permiso.status !== 'granted') {
+    const serviciosActivos = await Location.hasServicesEnabledAsync();
+    if (!serviciosActivos) {
       throw new Error(
-        'Permiso GPS denegado. Active ubicación para registrar coordenadas exactas de rescate.'
+        'El GPS del teléfono está apagado. Active «Ubicación» en Ajustes del dispositivo.'
       );
     }
 
+    const permiso = await Location.requestForegroundPermissionsAsync();
+    if (permiso.status !== 'granted') {
+      throw new Error('PERMISO_GPS_DENEGADO');
+    }
+
     const posicion = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
+      accuracy: Location.Accuracy.High,
     });
 
     return {
@@ -24,6 +30,17 @@ export class LocationService {
       longitud: posicion.coords.longitude,
       precisionMetros: posicion.coords.accuracy,
     };
+  }
+
+  public static abrirAjustesUbicacion(): void {
+    void Linking.openSettings();
+  }
+
+  public static mensajePermisoDenegado(): string {
+    if (Platform.OS === 'ios') {
+      return 'Permita la ubicación:\n\nAjustes → MeshnetworkVenezuela → Ubicación → «Al usar la app»';
+    }
+    return 'Permita la ubicación:\n\nAjustes → Apps → Mesh Network Venezuela → Permisos → Ubicación → Permitir';
   }
 
   public static formatearCoordenadas(latitud: number, longitud: number): string {

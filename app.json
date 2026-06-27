@@ -2,10 +2,10 @@
   "expo": {
     "name": "MeshnetworkVenezuela",
     "slug": "meshnetwork-venezuela",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/logo.jpg",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "scheme": "meshnetworkvenezuela",
     "splash": {
       "image": "./assets/logo.jpg",
@@ -17,7 +17,11 @@
       "bundleIdentifier": "com.vicarx.meshnetworkvenezuela",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "MeshnetworkVenezuela usa GPS para registrar y navegar a puntos exactos de rescate en La Guaira.",
-        "LSApplicationQueriesSchemes": ["maps", "comgooglemaps", "google.navigation"]
+        "LSApplicationQueriesSchemes": [
+          "maps",
+          "comgooglemaps",
+          "google.navigation"
+        ]
       }
     },
     "android": {
@@ -31,13 +35,22 @@
         "ACCESS_FINE_LOCATION",
         "SEND_SMS",
         "RECEIVE_SMS",
-        "INTERNET"
+        "INTERNET",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "intentFilters": [
         {
           "action": "VIEW",
-          "data": [{ "scheme": "geo" }],
-          "category": ["DEFAULT", "BROWSABLE"]
+          "data": [
+            {
+              "scheme": "geo"
+            }
+          ],
+          "category": [
+            "DEFAULT",
+            "BROWSABLE"
+          ]
         }
       ]
     },
@@ -52,6 +65,12 @@
         }
       ],
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f12c6744-8204-41d8-aa78-f47f35e6c5be"
+      }
+    },
+    "owner": "victorx2"
   }
 }

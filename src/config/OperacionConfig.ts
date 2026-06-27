@@ -4,7 +4,8 @@ export const OperacionConfig = {
   COMANDO_CENTRAL_SMS: '04140000000',
   NOMBRE_COMANDO: 'Comando Central La Guaira',
   BRIGADA_ID: 'Brigada-Rescate-LG',
-  VERSION_DATOS: 'MNv1',
+  VERSION_DATOS: 'MNv2',
+  FUENTE_ORIGEN: 'MeshApp',
   CIUDADES_LA_GUAIRA: [
     'La Guaira',
     'Maiquetía',

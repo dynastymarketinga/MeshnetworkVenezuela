@@ -1,5 +1,8 @@
-export const SMS_PROTOCOLO = 'MNv1';
+export const SMS_PROTOCOLO = 'MNv2';
+export const SMS_PROTOCOLO_LEGACY = 'MNv1';
 export const SMS_MAX_CARACTERES = 140;
+
+const PROTOCOLOS = [SMS_PROTOCOLO, SMS_PROTOCOLO_LEGACY] as const;
 
 export function partirCadenaEnLotes(
   cadenaJson: string,
@@ -37,6 +40,22 @@ export function partirCadenaEnLotes(
   });
 }
 
+function parsearLineaMultiparte(linea: string): unknown[] {
+  for (const proto of PROTOCOLOS) {
+    if (!linea.startsWith(`${proto}|`)) continue;
+    const match = linea.match(new RegExp(`^${proto}\\|\\d+\\/\\d+\\|(.+)$`));
+    if (!match) {
+      throw new Error(`Formato de lote inválido: ${linea.substring(0, 24)}...`);
+    }
+    const fragmento: unknown = JSON.parse(match[1]);
+    if (!Array.isArray(fragmento)) {
+      throw new Error('Cada lote SMS debe contener un arreglo JSON.');
+    }
+    return fragmento;
+  }
+  throw new Error(`Línea SMS no reconocida: ${linea.substring(0, 24)}...`);
+}
+
 export function parsearEntradaSms(texto: string): unknown[] {
   const lineas = texto
     .trim()
@@ -52,17 +71,10 @@ export function parsearEntradaSms(texto: string): unknown[] {
   let huboMultiparte = false;
 
   for (const linea of lineas) {
-    if (linea.startsWith(`${SMS_PROTOCOLO}|`)) {
+    const esMultiparte = PROTOCOLOS.some((p) => linea.startsWith(`${p}|`));
+    if (esMultiparte) {
       huboMultiparte = true;
-      const match = linea.match(/^MNv1\|\d+\/\d+\|(.+)$/);
-      if (!match) {
-        throw new Error(`Formato de lote inválido: ${linea.substring(0, 20)}...`);
-      }
-      const fragmento: unknown = JSON.parse(match[1]);
-      if (!Array.isArray(fragmento)) {
-        throw new Error('Cada lote SMS debe contener un arreglo JSON.');
-      }
-      acumulado.push(...fragmento);
+      acumulado.push(...parsearLineaMultiparte(linea));
     }
   }
 

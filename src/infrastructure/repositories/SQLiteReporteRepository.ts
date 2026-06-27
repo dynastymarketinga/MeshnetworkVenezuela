@@ -1,10 +1,17 @@
 import * as SQLite from 'expo-sqlite';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  ESTADOS_ESTRUCTURA,
+  ESTADOS_REPORTE,
+  EstadoEstructura,
   EstadoReporte,
-  ReporteComprimido,
+  ReporteComprimidoLegacy,
+  ReporteComprimidoMNv1,
+  ReporteComprimidoMNv2,
   ReporteEmergencia,
   ReporteEntrada,
+  TIPOS_REGISTRO,
+  TipoRegistro,
 } from '../../domain/entities/Reporte';
 import {
   IReporteRepository,
@@ -14,28 +21,32 @@ import {
   parsearEntradaSms,
   partirCadenaEnLotes,
 } from '../../domain/services/SmsParticionService';
+import { OperacionConfig } from '../../config/OperacionConfig';
 import { obtenerBaseDeDatos } from '../database/SQLiteDatabase';
 
 const LEGACY_STORAGE_KEY = '@meshnetwork_venezuela_reportes_v1';
 
-const ESTADOS_VALIDOS: EstadoReporte[] = ['CRITICO', 'POR LOCALIZAR', 'LOCALIZADO'];
-
 interface ReporteRow {
   id: string;
+  fuente_origen: string;
+  tipo_registro: string;
   nombre: string;
   edad: string;
   genero: string;
   telefono: string;
   ciudad: string;
   ubicacion: string;
-  latitud: number | null;
-  longitud: number | null;
+  latitud: number;
+  longitud: number;
   estado: string;
+  estado_estructura: string;
   notas: string;
   timestamp: number;
 }
 
 type Listener = (reportes: ReporteEmergencia[]) => void;
+
+type ModoInsercion = 'ignore' | 'replace_si_mas_reciente';
 
 export class SQLiteReporteRepository implements IReporteRepository {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -58,83 +69,141 @@ export class SQLiteReporteRepository implements IReporteRepository {
     return `SOS-${Date.now()}-${sufijo}`;
   }
 
-  private filaARreporte(row: ReporteRow): ReporteEmergencia {
-    const reporte: ReporteEmergencia = {
+  private esEstadoValido(valor: string): valor is EstadoReporte {
+    return (ESTADOS_REPORTE as readonly string[]).includes(valor);
+  }
+
+  private esTipoValido(valor: string): valor is TipoRegistro {
+    return (TIPOS_REGISTRO as readonly string[]).includes(valor);
+  }
+
+  private esEstructuraValida(valor: string): valor is EstadoEstructura {
+    return (ESTADOS_ESTRUCTURA as readonly string[]).includes(valor);
+  }
+
+  private filaAReporte(row: ReporteRow): ReporteEmergencia {
+    return {
       id: row.id,
+      fuente_origen: row.fuente_origen,
+      tipo_registro: this.esTipoValido(row.tipo_registro)
+        ? row.tipo_registro
+        : 'PERSONA_ATRAPADA',
       nombre_completo: row.nombre,
       edad: row.edad,
       genero: row.genero,
       telefono_contacto: row.telefono ?? '',
       ciudad: row.ciudad ?? 'La Guaira',
       ubicacion_exacta: row.ubicacion,
-      estado_actual: row.estado as EstadoReporte,
+      latitud: row.latitud,
+      longitud: row.longitud,
+      estado_actual: this.esEstadoValido(row.estado) ? row.estado : 'POR LOCALIZAR',
+      estado_estructura: this.esEstructuraValida(row.estado_estructura)
+        ? row.estado_estructura
+        : 'SEGURO',
       notas_paramedicos: row.notas,
       timestamp: row.timestamp,
     };
-    if (row.latitud !== null) reporte.latitud = row.latitud;
-    if (row.longitud !== null) reporte.longitud = row.longitud;
-    return reporte;
   }
 
-  private comprimir(reporte: ReporteEmergencia): ReporteComprimido {
-    const base: ReporteComprimido = {
+  private comprimir(reporte: ReporteEmergencia): ReporteComprimidoMNv2 {
+    const base: ReporteComprimidoMNv2 = {
       i: reporte.id,
+      o: reporte.fuente_origen,
+      x: reporte.tipo_registro,
       n: reporte.nombre_completo,
       e: reporte.edad,
       g: reporte.genero,
       u: reporte.ubicacion_exacta,
+      lt: Math.round(reporte.latitud * 100000) / 100000,
+      lg: Math.round(reporte.longitud * 100000) / 100000,
       s: reporte.estado_actual,
-      o: reporte.notas_paramedicos,
+      c: reporte.telefono_contacto,
+      r: reporte.estado_estructura,
+      m: reporte.notas_paramedicos,
       t: reporte.timestamp,
     };
-    if (reporte.telefono_contacto.trim()) base.p = reporte.telefono_contacto.trim();
-    if (reporte.ciudad.trim()) base.c = reporte.ciudad.trim();
-    if (reporte.latitud !== undefined) {
-      base.la = Math.round(reporte.latitud * 100000) / 100000;
-    }
-    if (reporte.longitud !== undefined) {
-      base.lo = Math.round(reporte.longitud * 100000) / 100000;
+    if (reporte.ciudad?.trim()) {
+      base.y = reporte.ciudad.trim();
     }
     return base;
   }
 
-  private expandir(item: ReporteComprimido): ReporteEmergencia {
-    const reporte: ReporteEmergencia = {
-      id: item.i,
-      nombre_completo: item.n ?? 'Anónimo',
-      edad: String(item.e ?? '0'),
-      genero: item.g ?? 'M',
-      telefono_contacto: item.p ?? '',
-      ciudad: item.c ?? 'La Guaira',
-      ubicacion_exacta: item.u ?? '',
-      estado_actual: item.s,
-      notas_paramedicos: item.o ?? '',
-      timestamp: item.t,
+  private esMNv2(item: ReporteComprimidoLegacy): item is ReporteComprimidoMNv2 {
+    return typeof (item as ReporteComprimidoMNv2).lt === 'number';
+  }
+
+  private expandir(item: ReporteComprimidoLegacy): ReporteEmergencia {
+    if (this.esMNv2(item)) {
+      return {
+        id: item.i,
+        fuente_origen: item.o || OperacionConfig.FUENTE_ORIGEN,
+        tipo_registro: this.esTipoValido(item.x) ? item.x : 'PERSONA_ATRAPADA',
+        nombre_completo: item.n ?? 'Anónimo',
+        edad: String(item.e ?? '0'),
+        genero: item.g ?? 'M',
+        telefono_contacto: item.c ?? '',
+        ciudad: item.y ?? 'La Guaira',
+        ubicacion_exacta: item.u ?? '',
+        latitud: item.lt,
+        longitud: item.lg,
+        estado_actual: item.s,
+        estado_estructura: this.esEstructuraValida(item.r) ? item.r : 'SEGURO',
+        notas_paramedicos: item.m ?? '',
+        timestamp: item.t,
+      };
+    }
+
+    const legacy = item as ReporteComprimidoMNv1;
+    return {
+      id: legacy.i,
+      fuente_origen: OperacionConfig.FUENTE_ORIGEN,
+      tipo_registro: 'PERSONA_ATRAPADA',
+      nombre_completo: legacy.n ?? 'Anónimo',
+      edad: String(legacy.e ?? '0'),
+      genero: legacy.g ?? 'M',
+      telefono_contacto: legacy.p ?? '',
+      ciudad: legacy.c ?? 'La Guaira',
+      ubicacion_exacta: legacy.u ?? '',
+      latitud: typeof legacy.la === 'number' ? legacy.la : 0,
+      longitud: typeof legacy.lo === 'number' ? legacy.lo : 0,
+      estado_actual: legacy.s,
+      estado_estructura: 'SEGURO',
+      notas_paramedicos: legacy.o ?? '',
+      timestamp: legacy.t,
     };
-    if (typeof item.la === 'number') reporte.latitud = item.la;
-    if (typeof item.lo === 'number') reporte.longitud = item.lo;
-    return reporte;
   }
 
-  private esEstadoValido(valor: string): valor is EstadoReporte {
-    return ESTADOS_VALIDOS.includes(valor as EstadoReporte);
-  }
-
-  private esComprimidoValido(item: unknown): item is ReporteComprimido {
+  private esComprimidoValido(item: unknown): item is ReporteComprimidoLegacy {
     if (!item || typeof item !== 'object') return false;
-    const r = item as ReporteComprimido;
-    return (
-      typeof r.i === 'string' &&
-      r.i.length > 0 &&
-      typeof r.t === 'number' &&
-      this.esEstadoValido(r.s)
-    );
+    const r = item as ReporteComprimidoLegacy;
+    return typeof r.i === 'string' && r.i.length > 0 && typeof r.t === 'number' && this.esEstadoValido(r.s);
+  }
+
+  private valoresInsert(reporte: ReporteEmergencia): (string | number)[] {
+    return [
+      reporte.id,
+      reporte.fuente_origen,
+      reporte.tipo_registro,
+      reporte.nombre_completo,
+      reporte.edad,
+      reporte.genero,
+      reporte.telefono_contacto,
+      reporte.ciudad ?? 'La Guaira',
+      reporte.ubicacion_exacta,
+      reporte.latitud,
+      reporte.longitud,
+      reporte.estado_actual,
+      reporte.estado_estructura,
+      reporte.notas_paramedicos,
+      reporte.timestamp,
+    ];
   }
 
   private async recargarCache(): Promise<void> {
     if (!this.db) return;
     const filas = await this.db.getAllAsync<ReporteRow>(`
-      SELECT id, nombre, edad, genero, telefono, ciudad, ubicacion, latitud, longitud, estado, notas, timestamp
+      SELECT id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
+             ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp
       FROM reportes
       ORDER BY
         CASE estado
@@ -145,48 +214,44 @@ export class SQLiteReporteRepository implements IReporteRepository {
         END,
         timestamp DESC
     `);
-    this.cache = filas.map((f) => this.filaARreporte(f));
+    this.cache = filas.map((f) => this.filaAReporte(f));
   }
 
-  private async insertarReporte(reporte: ReporteEmergencia): Promise<void> {
+  private async insertarReporte(
+    reporte: ReporteEmergencia,
+    modo: ModoInsercion
+  ): Promise<'insertado' | 'actualizado' | 'ignorado'> {
     if (!this.db) throw new Error('Base de datos no inicializada.');
-    await this.db.runAsync(
-      `INSERT INTO reportes (id, nombre, edad, genero, telefono, ciudad, ubicacion, latitud, longitud, estado, notas, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      reporte.id,
-      reporte.nombre_completo,
-      reporte.edad,
-      reporte.genero,
-      reporte.telefono_contacto,
-      reporte.ciudad,
-      reporte.ubicacion_exacta,
-      reporte.latitud ?? null,
-      reporte.longitud ?? null,
-      reporte.estado_actual,
-      reporte.notas_paramedicos,
-      reporte.timestamp
-    );
-  }
 
-  private async insertarIgnorandoDuplicados(reporte: ReporteEmergencia): Promise<boolean> {
-    if (!this.db) throw new Error('Base de datos no inicializada.');
-    const resultado = await this.db.runAsync(
-      `INSERT OR IGNORE INTO reportes (id, nombre, edad, genero, telefono, ciudad, ubicacion, latitud, longitud, estado, notas, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      reporte.id,
-      reporte.nombre_completo,
-      reporte.edad,
-      reporte.genero,
-      reporte.telefono_contacto,
-      reporte.ciudad,
-      reporte.ubicacion_exacta,
-      reporte.latitud ?? null,
-      reporte.longitud ?? null,
-      reporte.estado_actual,
-      reporte.notas_paramedicos,
-      reporte.timestamp
+    const existente = await this.db.getFirstAsync<{ timestamp: number }>(
+      'SELECT timestamp FROM reportes WHERE id = ?',
+      reporte.id
     );
-    return (resultado.changes ?? 0) > 0;
+
+    if (modo === 'replace_si_mas_reciente' && existente) {
+      if (existente.timestamp >= reporte.timestamp) {
+        return 'ignorado';
+      }
+    }
+
+    const sql =
+      modo === 'ignore' && !existente
+        ? `INSERT OR IGNORE INTO reportes (
+            id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
+            ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        : `INSERT OR REPLACE INTO reportes (
+            id, fuente_origen, tipo_registro, nombre, edad, genero, telefono, ciudad,
+            ubicacion, latitud, longitud, estado, estado_estructura, notas, timestamp
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    if (modo === 'ignore' && existente) {
+      return 'ignorado';
+    }
+
+    const resultado = await this.db.runAsync(sql, ...this.valoresInsert(reporte));
+    if ((resultado.changes ?? 0) === 0) return 'ignorado';
+    return existente ? 'actualizado' : 'insertado';
   }
 
   private async migrarDesdeAsyncStorage(): Promise<void> {
@@ -203,14 +268,28 @@ export class SQLiteReporteRepository implements IReporteRepository {
       if (!Array.isArray(parsed)) return;
 
       for (const item of parsed) {
-        const r = item as ReporteEmergencia;
-        if (r?.id && r.estado_actual && typeof r.timestamp === 'number') {
-          await this.insertarIgnorandoDuplicados({
-            ...r,
+        const r = item as Partial<ReporteEmergencia>;
+        if (!r?.id || !r.estado_actual || typeof r.timestamp !== 'number') continue;
+        await this.insertarReporte(
+          {
+            id: r.id,
+            fuente_origen: r.fuente_origen ?? OperacionConfig.FUENTE_ORIGEN,
+            tipo_registro: r.tipo_registro ?? 'PERSONA_ATRAPADA',
+            nombre_completo: r.nombre_completo ?? 'Anónimo',
+            edad: r.edad ?? '0',
+            genero: r.genero ?? 'M',
             telefono_contacto: r.telefono_contacto ?? '',
             ciudad: r.ciudad ?? 'La Guaira',
-          });
-        }
+            ubicacion_exacta: r.ubicacion_exacta ?? '',
+            latitud: r.latitud ?? 0,
+            longitud: r.longitud ?? 0,
+            estado_actual: r.estado_actual,
+            estado_estructura: r.estado_estructura ?? 'SEGURO',
+            notas_paramedicos: r.notas_paramedicos ?? '',
+            timestamp: r.timestamp,
+          },
+          'ignore'
+        );
       }
       await AsyncStorage.removeItem(LEGACY_STORAGE_KEY);
     } catch {
@@ -229,10 +308,11 @@ export class SQLiteReporteRepository implements IReporteRepository {
   public async guardar(entrada: ReporteEntrada): Promise<ReporteEmergencia> {
     const nuevo: ReporteEmergencia = {
       ...entrada,
+      fuente_origen: entrada.fuente_origen || OperacionConfig.FUENTE_ORIGEN,
       id: this.generarId(),
       timestamp: Date.now(),
     };
-    await this.insertarReporte(nuevo);
+    await this.insertarReporte(nuevo, 'ignore');
     await this.recargarCache();
     this.notificar();
     return nuevo;
@@ -281,12 +361,13 @@ export class SQLiteReporteRepository implements IReporteRepository {
           continue;
         }
         const reporte = this.expandir(item);
-        if (!reporte.ubicacion_exacta.trim() && reporte.latitud === undefined) {
+        if (!reporte.ubicacion_exacta.trim() && reporte.latitud === 0 && reporte.longitud === 0) {
           resultado.ignorados += 1;
           continue;
         }
-        const insertado = await this.insertarIgnorandoDuplicados(reporte);
-        if (insertado) resultado.importados += 1;
+        const estado = await this.insertarReporte(reporte, 'replace_si_mas_reciente');
+        if (estado === 'insertado') resultado.importados += 1;
+        else if (estado === 'actualizado') resultado.actualizados += 1;
         else resultado.ignorados += 1;
       }
     });

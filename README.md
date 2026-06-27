@@ -1,82 +1,78 @@
 # Mesh Network Venezuela
 
-Herramienta **offline-first** para paramédicos y brigadas de rescate en **La Guaira**. Registra personas afectadas con GPS, persiste en SQLite y transmite datos por **SMS manual** cuando hay señal GSM — sin internet ni servidores.
+Herramienta **offline-first** para paramédicos y brigadas de rescate en **La Guaira**. Registra personas, infraestructura dañada y familias sin vivienda con GPS, persiste en SQLite y transmite por **SMS manual** (`MNv2`) cuando hay señal GSM.
 
-- **App de campo:** APK Android (`com.vic_arx.meshnetworkvenezuela`)
-- **Demo web:** [meshnetwork-venezuela.vercel.app](https://meshnetwork-venezuela.vercel.app) (capacitación; no sustituye el APK)
+- **App de campo:** APK Android v1.1.0 (`com.vic_arx.meshnetworkvenezuela`)
+- **Hub integración:** [meshnetwork-venezuela.vercel.app/api/hub](https://meshnetwork-venezuela.vercel.app/api/hub) (otras apps; requiere Vercel KV)
+- **Demo web:** [meshnetwork-venezuela.vercel.app](https://meshnetwork-venezuela.vercel.app) (no sustituye el APK)
 - **Repo:** [github.com/dynastymarketinga/MeshnetworkVenezuela](https://github.com/dynastymarketinga/MeshnetworkVenezuela)
 
 ---
 
-## Capacidades (sin internet)
+## Capacidades APK (sin internet)
 
 | Función | Tecnología |
 |---------|------------|
-| Registro táctico + triaje | SQLite + GPS obligatorio |
-| Persistencia tras apagado | `expo-sqlite` (WAL) |
-| Navegación a punto | `geo:` / Google Maps / OsmAnd offline |
-| Enlace entre brigadas | SMS comprimido `MNv1\|1/3\|…` |
-| Fusión sin duplicados | `INSERT OR IGNORE` |
+| Registro táctico + triaje | SQLite WAL + GPS obligatorio |
+| Tipos de registro | Persona atrapada, infraestructura, sin vivienda |
+| Enlace entre brigadas | SMS `MNv2\|1/3\|…` (compatible MNv1) |
+| Fusión | `INSERT OR IGNORE` / `REPLACE` si timestamp mayor |
+| UI | OLED táctico `#000000` / `#00AEEF` |
 
 ---
 
-## Compilar APK (producción)
+## Hub centralizado (Vercel KV)
+
+Para **otros desarrolladores** que quieran evitar bases fragmentadas:
+
+| Endpoint | Uso |
+|----------|-----|
+| `GET /api/hub?action=consultar` | Consultar duplicados antes de guardar |
+| `POST /api/hub?action=registrar` | Registrar `ReporteEmergencia` |
+
+Documentación completa: **`HUB_INTEGRACION_DESARROLLADORES.md`**
+
+Variables Vercel: `KV_REST_API_URL`, `KV_REST_API_TOKEN`, opcional `HUB_API_KEY`.
+
+---
+
+## Compilar APK
 
 ```powershell
 npm install
-npx eas-cli login
-npx eas-cli init
-npx eas-cli build --platform android --profile preview
+npx eas-cli build --platform android --profile preview --non-interactive
 ```
 
-Instalación en teléfonos: ver **`INSTALACION_APK_CAMPO.md`**.  
-Validación en terreno: ver **`CHECKLIST_VALIDACION_CAMPO.md`**.
+Instalación: **`INSTALACION_APK_CAMPO.md`** · Campo: **`PRUEBA_RESCATISTAS.md`**
 
 ### Configuración operativa
 
-Editar `src/config/OperacionConfig.ts`:
-
-- `COMANDO_CENTRAL_SMS` — número Bomberos / Protección Civil La Guaira
-- `BRIGADA_ID`, `NOMBRE_COMANDO`
-
----
-
-## Desarrollo local (Expo)
-
-```powershell
-npm install
-npx expo start
-```
-
-Para probar en dispositivo físico con módulos nativos (SQLite, SMS, GPS):
-
-```powershell
-npm run run:android
-```
+`src/config/OperacionConfig.ts` — `COMANDO_CENTRAL_SMS`, `BRIGADA_ID`, `FUENTE_ORIGEN`.
 
 ---
 
 ## Arquitectura
 
 ```
+shared/reporte.types.ts     # Modelo unificado APK + Hub
 src/
-├── config/OperacionConfig.ts
-├── domain/entities, repositories, services
-├── infrastructure/
-│   ├── database/SQLiteDatabase.ts
-│   ├── repositories/SQLiteReporteRepository.ts
-│   └── services/Location, Navigation, SmsDirect
+├── domain/ + infrastructure/ (SQLite, Location, SMS)
 ├── screens/HomeScreen.tsx
-└── theme/BrutalistTheme.ts
+└── theme/TacticalTheme.ts
+api/
+├── hub.ts                  # Serverless Vercel KV
+└── _lib/
 ```
 
 ---
 
-## Despliegue web (Vercel)
+## Despliegue Vercel
 
-Framework: **Other** · Output: `.` · `vercel.json` sirve `index.html`.
+1. Activar **Vercel KV** en el proyecto
+2. Push → deploy automático
+3. Probar Hub en pestaña **Hub** del dashboard o con `curl`
 
-La web usa `localStorage` como demo; la operación real es el **APK**.
+La web demo usa `localStorage`; operación real = **APK**.
 
 ---
 

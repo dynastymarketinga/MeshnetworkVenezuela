@@ -4,15 +4,29 @@ Guía para instalar **Mesh Network Venezuela** en teléfonos Android de brigadas
 
 ---
 
+## APK listo — build 27 jun 2026
+
+| | |
+|---|---|
+| **Versión** | 1.0.0 (perfil `preview`) |
+| **Build EAS** | [Ver build en Expo](https://expo.dev/accounts/victorx2/projects/meshnetwork-venezuela/builds/0fc65d2d-951c-4db1-8c00-e13bcb2e9069) |
+| **Descarga directa APK** | https://expo.dev/artifacts/eas/Uzihf_EC79RC4mD1fNLiJ0znlBF9PenFc_bM4Ud4Hyo.apk |
+| **Instalar en Android** | Abrir el enlace del build en el teléfono o escanear el QR que muestra Expo |
+
+Copia local (si existe): `releases/MeshNetworkVenezuela-1.0.0-preview.apk`
+
+> **Número comando:** esta build usa el placeholder `04140000000`. Cuando tengas el número real de Bomberos/Protección Civil, edita `src/config/OperacionConfig.ts` y vuelve a compilar (`npx eas-cli build --platform android --profile preview`).
+
+---
+
 ## Antes de salir a terreno (responsable técnico)
 
-### 1. Compilar el APK (una sola vez, con PC + internet)
+### 1. Compilar el APK (solo si necesitas nueva versión)
 
 ```powershell
 cd C:\Users\pc\Desktop\App
 npm install
 npx eas-cli login
-npx eas-cli init
 npx eas-cli build --platform android --profile preview
 ```
 
