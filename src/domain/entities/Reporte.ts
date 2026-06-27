@@ -6,9 +6,24 @@ export interface ReporteEmergencia {
   edad: string;
   genero: string;
   ubicacion_exacta: string;
+  latitud?: number;
+  longitud?: number;
   estado_actual: EstadoReporte;
   notas_paramedicos: string;
   timestamp: number;
 }
 
 export type ReporteEntrada = Omit<ReporteEmergencia, 'id' | 'timestamp'>;
+
+export interface ReporteComprimido {
+  i: string;
+  n: string;
+  e: string;
+  g: string;
+  u: string;
+  s: EstadoReporte;
+  o: string;
+  t: number;
+  la?: number;
+  lo?: number;
+}

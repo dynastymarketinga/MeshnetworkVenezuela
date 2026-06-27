@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.12",
     "expo-clipboard": "~56.0.4",
+    "expo-location": "~56.0.18",
+    "expo-sms": "~56.0.3",
+    "expo-sqlite": "~56.0.5",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
     "react-native": "0.85.3"
@@ -17,7 +21,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "run:android": "expo run:android",
+    "build:apk": "eas build --platform android --profile preview"
   },
   "private": true
 }

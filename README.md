@@ -6,26 +6,21 @@ Herramienta offline-first para paramédicos y brigadas de rescate en La Guaira, 
 
 | Componente | Tecnología | Cómo probarlo |
 |------------|------------|---------------|
-| **Simulador Web** | `index.html` + Vanilla JS | [Vercel](https://meshnetwork-venezuela.vercel.app) (tras conectar repo) |
-| **App Móvil** | Expo + React Native + TypeScript | Expo Go + `npx expo start` |
+| **App Móvil Operativa** | Expo + AsyncStorage | Expo Go + `npx expo start` |
+| **Demo Web** | `index.html` (Vercel) | Solo demostración — la app real es móvil |
 
-## Simulador Web (Vercel)
-
-Abre la URL de Vercel en cualquier navegador. Permite:
-
-- Registrar reportes tácticos (SOS-)
-- Simular pulsos de malla BLE (BLE-)
-- Ver lista ordenada por prioridad: CRITICO → POR LOCALIZAR → LOCALIZADO
-- Copiar cadena JSON comprimida para SMS (llaves `i,n,e,g,u,s,o,t`)
-
-La lógica web replica `MemoryReporteRepository` del código TypeScript.
-
-## App Móvil (Expo Go)
+## App Móvil Operativa (Expo Go)
 
 ```bash
 npm install
 npx expo start
 ```
+
+- **Persistencia local:** cada registro se guarda en disco del teléfono (AsyncStorage).
+- **Exportar:** comprimir todos los reportes a JSON SMS (`i,n,e,g,u,s,o,t`).
+- **Importar:** pegar cadena de otra brigada y fusionar sin duplicar IDs.
+- **Prioridad:** CRITICO → POR LOCALIZAR → LOCALIZADO.
+- **Sin datos falsos:** eliminada toda simulación BLE automática.
 
 Escanea el QR con **Expo Go** en Android/iOS.
 
