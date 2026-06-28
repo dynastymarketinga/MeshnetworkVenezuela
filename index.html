@@ -2274,13 +2274,14 @@
 
     const TIPO_LABEL = {
       PERSONA_ATRAPADA: 'Persona atrapada',
+      PERSONA_DESAPARECIDA: 'Persona desaparecida',
       INFRAESTRUCTURA_DANADA: 'Infraestructura dañada',
       SIN_VIVIENDA: 'Familia sin vivienda',
     };
     const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    const WIZARD_PASOS = ['step-tipo', 'step-ubicacion', 'estado-section', 'step-foto', 'step-datos', 'step-resumen'];
+    const WIZARD_PASOS = ['step-tipo', 'seccion-atrapada', 'seccion-desaparecida', 'step-ubicacion', 'estado-section', 'step-foto', 'step-datos', 'step-resumen'];
     let wizardActivo = 'step-tipo';
 
     function pasosVisibles() {
@@ -2289,25 +2290,46 @@
 
     function renderResumen() {
       const coords = coordenadasListas();
+      const esDesaparecida = tipoSel === 'PERSONA_DESAPARECIDA';
+      const SI_NO = { SI: 'Sí', NO: 'No', NO_SE: 'No se sabe' };
       const filas = [];
       const add = (label, value) => {
         const v = (value == null ? '' : String(value)).trim();
         if (v) filas.push({ label, value: v });
       };
       add('Tipo', TIPO_LABEL[tipoSel] || tipoSel);
+
+      if (esDesaparecida) {
+        add('Nombre', $('desap-nombre').value);
+        add('Edad', $('desap-edad').value);
+        add('Género', desapGeneroSel);
+        add('Visto por última vez', $('desap-visto').value);
+        add('Rasgos físicos', $('desap-rasgos').value);
+        add('Teléfono de quien reporta', $('desap-contacto').value);
+        add('Relación', $('desap-relacion').value);
+      }
+
       add('Ubicación exacta', $('ubicacion').value);
       add('Coordenadas', coords ? formatearCoordenadas(coords.lat, coords.lng) : 'Sin GPS');
       if (!$('estado-section').hidden) add('Estado', estadoSel);
-      add('Nombre', $('nombre').value.trim() || 'Anónimo');
-      add('Teléfono', $('telefono').value);
+
+      if (tipoSel === 'PERSONA_ATRAPADA') {
+        add('¿Se escuchan personas?', SI_NO[escuchaSel]);
+        add('¿Personas fallecidas?', SI_NO[fallecidosSel]);
+      }
+
+      if (!esDesaparecida) {
+        add('Nombre', $('nombre').value.trim() || 'Anónimo');
+        add('Teléfono', $('telefono').value);
+        add('Edad', $('edad').value);
+        add('Género', generoSel);
+        add('Zona afectada', $('zona-tag').value);
+        add('Dirección de origen', $('direccion-origen').value);
+        if (censoPersonas.length) add('Censo del grupo', censoPersonas.join(', '));
+        if (tipoSel !== 'SIN_VIVIENDA' && $('sin-vivienda').checked) add('Requiere vivienda', 'Sí');
+        add('Notas', $('notas').value);
+      }
       add('Ciudad', ciudadSel);
-      add('Edad', $('edad').value);
-      add('Género', generoSel);
-      add('Zona afectada', $('zona-tag').value);
-      add('Dirección de origen', $('direccion-origen').value);
-      if (censoPersonas.length) add('Censo del grupo', censoPersonas.join(', '));
-      if (tipoSel !== 'SIN_VIVIENDA' && $('sin-vivienda').checked) add('Requiere vivienda', 'Sí');
-      add('Notas', $('notas').value);
 
       let html = filas.map((f) =>
         `<div class="resumen-row"><span class="resumen-label">${escHtml(f.label)}</span>` +
@@ -2345,9 +2367,20 @@
     }
 
     function validarPasoActual() {
+      const esDesaparecida = tipoSel === 'PERSONA_DESAPARECIDA';
+      if (wizardActivo === 'seccion-desaparecida') {
+        if (!$('desap-nombre').value.trim()) { toast('⚠ Escriba el nombre de la persona desaparecida'); return false; }
+        if (telefonoTieneError($('desap-contacto').value)) { toast('⚠ Teléfono inválido: use formato venezolano (04121234567)'); return false; }
+        if (!validarEdad($('desap-edad').value)) { toast('⚠ Edad inválida: use 0-115 o palabra operativa'); return false; }
+        actualizarEstadoBotonGuardar();
+        return true;
+      }
       if (wizardActivo === 'step-ubicacion') {
-        if (!$('ubicacion').value.trim()) { toast('⚠ Escriba sector, calle o edificio'); return false; }
-        if (!coordenadasListas()) {
+        if (!$('ubicacion').value.trim()) {
+          toast(esDesaparecida ? '⚠ Escriba el sector donde se le vio por última vez' : '⚠ Escriba sector, calle o edificio');
+          return false;
+        }
+        if (!esDesaparecida && !coordenadasListas()) {
           toast('⚠ Falta la ubicación: use el botón GPS o escriba latitud y longitud');
           return false;
         }
