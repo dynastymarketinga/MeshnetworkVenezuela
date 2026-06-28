@@ -453,6 +453,7 @@
       const total = datos.length;
       const criticos = datos.filter((r) => r.estado_actual === 'CRITICO').length;
       const porLoc = datos.filter((r) => r.estado_actual === 'POR LOCALIZAR').length;
+      const leves = datos.filter((r) => r.estado_actual === 'LEVE').length;
       const localizados = datos.filter((r) => r.estado_actual === 'LOCALIZADO').length;
       const sinViv = datos.filter((r) => r.tiene_hogar_actual === false).length;
       const conFoto = datos.filter((r) => r.foto_estructura_b64).length;
@@ -461,6 +462,7 @@
         ['', total, 'Total'],
         ['n-critico', criticos, 'Críticos'],
         ['n-alerta', porLoc, 'Por localizar'],
+        ['n-ok', leves, 'Leves'],
         ['n-ok', localizados, 'Localizados'],
         ['', sinViv, 'Sin vivienda'],
         ['', conFoto, 'Con foto'],

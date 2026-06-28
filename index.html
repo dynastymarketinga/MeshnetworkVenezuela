@@ -977,6 +977,83 @@
 
     /* Checkbox en marca */
     .checkbox-field input[type="checkbox"] { accent-color: var(--brand); }
+
+    /* —— Asistente por pasos (wizard) —— */
+    .wizard-progress { margin: 10px 0 16px; }
+    .wizard-progress-text {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .wizard-progress-text #wizard-step-label { color: var(--brand); }
+    .wizard-progress-bar {
+      height: 6px;
+      background: var(--border-light);
+      border-radius: var(--pill);
+      overflow: hidden;
+    }
+    .wizard-progress-fill {
+      height: 100%;
+      width: 0;
+      background: var(--brand);
+      border-radius: var(--pill);
+      transition: width .3s ease;
+    }
+    .wizard-step { display: none; }
+    .wizard-step.active { display: block; animation: wizardFade .2s ease; }
+    @keyframes wizardFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .wizard-nav {
+      position: sticky;
+      bottom: 72px;
+      z-index: 40;
+      display: flex;
+      gap: 10px;
+      padding-top: 10px;
+      margin-top: 8px;
+    }
+    .wizard-nav .btn-next,
+    .wizard-nav .btn-emergencia { flex: 1; }
+    .btn-back {
+      flex: 0 0 auto;
+      background: var(--surface-2);
+      border: 1px solid var(--border-light);
+      color: var(--text);
+    }
+    .btn-back:hover { border-color: var(--muted); }
+
+    /* Resumen de confirmación */
+    .resumen-list {
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .resumen-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .resumen-row:last-child { border-bottom: 0; }
+    .resumen-label {
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      flex: 0 0 auto;
+    }
+    .resumen-value {
+      font-weight: 700;
+      text-align: right;
+      word-break: break-word;
+    }
+    .resumen-foto img {
+      max-width: 120px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+    }
   </style>
 </head>
 <body>
@@ -1007,9 +1084,16 @@
         </div>
         <p class="panel-desc reg-hero" id="hero-desc">Registre puntos de rescate con GPS. Los datos se sincronizan entre brigadas por SMS.</p>
 
-        <section class="form-section">
+        <div class="wizard-progress">
+          <div class="wizard-progress-text">
+            <span id="wizard-step-label">Paso 1</span> · <span id="wizard-step-title">¿Qué está registrando?</span>
+          </div>
+          <div class="wizard-progress-bar"><div class="wizard-progress-fill" id="wizard-progress-fill"></div></div>
+        </div>
+
+        <section class="form-section wizard-step active" id="step-tipo" data-title="¿Qué está registrando?">
           <header class="form-section-header">
-            <p class="form-section-kicker">1 — Tipo</p>
+            <p class="form-section-kicker">Tipo</p>
             <h3 class="form-section-title">¿Qué está registrando?</h3>
           </header>
           <div class="form-section-body">
@@ -1093,9 +1177,9 @@
           </div>
         </section>
 
-        <section class="form-section">
+        <section class="form-section wizard-step" id="step-ubicacion" data-title="Dónde es">
           <header class="form-section-header">
-            <p class="form-section-kicker">2 — Ubicación</p>
+            <p class="form-section-kicker">Ubicación</p>
             <h3 class="form-section-title">Dónde es</h3>
           </header>
           <div class="form-section-body">
@@ -1125,9 +1209,9 @@
           </div>
         </section>
 
-        <section class="form-section" id="estado-section">
+        <section class="form-section wizard-step" id="estado-section" data-title="Estado">
           <header class="form-section-header">
-            <p class="form-section-kicker">3 — Triaje</p>
+            <p class="form-section-kicker">Triaje</p>
             <h3 class="form-section-title">Estado</h3>
           </header>
           <div class="form-section-body">
@@ -1135,9 +1219,9 @@
           </div>
         </section>
 
-        <section class="form-section">
+        <section class="form-section wizard-step" id="step-foto" data-title="Foto (opcional)">
           <header class="form-section-header">
-            <p class="form-section-kicker">4 — Foto</p>
+            <p class="form-section-kicker">Foto</p>
             <h3 class="form-section-title">Foto (opcional)</h3>
           </header>
           <div class="form-section-body">
@@ -1373,6 +1457,10 @@
         { v: 'POR LOCALIZAR', label: 'POR LOCALIZAR' },
         { v: 'LOCALIZADO', label: 'LOCALIZADO' },
       ],
+      PERSONA_DESAPARECIDA: [
+        { v: 'POR LOCALIZAR', label: 'DESAPARECIDA' },
+        { v: 'LOCALIZADO', label: 'ENCONTRADA' },
+      ],
       INFRAESTRUCTURA_DANADA: [
         { v: 'CRITICO', label: 'CRÍTICO' },
         { v: 'LEVE', label: 'LEVE' },
@@ -1381,6 +1469,7 @@
     };
     const ESTADO_DEFAULT = {
       PERSONA_ATRAPADA: 'POR LOCALIZAR',
+      PERSONA_DESAPARECIDA: 'POR LOCALIZAR',
       INFRAESTRUCTURA_DANADA: 'CRITICO',
       SIN_VIVIENDA: 'LOCALIZADO',
     };
@@ -1466,6 +1555,10 @@
         if (r.tiene_hogar_actual === false) base.hv = 0;
         if (r.direccion_origen) base.do = r.direccion_origen;
         if (r.zona_afectada_tag) base.zt = r.zona_afectada_tag;
+        if (r.escucha_personas && r.escucha_personas !== 'NO_SE') base.ep = r.escucha_personas;
+        if (r.personas_fallecidas && r.personas_fallecidas !== 'NO_SE') base.pf = r.personas_fallecidas;
+        if (r.desap_visto) base.dv = r.desap_visto;
+        if (r.desap_relacion) base.dr = r.desap_relacion;
         return base;
       }
 
@@ -1492,6 +1585,10 @@
             direccion_origen: c.do || '',
             zona_afectada_tag: c.zt || '',
             foto_estructura_b64: '',
+            escucha_personas: c.ep || 'NO_SE',
+            personas_fallecidas: c.pf || 'NO_SE',
+            desap_visto: c.dv || '',
+            desap_relacion: c.dr || '',
           };
         }
         return {
@@ -1515,6 +1612,10 @@
           direccion_origen: '',
           zona_afectada_tag: '',
           foto_estructura_b64: '',
+          escucha_personas: 'NO_SE',
+          personas_fallecidas: 'NO_SE',
+          desap_visto: '',
+          desap_relacion: '',
         };
       }
 
@@ -1525,6 +1626,10 @@
           direccion_origen: '',
           zona_afectada_tag: '',
           foto_estructura_b64: '',
+          escucha_personas: 'NO_SE',
+          personas_fallecidas: 'NO_SE',
+          desap_visto: '',
+          desap_relacion: '',
           ...entrada,
           id: this.generarId(),
           timestamp: Date.now(),
@@ -1663,22 +1768,28 @@
     }
 
     function actualizarEstadoBotonGuardar() {
+      const esDesaparecida = tipoSel === 'PERSONA_DESAPARECIDA';
       const telErr = telefonoTieneError($('telefono').value);
       const edadErr = !validarEdad($('edad').value);
       const censoErr = censoPersonas.some((p) => !validarCensoPersona(p));
+      const desapTelErr = esDesaparecida && telefonoTieneError($('desap-contacto').value);
+      const desapEdadErr = esDesaparecida && !validarEdad($('desap-edad').value);
       $('alert-telefono').classList.toggle('visible', telErr);
       $('alert-edad').classList.toggle('visible', edadErr);
       $('alert-censo').classList.toggle('visible', censoErr);
-      $('btn-guardar').disabled = telErr || edadErr || censoErr;
+      $('alert-desap-contacto').classList.toggle('visible', desapTelErr);
+      $('alert-desap-edad').classList.toggle('visible', desapEdadErr);
+      $('btn-guardar').disabled = telErr || edadErr || censoErr || desapTelErr || desapEdadErr;
     }
 
     function validarFormulario() {
       actualizarEstadoBotonGuardar();
-      if (telefonoTieneError($('telefono').value)) {
+      const esDesaparecida = tipoSel === 'PERSONA_DESAPARECIDA';
+      if (telefonoTieneError($('telefono').value) || (esDesaparecida && telefonoTieneError($('desap-contacto').value))) {
         toast('⚠ Teléfono inválido: use formato venezolano (04121234567)');
         return false;
       }
-      if (!validarEdad($('edad').value)) {
+      if (!validarEdad($('edad').value) || (esDesaparecida && !validarEdad($('desap-edad').value))) {
         toast('⚠ Edad inválida: use 0-115 o palabra operativa');
         return false;
       }
@@ -1729,15 +1840,47 @@
       });
     });
 
+    function setChipActivo(groupId, attr, valor) {
+      document.querySelectorAll(`#${groupId} .chip`).forEach((b) => {
+        b.classList.toggle('active', b.dataset[attr] === valor);
+      });
+    }
+
     function aplicarTipoActivo(valor) {
       tipoSel = valor;
       document.querySelectorAll('#tipo-chips .tipo-btn').forEach((b) => {
         b.classList.toggle('active', b.dataset.t === valor);
       });
+      const esAtrapada = valor === 'PERSONA_ATRAPADA';
+      const esDesaparecida = valor === 'PERSONA_DESAPARECIDA';
+      $('seccion-atrapada').hidden = !esAtrapada;
+      $('seccion-desaparecida').hidden = !esDesaparecida;
+      const masDatos = document.querySelector('.mas-datos');
+      if (masDatos) masDatos.hidden = esDesaparecida;
       renderEstadoChips(valor);
+      actualizarEstadoBotonGuardar();
     }
     document.querySelectorAll('#tipo-chips .tipo-btn').forEach((btn) => {
       btn.addEventListener('click', () => aplicarTipoActivo(btn.dataset.t));
+    });
+
+    document.querySelectorAll('#escucha-chips .chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        escuchaSel = btn.dataset.v;
+        setChipActivo('escucha-chips', 'v', escuchaSel);
+      });
+    });
+    document.querySelectorAll('#fallecidos-chips .chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        fallecidosSel = btn.dataset.v;
+        setChipActivo('fallecidos-chips', 'v', fallecidosSel);
+      });
+    });
+    document.querySelectorAll('#desap-genero-chips .chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        desapGeneroSel = btn.dataset.g;
+        setChipActivo('desap-genero-chips', 'g', desapGeneroSel);
+      });
     });
 
     function aplicarEstadoActivo(btn) {
@@ -1851,6 +1994,17 @@
     });
 
     $('edad').addEventListener('input', () => {
+      actualizarEstadoBotonGuardar();
+    });
+
+    $('desap-contacto').addEventListener('input', () => {
+      const el = $('desap-contacto');
+      const digits = el.value.replace(/\D/g, '').slice(0, 12);
+      if (el.value !== digits) el.value = digits;
+      actualizarEstadoBotonGuardar();
+    });
+
+    $('desap-edad').addEventListener('input', () => {
       actualizarEstadoBotonGuardar();
     });
 
