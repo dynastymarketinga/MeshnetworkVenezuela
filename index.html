@@ -367,6 +367,16 @@
       text-transform: uppercase;
     }
     .card-id { color: var(--light); font-size: 0.6rem; font-family: ui-monospace, monospace; }
+    .card-tipo {
+      display: inline-block;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      font-size: 0.55rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue);
+    }
     .card-nombre { font-size: 1rem; font-weight: 800; color: var(--ink); }
     .card-ubicacion { color: var(--muted); font-size: 0.85rem; margin-top: 6px; line-height: 1.5; }
     .card-gps {
@@ -1001,7 +1011,7 @@
       transition: width .3s ease;
     }
     .wizard-step { display: none; }
-    .wizard-step.active { display: block; animation: wizardFade .2s ease; }
+    .wizard-step.active:not([hidden]) { display: block; animation: wizardFade .2s ease; }
     @keyframes wizardFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .wizard-nav {
       position: sticky;
@@ -1106,7 +1116,7 @@
           </div>
         </section>
 
-        <section class="form-section" id="seccion-atrapada">
+        <section class="form-section wizard-step" id="seccion-atrapada" data-title="Señales en el sitio">
           <header class="form-section-header">
             <p class="form-section-kicker">Señales en el sitio</p>
             <h3 class="form-section-title">¿Qué se percibe en la ubicación?</h3>
@@ -1132,7 +1142,7 @@
           </div>
         </section>
 
-        <section class="form-section" id="seccion-desaparecida" hidden>
+        <section class="form-section wizard-step" id="seccion-desaparecida" data-title="Datos de la persona" hidden>
           <header class="form-section-header">
             <p class="form-section-kicker">Datos de la persona</p>
             <h3 class="form-section-title">Reportar persona desaparecida</h3>
@@ -1235,13 +1245,12 @@
           </div>
         </section>
 
-        <div class="form-actions">
-          <button type="button" class="btn-emergencia" id="btn-guardar">Guardar punto de rescate</button>
-        </div>
-
-        <details class="mas-datos">
-          <summary>Más datos (opcional): contacto, edad, censo, notas…</summary>
-          <div class="form-body mas-datos-body">
+        <section class="form-section wizard-step" id="step-datos" data-title="Más datos (opcional)">
+          <header class="form-section-header">
+            <p class="form-section-kicker">Datos adicionales</p>
+            <h3 class="form-section-title">Más datos (opcional)</h3>
+          </header>
+          <div class="form-section-body form-body mas-datos-body">
             <div class="field-box">
               <label for="telefono">Teléfono de contacto</label>
               <input id="telefono" type="text" inputmode="numeric" maxlength="12" placeholder="04121234567" autocomplete="tel" />
@@ -1298,7 +1307,24 @@
               <textarea id="notas" placeholder="Ej: Se escuchan ruidos bajo la losa oeste"></textarea>
             </div>
           </div>
-        </details>
+        </section>
+
+        <section class="form-section wizard-step" id="step-resumen" data-title="Revisar y confirmar">
+          <header class="form-section-header">
+            <p class="form-section-kicker">Resumen</p>
+            <h3 class="form-section-title">Revisar y confirmar</h3>
+          </header>
+          <div class="form-section-body">
+            <p class="field-hint">Revise que la información sea correcta antes de enviar el reporte.</p>
+            <div class="resumen-list" id="resumen-list"></div>
+          </div>
+        </section>
+
+        <div class="wizard-nav">
+          <button type="button" class="btn-action btn-back" id="wizard-back" hidden>← Atrás</button>
+          <button type="button" class="btn-gps btn-next" id="wizard-next">Siguiente →</button>
+          <button type="button" class="btn-emergencia" id="btn-guardar" hidden>Confirmar y enviar reporte</button>
+        </div>
       </div>
 
       <div id="tab-reportes" class="tab-panel">
@@ -1855,8 +1881,7 @@
       const esDesaparecida = valor === 'PERSONA_DESAPARECIDA';
       $('seccion-atrapada').hidden = !esAtrapada;
       $('seccion-desaparecida').hidden = !esDesaparecida;
-      const masDatos = document.querySelector('.mas-datos');
-      if (masDatos) masDatos.hidden = esDesaparecida;
+      $('step-datos').hidden = esDesaparecida;
       renderEstadoChips(valor);
       actualizarEstadoBotonGuardar();
     }
@@ -2056,13 +2081,32 @@
               <a class="btn-contacto llamar" href="tel:${numero}">Llamar</a>
             </div>`;
         }
+        const TIPO_LABEL = {
+          PERSONA_ATRAPADA: 'Persona atrapada',
+          PERSONA_DESAPARECIDA: 'Persona desaparecida',
+          INFRAESTRUCTURA_DANADA: 'Infraestructura dañada',
+          SIN_VIVIENDA: 'Familia sin vivienda',
+        };
+        const tipoBadge = `<div class="card-tipo">${TIPO_LABEL[item.tipo_registro] || 'Registro'}</div>`;
+        let señales = '';
+        if (item.tipo_registro === 'PERSONA_ATRAPADA') {
+          if (item.escucha_personas === 'SI') señales += '<div class="card-notas card-flag-critico">🔊 Se escuchan personas</div>';
+          else if (item.escucha_personas === 'NO') señales += '<div class="card-notas">🔇 No se escuchan personas</div>';
+          if (item.personas_fallecidas === 'SI') señales += '<div class="card-notas card-flag-critico">☠ Personas fallecidas en el sitio</div>';
+        }
+        if (item.tipo_registro === 'PERSONA_DESAPARECIDA') {
+          if (item.desap_visto) señales += `<div class="card-notas">👁 Última vez: ${item.desap_visto}</div>`;
+          if (item.desap_relacion) señales += `<div class="card-notas">Reporta: ${item.desap_relacion}</div>`;
+        }
         return `
           <div class="card ${est.card}">
             <div class="card-top">
               <span class="card-estado ${est.label}">${item.estado_actual}</span>
               <span class="card-id">${item.id}</span>
             </div>
+            ${tipoBadge}
             <div class="card-nombre">${item.nombre_completo}${item.edad !== '0' ? ' · ' + item.edad + ' años' : ''} · ${item.genero}</div>
+            ${señales}
             ${item.zona_afectada_tag ? `<div class="card-notas">Zona: ${item.zona_afectada_tag}</div>` : ''}
             ${item.tiene_hogar_actual === false ? '<div class="card-notas card-flag-critico">SIN VIVIENDA</div>' : ''}
             ${item.censo_personas?.length ? `<div class="card-notas">Censo (${item.censo_personas.length}): ${item.censo_personas.join(', ')}</div>` : ''}
@@ -2228,37 +2272,165 @@
       if (thumb) abrirLightbox(thumb.src);
     });
 
+    const TIPO_LABEL = {
+      PERSONA_ATRAPADA: 'Persona atrapada',
+      INFRAESTRUCTURA_DANADA: 'Infraestructura dañada',
+      SIN_VIVIENDA: 'Familia sin vivienda',
+    };
+    const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    const WIZARD_PASOS = ['step-tipo', 'step-ubicacion', 'estado-section', 'step-foto', 'step-datos', 'step-resumen'];
+    let wizardActivo = 'step-tipo';
+
+    function pasosVisibles() {
+      return WIZARD_PASOS.filter((id) => !$(id).hidden);
+    }
+
+    function renderResumen() {
+      const coords = coordenadasListas();
+      const filas = [];
+      const add = (label, value) => {
+        const v = (value == null ? '' : String(value)).trim();
+        if (v) filas.push({ label, value: v });
+      };
+      add('Tipo', TIPO_LABEL[tipoSel] || tipoSel);
+      add('Ubicación exacta', $('ubicacion').value);
+      add('Coordenadas', coords ? formatearCoordenadas(coords.lat, coords.lng) : 'Sin GPS');
+      if (!$('estado-section').hidden) add('Estado', estadoSel);
+      add('Nombre', $('nombre').value.trim() || 'Anónimo');
+      add('Teléfono', $('telefono').value);
+      add('Ciudad', ciudadSel);
+      add('Edad', $('edad').value);
+      add('Género', generoSel);
+      add('Zona afectada', $('zona-tag').value);
+      add('Dirección de origen', $('direccion-origen').value);
+      if (censoPersonas.length) add('Censo del grupo', censoPersonas.join(', '));
+      if (tipoSel !== 'SIN_VIVIENDA' && $('sin-vivienda').checked) add('Requiere vivienda', 'Sí');
+      add('Notas', $('notas').value);
+
+      let html = filas.map((f) =>
+        `<div class="resumen-row"><span class="resumen-label">${escHtml(f.label)}</span>` +
+        `<span class="resumen-value">${escHtml(f.value)}</span></div>`
+      ).join('');
+      if (fotoB64) {
+        html += `<div class="resumen-row resumen-foto"><span class="resumen-label">Foto</span>` +
+          `<img src="${fotoB64}" alt="Foto del reporte" /></div>`;
+      }
+      $('resumen-list').innerHTML = html;
+    }
+
+    function mostrarPaso(id) {
+      if (!WIZARD_PASOS.includes(id)) return;
+      wizardActivo = id;
+      WIZARD_PASOS.forEach((s) => $(s).classList.toggle('active', s === id));
+      const visibles = pasosVisibles();
+      const pos = visibles.indexOf(id);
+      const esUltimo = id === 'step-resumen';
+      $('wizard-step-label').textContent = `Paso ${pos + 1} de ${visibles.length}`;
+      $('wizard-step-title').textContent = $(id).dataset.title || '';
+      $('wizard-progress-fill').style.width = `${((pos + 1) / visibles.length) * 100}%`;
+      $('wizard-back').hidden = pos === 0;
+      $('wizard-next').hidden = esUltimo;
+      $('btn-guardar').hidden = !esUltimo;
+      if (esUltimo) renderResumen();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function pasoRelativo(salto) {
+      const visibles = pasosVisibles();
+      const pos = visibles.indexOf(wizardActivo);
+      const destino = Math.min(Math.max(pos + salto, 0), visibles.length - 1);
+      return visibles[destino];
+    }
+
+    function validarPasoActual() {
+      if (wizardActivo === 'step-ubicacion') {
+        if (!$('ubicacion').value.trim()) { toast('⚠ Escriba sector, calle o edificio'); return false; }
+        if (!coordenadasListas()) {
+          toast('⚠ Falta la ubicación: use el botón GPS o escriba latitud y longitud');
+          return false;
+        }
+      }
+      if (wizardActivo === 'step-datos') return validarFormulario();
+      return true;
+    }
+
+    $('wizard-next').addEventListener('click', () => {
+      if (!validarPasoActual()) return;
+      mostrarPaso(pasoRelativo(1));
+    });
+    $('wizard-back').addEventListener('click', () => mostrarPaso(pasoRelativo(-1)));
+    mostrarPaso('step-tipo');
+
     $('btn-guardar').addEventListener('click', () => {
       if (!validarFormulario()) return;
+      const esDesaparecida = tipoSel === 'PERSONA_DESAPARECIDA';
       const ubicacion = $('ubicacion').value.trim();
-      if (!ubicacion) { toast('⚠ Escriba sector, calle o edificio'); return; }
+      if (!ubicacion) {
+        toast(esDesaparecida ? '⚠ Escriba el sector donde se le vio por última vez' : '⚠ Escriba sector, calle o edificio');
+        return;
+      }
       const coords = coordenadasListas();
-      if (!coords) {
+      if (!coords && !esDesaparecida) {
         toast('⚠ Falta la ubicación en mapa: use el botón azul o escriba latitud y longitud abajo');
         return;
       }
-      latitud = coords.lat;
-      longitud = coords.lng;
-      const nuevo = repo.guardar({
-        fuente_origen: CONFIG.FUENTE_ORIGEN,
-        tipo_registro: tipoSel,
-        nombre_completo: $('nombre').value.trim() || 'Anónimo',
-        telefono_contacto: $('telefono').value.replace(/\D/g, ''),
-        ciudad: ciudadSel,
-        edad: $('edad').value.trim() || '0',
-        genero: generoSel,
-        ubicacion_exacta: ubicacion,
-        latitud,
-        longitud,
-        estado_actual: estadoSel,
-        estado_estructura: 'SEGURO',
-        notas_paramedicos: $('notas').value.trim(),
-        censo_personas: [...censoPersonas],
-        tiene_hogar_actual: tipoSel === 'SIN_VIVIENDA' ? false : !$('sin-vivienda').checked,
-        direccion_origen: $('direccion-origen').value.trim(),
-        zona_afectada_tag: $('zona-tag').value.trim() || ciudadSel,
-        foto_estructura_b64: fotoB64,
-      });
+      latitud = coords ? coords.lat : undefined;
+      longitud = coords ? coords.lng : undefined;
+
+      let entrada;
+      if (esDesaparecida) {
+        const nombreDesap = $('desap-nombre').value.trim();
+        if (!nombreDesap) { toast('⚠ Escriba el nombre de la persona desaparecida'); return; }
+        entrada = {
+          fuente_origen: CONFIG.FUENTE_ORIGEN,
+          tipo_registro: tipoSel,
+          nombre_completo: nombreDesap,
+          telefono_contacto: $('desap-contacto').value.replace(/\D/g, ''),
+          ciudad: ciudadSel,
+          edad: $('desap-edad').value.trim() || '0',
+          genero: desapGeneroSel,
+          ubicacion_exacta: ubicacion,
+          latitud,
+          longitud,
+          estado_actual: estadoSel,
+          estado_estructura: 'SEGURO',
+          notas_paramedicos: $('desap-rasgos').value.trim(),
+          censo_personas: [],
+          tiene_hogar_actual: true,
+          direccion_origen: '',
+          zona_afectada_tag: ciudadSel,
+          foto_estructura_b64: fotoB64,
+          desap_visto: $('desap-visto').value.trim(),
+          desap_relacion: $('desap-relacion').value.trim(),
+        };
+      } else {
+        entrada = {
+          fuente_origen: CONFIG.FUENTE_ORIGEN,
+          tipo_registro: tipoSel,
+          nombre_completo: $('nombre').value.trim() || 'Anónimo',
+          telefono_contacto: $('telefono').value.replace(/\D/g, ''),
+          ciudad: ciudadSel,
+          edad: $('edad').value.trim() || '0',
+          genero: generoSel,
+          ubicacion_exacta: ubicacion,
+          latitud,
+          longitud,
+          estado_actual: estadoSel,
+          estado_estructura: 'SEGURO',
+          notas_paramedicos: $('notas').value.trim(),
+          censo_personas: [...censoPersonas],
+          tiene_hogar_actual: tipoSel === 'SIN_VIVIENDA' ? false : !$('sin-vivienda').checked,
+          direccion_origen: $('direccion-origen').value.trim(),
+          zona_afectada_tag: $('zona-tag').value.trim() || ciudadSel,
+          foto_estructura_b64: fotoB64,
+          escucha_personas: tipoSel === 'PERSONA_ATRAPADA' ? escuchaSel : 'NO_SE',
+          personas_fallecidas: tipoSel === 'PERSONA_ATRAPADA' ? fallecidosSel : 'NO_SE',
+        };
+      }
+
+      const nuevo = repo.guardar(entrada);
       $('nombre').value = '';
       $('telefono').value = '';
       $('edad').value = '';
@@ -2267,11 +2439,24 @@
       $('zona-tag').value = '';
       $('direccion-origen').value = '';
       $('sin-vivienda').checked = false;
+      $('desap-nombre').value = '';
+      $('desap-edad').value = '';
+      $('desap-visto').value = '';
+      $('desap-rasgos').value = '';
+      $('desap-contacto').value = '';
+      $('desap-relacion').value = '';
+      escuchaSel = 'NO_SE';
+      fallecidosSel = 'NO_SE';
+      desapGeneroSel = 'M';
+      setChipActivo('escucha-chips', 'v', 'NO_SE');
+      setChipActivo('fallecidos-chips', 'v', 'NO_SE');
+      setChipActivo('desap-genero-chips', 'g', 'M');
       censoPersonas = [];
       renderCensoChips();
       mostrarFotoPreview('');
       aplicarTipoActivo('PERSONA_ATRAPADA');
       actualizarEstadoBotonGuardar();
+      mostrarPaso('step-tipo');
       toast('✓ Punto guardado en disco local');
       publicarEnHub(nuevo);
       irTab('reportes');
